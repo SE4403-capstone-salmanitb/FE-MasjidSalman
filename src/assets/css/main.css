@@ -1,0 +1,7 @@
+#app {
+  font-family: "Inter", sans-serif;
+}
+
+.router-link-exact-active {
+  font-weight: bold;
+}
