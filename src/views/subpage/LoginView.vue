@@ -7,21 +7,27 @@
         Selamat datang kembali! Silakan masuk untuk mengakses akun Anda dan
         tetap terhubung dengan komunitas Masjid Salman ITB.
       </p>
-      <form action="#" method="post" @click="getting">
+      <form @submit.prevent="onSubmit">
         <div class="input-container">
           <input
-            v-model="username"
-            type="text"
-            id="username"
-            placeholder="Username"
+            filled
+            v-model="email"
+            label="Email"
+            type="email"
+            :rules="[(val) => !!val || 'Field is required']"
+            placeholder="email"
+            autocomplete="username"
           />
         </div>
         <div class="input-container">
           <input
+            filled
             v-model="password"
+            label="Password"
             :type="showPassword ? 'text' : 'password'"
-            id="password"
             placeholder="Enter your password"
+            :rules="[(val) => !!val || 'Field is required']"
+            autocomplete="current-password"
           />
           <b-icon-eye-fill
             style="
@@ -33,8 +39,22 @@
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
         </div>
+        <div class="form-check">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            v-model="rememberMe"
+            label="Remember me"
+            id="flexCheckDefault"
+          />
+          <label class="form-check-label" for="flexCheckDefault">
+            Remember Me
+          </label>
+        </div>
+        <button type="submit" :loading="isLoading" label="Login" unelevated>
+          Masuk
+        </button>
       </form>
-      <button @click="login">Masuk</button>
       <div class="akun">
         Tidak punya akun? <router-link to="/register">Daftar</router-link>
       </div>
@@ -45,43 +65,97 @@
   </div>
 </template>
 
-<script>
-import axios from "axios";
-export default {
-  data() {
-    return {
-      showPassword: false,
-      form: {
-        username: "",
-        password: "",
-      },
-    };
-  },
-  methods: {
-    login() {
-      // Implement your login logic here
-      axios
-        .post("/api/login", this.form)
-        .then((response) => {
-          if (response.status === 200) {
-            // Login successful, redirect to profile page
-            this.$router.push("/profile");
-          } else {
-            // Handle other statuses, such as 401 for unauthorized
-            // You might want to display an error message to the user
-            console.error("Login failed");
-          }
-        })
-        .catch((error) => {
-          console.error("Error during login:", error);
-          // Handle error, display error message to user
-        });
-    },
-    togglePasswordVisibility() {
-      this.showPassword = !this.showPassword;
-    },
-  },
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import axios from "@/lib/axios";
+
+const email = ref("");
+const password = ref("");
+const rememberMe = ref(false);
+const showPassword = ref(false);
+const isLoading = ref(false);
+
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value;
 };
+
+const onSubmit = async () => {
+  isLoading.value = true;
+  const form = {
+    email: email.value,
+    password: password.value,
+    remember: rememberMe.value,
+  };
+
+  try {
+    await axios.get("sanctum/csrf-cookie");
+    try {
+      const result = await axios.post("/login", form);
+      if (result.status !== 200) {
+        throw new Error(result.data);
+      }
+      sessionStorage.setItem("user", JSON.stringify(result.data.user));
+      sessionStorage.setItem(
+        "bearer",
+        JSON.stringify(result.data.access_token)
+      );
+      window.location.href = "/profile";
+    } catch (error) {
+      console.error("Error making the request:", error.toJSON());
+      // Tampilkan pesan error kepada pengguna
+      // Misalnya, update state untuk menampilkan pesan error di UI
+    }
+  } catch (error) {
+    console.error("Error with CSRF or network:", error);
+    // Tampilkan pesan error umum atau khusus terkait CSRF/network
+  }
+
+  isLoading.value = false;
+};
+
+onMounted(() => {
+  if (sessionStorage.getItem("bearer") != null) {
+    window.location.href = "/profile";
+  }
+});
+// export default {
+//   data() {
+//     return {
+//       showPassword: false,
+//       email: "",
+//       password: "",
+//     };
+//   },
+//   methods: {
+//     togglePasswordVisibility() {
+//       this.showPassword = !this.showPassword;
+//     },
+//     login() {
+//       // Implementasi logika login di sini menggunakan data email dan password
+//       // Misalnya, Anda dapat menggunakan Axios untuk mengirim permintaan ke backend
+//       axios
+//         .post("/api/login", { email: this.email, password: this.password })
+//         .then((response) => {
+//           // Cek jika respons dari backend adalah sukses atau tidak
+//           if (response.data.success) {
+//             // Jika sukses, Anda dapat melakukan sesuatu seperti redirect ke halaman utama
+//             // atau menyimpan token akses di local storage
+//             console.log("Login berhasil!");
+//           } else {
+//             // Jika respons menunjukkan login gagal, atur pesan kesalahan
+//             this.loginError = response.data.message;
+//           }
+//         })
+//         .catch((error) => {
+//           console.error("Error:", error);
+//           // Misalnya, tampilkan pesan kesalahan umum jika terjadi kesalahan saat mengirim permintaan
+//           this.loginError =
+//             "Terjadi kesalahan saat melakukan login. Silakan coba lagi.";
+//           // Handle error di sini
+//         });
+//     },
+//   },
+// };
 </script>
 
 <style scoped>
@@ -102,6 +176,16 @@ export default {
   margin: 13px auto;
   display: flex;
   align-items: center;
+}
+
+.form-check {
+  display: flex;
+  align-items: center; /* Menyamakan tinggi */
+  justify-content: flex-start; /* Memposisikan ke kiri */
+}
+.form-check .form-check-label {
+  font-size: 12;
+  font-weight: 600;
 }
 
 .input-container input {
@@ -125,7 +209,7 @@ button {
   border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
-  margin-top: 39px;
+  margin-top: 29px;
   font-size: 20px;
   font-weight: bold;
   border-radius: 13px;

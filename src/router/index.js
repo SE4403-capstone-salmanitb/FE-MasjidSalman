@@ -5,14 +5,16 @@ import LoginView from "../views/subpage/LoginView.vue";
 import RegisterView from "../views/subpage/RegisterView.vue";
 import LupaView from "../views/subpage/LupaView.vue";
 import InputView from "../views/subpage/InputView.vue";
-import PenjelasanView from "../views/subpage/PenjelasanView.vue";
-import ResumeView from "../views/subpage/ResumeView.vue";
+import InputkpiView from "../views/subpage/InputkpiView.vue";
+import InputrkaView from "../views/subpage/InputrkaView.vue";
+import InputanggaranView from "../views/subpage/InputanggaranView.vue";
+import InputbulanView from "../views/subpage/InputbulanView.vue";
+
 import ProfileView from "../views/mainpage/ProfileView.vue";
-import BulanView from "../views/mainpage/BulanView.vue";
 import KpiView from "../views/mainpage/KpiView.vue";
 import ProgramView from "../views/mainpage/ProgramView.vue";
 import RekapView from "../views/mainpage/RekapView.vue";
-import AnggaranView from "../views/mainpage/AnggaranView.vue";
+import PersetujuanView from "../views/mainpage/PersetujuanView.vue";
 import PenjrkaView from "../views/mainpage/PenjrkaView.vue";
 import RkaView from "../views/mainpage/RkaView.vue";
 
@@ -45,20 +47,36 @@ const routes = [
     component: InputView,
   },
   {
+    path: "/inputkpi",
+    name: "inputkpi",
+    component: InputkpiView,
+  },
+  {
+    path: "/inputrka",
+    name: "inputrka",
+    component: InputrkaView,
+  },
+  {
+    path: "/inputanggaran",
+    name: "inputanggaran",
+    component: InputanggaranView,
+  },
+  {
+    path: "/inputbulan",
+    name: "inputbulan",
+    component: InputbulanView,
+  },
+  {
+    path: "/persetujuan",
+    name: "persetujuan",
+    component: PersetujuanView,
+  },
+  {
     path: "/profile",
     name: "profile",
     component: ProfileView,
   },
-  {
-    path: "/anggaran",
-    name: "anggaran",
-    component: AnggaranView,
-  },
-  {
-    path: "/bulan",
-    name: "bulan",
-    component: BulanView,
-  },
+
   {
     path: "/kpi",
     name: "kpi",
@@ -75,12 +93,6 @@ const routes = [
     component: RekapView,
   },
   {
-    path: "/resume",
-    name: "resume",
-    component: ResumeView,
-  },
-
-  {
     path: "/penjrka",
     name: "penjrka",
     component: PenjrkaView,
@@ -89,16 +101,6 @@ const routes = [
     path: "/rka",
     name: "rka",
     component: RkaView,
-  },
-  {
-    path: "/penjelasan",
-    name: "penjelasan",
-    component: PenjelasanView,
-  },
-  {
-    path: "/resume",
-    name: "resume",
-    component: ResumeView,
   },
   {
     path: "/about",

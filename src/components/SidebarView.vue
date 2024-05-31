@@ -34,18 +34,30 @@
           >
           <router-link to="/rka" class="sub-item">RKA</router-link>
           <router-link to="kpi" class="sub-item">KPI</router-link>
-          <a class="sub-btn2"
-            ><div class="sub-item">
-              Laporan<b-icon-caret-right-fill
-                class="dropdown2"
-              ></b-icon-caret-right-fill>
-            </div>
-          </a>
-          <div class="sub-menu2">
-            <router-link to="/program" class="sub-item2">Program</router-link>
-            <router-link to="/rekap" class="sub-item2">Rekap</router-link>
-          </div>
         </div>
+      </div>
+      <div class="item">
+        <a class="sub-btn2"
+          ><div class="sub-item" style="padding-left: 40px">
+            Laporan
+            <b-icon-caret-right-fill
+              class="dropdown2"
+            ></b-icon-caret-right-fill>
+          </div>
+        </a>
+        <div class="sub-menu2">
+          <router-link to="/program" class="sub-item2">Program</router-link>
+          <router-link to="/rekap" class="sub-item2">Rekap</router-link>
+        </div>
+      </div>
+
+      <div class="item">
+        <router-link
+          class="nav-link"
+          to="/persetujuan"
+          style="padding-left: 72px"
+          >Persetujuan</router-link
+        >
       </div>
     </div>
   </div>
@@ -53,17 +65,20 @@
 
 <script>
 import $ from "jquery";
-export default {};
-$(document).ready(function () {
-  $(".menu").on("click", ".sub-btn", function () {
-    $(this).next(".sub-menu").slideToggle();
-    $(this).find(".dropdown").toggleClass("rotate");
-  });
-  $(".menu").on("click", ".sub-btn2", function () {
-    $(this).next(".sub-menu2").slideToggle();
-    $(this).find(".dropdown2").toggleClass("rotate");
-  });
-});
+export default {
+  mounted() {
+    $(document).ready(function () {
+      $(".menu").on("click", ".sub-btn", function () {
+        $(this).next(".sub-menu").slideToggle();
+        $(this).find(".dropdown").toggleClass("rotate");
+      });
+      $(".menu").on("click", ".sub-btn2", function () {
+        $(this).next(".sub-menu2").slideToggle();
+        $(this).find(".dropdown2").toggleClass("rotate");
+      });
+    });
+  },
+};
 </script>
 
 <style>
@@ -98,7 +113,8 @@ $(document).ready(function () {
   width: 241px;
   height: 100vh;
   position: fixed;
-  overflow-y: auto;
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .sidebar .menu {
@@ -162,6 +178,7 @@ $(document).ready(function () {
   position: absolute;
   right: 0;
   margin-right: 20px;
+  margin-top: 3px;
   transition: 0.3 ease;
 }
 

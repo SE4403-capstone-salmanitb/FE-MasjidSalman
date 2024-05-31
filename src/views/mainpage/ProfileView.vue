@@ -15,11 +15,12 @@
               @change="changeImage"
               accept="image/*"
             />
-            <img
-              src="@/assets/profil.jpg"
-              alt="Profile Picture"
-              @click="openFileInput"
-            />
+            <div class="profile-picture">
+              <img src="@/assets/profil.jpg" alt="Profile Picture" />
+              <div class="overlay-text" @click="openFileInput">
+                Change Profile
+              </div>
+            </div>
           </div>
           <div class="col-6">
             <ul class="list-group">
@@ -43,7 +44,14 @@
           </div>
           <div class="col">
             <div class="tombol">
-              <button type="button" class="btn">Edit</button>
+              <button
+                type="button"
+                class="btn-out"
+                style="background-color: red"
+                @click="logout"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
@@ -60,6 +68,13 @@ export default {
   },
 
   methods: {
+    logout() {
+      // Hapus token akses dari session storage
+      sessionStorage.removeItem("bearer");
+      // Redirect pengguna kembali ke halaman login
+      window.location.href = "/"; // Gantilah "/login" dengan URL halaman login Anda
+    },
+
     changeImage(event) {
       const file = event.target.files[0];
       if (file) {
@@ -70,11 +85,46 @@ export default {
         reader.readAsDataURL(file);
       }
     },
+
+    openFileInput() {
+      this.$refs.fileInput.click();
+    },
   },
 };
 </script>
 
 <style>
+.profile-picture {
+  position: relative;
+}
+
+.btn-out {
+  width: 104px;
+  height: 47px;
+  border-radius: 3px;
+  color: white;
+}
+
+.overlay-text {
+  position: absolute;
+  margin-left: 24px;
+  bottom: 0;
+  left: 0; /* Ubah dari right: 0; menjadi left: 0; */
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 5px 10px;
+  cursor: pointer;
+  height: 37px;
+  width: 220px;
+  font-size: 16px;
+  font-weight: 400;
+  text-align: center;
+}
+
+.overlay-text:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
 .card-container {
   padding-left: 260px; /* Lebar sidebar + jarak antara sidebar dan kartu */
   padding-top: 33px;

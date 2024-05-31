@@ -81,6 +81,18 @@ export default {
         if (response.status === 200) {
           console.log(response.data);
           // Account registration successful, maybe redirect user or show a success message
+
+          // Now, send email to the provided email address
+          await axios.post("/api/send-email", {
+            email: this.form.email,
+            message:
+              "Silahkan klik link untuk authentikasi: http://yourwebsite.com/authenticate",
+          });
+
+          // Show success message to user
+          alert(
+            "Account registered successfully. Please check your email for authentication link."
+          );
         }
       } catch (error) {
         console.error("Error during registration:", error);

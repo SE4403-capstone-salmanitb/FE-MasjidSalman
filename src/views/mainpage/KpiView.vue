@@ -2,9 +2,16 @@
   <div class="profile">
     <Sidebar />
     <div class="card-container">
-      <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
+      <div
+        class="card mb-3"
+        style="
+          max-width: 1149px;
+          max-height: fit-content;
+          /* background-color: red; */
+        "
+      >
         <div class="kepala">
-          <p>RENCANA KERJA & ANGGARAN / KPI</p>
+          <p>Tahunan / KPI</p>
         </div>
         <div class="container text-center">
           <div class="row">
@@ -16,6 +23,7 @@
                 variant="outline"
                 :text="selectedOption"
                 v-model="selectedOptionIndex"
+                dropup
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
@@ -27,15 +35,139 @@
               </b-dropdown>
             </div>
             <div class="tombol">
-              <button type="button" class="btn" @click="goToInputPage">
-                Tambah
+              <button type="button" class="btn">
+                Filter<b-icon-funnel-fill></b-icon-funnel-fill>
               </button>
               <div class="print">
                 <button type="button" class="btn">
-                  <b-icon-printer-fill></b-icon-printer-fill>
+                  <b-icon-printer-fill
+                    style="width: 20px; height: 20px"
+                  ></b-icon-printer-fill>
                 </button>
               </div>
             </div>
+            <div class="tahun">Tahun</div>
+            <div class="tahun1">
+              <div class="dropdown">
+                <select
+                  v-model="selectedYear"
+                  class="m-md-2"
+                  style="width: 90px; height: 38px"
+                >
+                  <option v-for="year in years" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="box-text">
+              <p class="text-area">{{ selectedOption }}</p>
+              <div class="additional-text">
+                <div class="container-box">
+                  <button type="button" class="btn" @click="goToInputPage">
+                    <b-icon-plus></b-icon-plus>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="table-container1">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 45px">No</th>
+                    <th style="width: 185px">Nama Program - Kegiatan</th>
+                    <th style="width: 396px">KPI</th>
+                    <th style="width: 504px">Target</th>
+                    <th style="text-align: center"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-if="programKpiByOption.length === 0">
+                    <tr>
+                      <td colspan="5" class="text-center">Data masih kosong</td>
+                    </tr>
+                  </template>
+                  <template v-else>
+                    <!-- Isi tabel dapat diperoleh dari data program yang dipilih -->
+                    <tr
+                      v-for="(program, index) in programKpiByOption"
+                      :key="index"
+                    >
+                      <td>{{ program.no }}</td>
+                      <td>
+                        <template v-if="!program.isEditing">{{
+                          program.namaprogram
+                        }}</template>
+                        <input
+                          type="text"
+                          v-model="program.namaprogram"
+                          v-else
+                        />
+                      </td>
+                      <!-- Kolom KPI -->
+                      <td>
+                        <template v-if="!program.isEditing">
+                          <div
+                            v-for="(kpi, kpiIndex) in program.kpi"
+                            :key="kpiIndex"
+                          >
+                            {{ kpi }}
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div
+                            v-for="(kpi, kpiIndex) in program.kpi"
+                            :key="kpiIndex"
+                          >
+                            <input
+                              type="text"
+                              v-model="program.kpi[kpiIndex]"
+                            />
+                          </div>
+                        </template>
+                      </td>
+                      <!-- Kolom Target -->
+                      <td>
+                        <template v-if="!program.isEditing">
+                          <div
+                            v-for="(target, targetIndex) in program.target"
+                            :key="targetIndex"
+                          >
+                            {{ target }}
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div
+                            v-for="(target, targetIndex) in program.target"
+                            :key="targetIndex"
+                          >
+                            <input
+                              type="text"
+                              v-model="program.target[targetIndex]"
+                            />
+                          </div>
+                        </template>
+                      </td>
+                      <td style="text-align: center">
+                        <!-- Tombol Edit -->
+                        <button
+                          type="button"
+                          class="edit-btn"
+                          @click="editProgram(program)"
+                        >
+                          <b-icon
+                            :icon="
+                              program.isEditing ? 'save-fill' : 'pencil-square'
+                            "
+                          ></b-icon>
+                        </button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+            <!-- Akhir dari elemen tabel -->
           </div>
         </div>
       </div>
@@ -49,6 +181,25 @@ import Sidebar from "@/components/SidebarView.vue";
 export default {
   data() {
     return {
+      programKpi: {
+        "PROGRAM KEPUSTAKAAN": [
+          {
+            no: 1,
+            namaprogram: "Produksi Buku",
+            kpi: ["jumlah buku baru ber-isbn 1", "jumlah buku baru ber-isbn 2"],
+            target: [
+              "minimal 4 judul dalam satu tahun 1",
+              "minimal 4 judul dalam satu tahun 2",
+            ],
+            isEditing: false,
+          },
+        ],
+        "PROGRAM INTELEKTUALITAS": [],
+        "PROGRAM EKOLITERASI": [],
+        "SUPPORTING SYSTEM": [],
+      },
+      selectedYear: new Date().getFullYear(), // Mengatur tahun saat ini sebagai nilai awal
+      years: this.generateYears(), // Menghasilkan daftar tahun
       options: [
         "PROGRAM KEPUSTAKAAN",
         "PROGRAM INTELEKTUALITAS",
@@ -59,6 +210,9 @@ export default {
     };
   },
   computed: {
+    programKpiByOption() {
+      return this.programKpi[this.selectedOption];
+    },
     selectedOption() {
       return this.selectedOptionIndex !== null
         ? this.options[this.selectedOptionIndex]
@@ -66,12 +220,28 @@ export default {
     },
   },
   methods: {
+    editProgram(program) {
+      // Toggle isEditing saat tombol edit diklik
+      program.isEditing = !program.isEditing;
+      // Simpan perubahan ke database
+      // this.saveChanges(program);
+      // Lakukan sesuatu dengan program yang diedit
+      console.log("Editing program:", program);
+    },
     goToInputPage() {
       // Mengarahkan ke halaman input
       this.$router.push({ path: "/input" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
     },
     selectOption(index) {
       this.selectedOptionIndex = index;
+    },
+    generateYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = currentYear; i >= currentYear - 3; i--) {
+        years.push(i);
+      }
+      return years;
     },
   },
   components: {
@@ -81,6 +251,31 @@ export default {
 </script>
 
 <style>
+.table input[type="text"] {
+  border: none;
+  width: 100%;
+  background-color: transparent;
+  text-align: center;
+  font-size: 15px;
+}
+
+/* Hilangkan border dan background-color input saat dalam mode edit */
+.table input[type="text"]:focus {
+  outline: none;
+}
+
+/* Sembunyikan tombol save-fill saat dalam mode edit */
+.edit-btn .b-icon[icon="save-fill"] {
+  display: none;
+}
+
+.table-container1 {
+  padding-top: 22px;
+  padding-left: 18px;
+  padding-bottom: 30px;
+  padding-right: 25px;
+}
+
 .card-container {
   padding-left: 260px; /* Lebar sidebar + jarak antara sidebar dan kartu */
   padding-top: 33px;
@@ -127,6 +322,11 @@ export default {
   display: flex;
   margin-top: 27px;
   margin-left: 5px;
+}
+
+.tahun {
+  margin-top: 30px;
+  font-weight: bold;
 }
 
 .tombol .btn {

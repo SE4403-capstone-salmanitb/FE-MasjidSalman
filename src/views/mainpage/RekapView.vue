@@ -1,100 +1,105 @@
 <template>
   <div class="profile">
-    <Sidebar />
-    <div class="card-container">
-      <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
-        <div class="kepala">
-          <p>RENCANA KERJA & ANGGARAN / Laporan / Rekap</p>
+    <div class="card1">
+      <div class="card mb-3" style="max-width: 1381px; max-height: fit-content">
+        <div class="kepala" style="width: 1381px">
+          <p @click="goBack">
+            <b-icon-arrow-left-circle-fill
+              style="margin-right: 26px"
+            ></b-icon-arrow-left-circle-fill
+            >Laporan / Laporan Rekap
+          </p>
         </div>
-        <div class="container text-center">
-          <div class="row">
-            <div class="teks">Program</div>
-            <div class="dropdown">
-              <b-dropdown
-                id="dropdown-1"
-                class="m-md-2"
-                variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-              >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in options"
-                  :key="index"
-                >
-                  {{ option }}
-                </b-dropdown-item>
-              </b-dropdown>
-            </div>
-            <div class="tombol">
-              <button type="button" class="btn" @click="goToInputPage">
-                Tambah
-              </button>
-              <div class="print">
-                <button type="button" class="btn">
-                  <b-icon-printer-fill></b-icon-printer-fill>
-                </button>
-              </div>
-            </div>
-          </div>
+        <!-- Tambahkan elemen tabel di bawah -->
+        <div class="table-container">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama Program - Kegiatan</th>
+                <th style="width: 20%">Target</th>
+                <th>Jan</th>
+                <th>Feb</th>
+                <th>Mar</th>
+                <th>Apr</th>
+                <th>Mei</th>
+                <th>Jun</th>
+                <th>Jul</th>
+                <th>Agust</th>
+                <th>Sept</th>
+                <th>Okt</th>
+                <th>Nov</th>
+                <th>Des</th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="programRekap.length === 0">
+                <tr>
+                  <td colspan="15" class="text-center">Data masih kosong</td>
+                </tr>
+              </template>
+              <template v-else>
+                <!-- Isi tabel dapat diperoleh dari data program yang dipilih -->
+                <tr v-for="(program, index) in programRekap" :key="index">
+                  <td>{{ program.no }}</td>
+                  <td>{{ program.namaprogram }}</td>
+                  <td>{{ program.target }}</td>
+                  <td>{{ program.jan }}</td>
+                  <td>{{ program.feb }}</td>
+                  <td>{{ program.mar }}</td>
+                  <td>{{ program.apr }}</td>
+                  <td>{{ program.mei }}</td>
+                  <td>{{ program.jun }}</td>
+                  <td>{{ program.jul }}</td>
+                  <td>{{ program.agust }}</td>
+                  <td>{{ program.sept }}</td>
+                  <td>{{ program.okt }}</td>
+                  <td>{{ program.nov }}</td>
+                  <td>{{ program.des }}</td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
+        <!-- Akhir dari elemen tabel -->
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import Sidebar from "@/components/SidebarView.vue";
-
 export default {
+  methods: {
+    goBack() {
+      // Fungsi ini akan mengarahkan pengguna kembali ke halaman sebelumnya
+      this.$router.go(-1); // Menggunakan Vue Router untuk navigasi kembali
+    },
+  },
   data() {
     return {
-      options: [
-        "PROGRAM KEPUSTAKAAN",
-        "PROGRAM INTELEKTUALITAS",
-        "PROGRAM EKOLITERASI",
-        "SUPPORTING SYSTEM",
+      programRekap: [
+        // Di sini Anda dapat menambahkan data rekap atau mengambilnya dari sumber eksternal
       ],
-      selectedOptionIndex: null,
     };
-  },
-  computed: {
-    selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.options[this.selectedOptionIndex]
-        : "PROGRAM KEPUSTAKAAN";
-    },
-  },
-  methods: {
-    goToInputPage() {
-      // Mengarahkan ke halaman input
-      this.$router.push({ path: "/input" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
-    },
-    selectOption(index) {
-      this.selectedOptionIndex = index;
-    },
-  },
-  components: {
-    Sidebar,
   },
 };
 </script>
 
 <style>
-.card-container {
-  padding-left: 260px; /* Lebar sidebar + jarak antara sidebar dan kartu */
+.card1 {
+  padding-left: 60px; /* Lebar sidebar + jarak antara sidebar dan kartu */
   padding-top: 33px;
   overflow-y: auto;
 }
 
-.card-container .card {
+.card1 .card {
   background-color: white;
 }
 
 .kepala {
   background-color: #967c55;
   height: 70px;
-  width: 1149px;
+  width: 1381px;
 }
 
 .kepala p {
@@ -113,47 +118,27 @@ export default {
   font-weight: bold;
 }
 
-.dropdown {
-  margin-top: 14px;
-  margin-bottom: 38px;
+.table-container {
+  padding-left: 24px;
+  padding-right: 17px;
+  padding-top: 39px;
 }
 
-.dropdown .m-md-2 {
-  border: 1px solid black;
-  background-color: white;
+.table {
+  width: calc(100% - 41px); /* 24px (padding kiri) + 17px (padding kanan) */
+  border-collapse: collapse;
 }
 
-.tombol {
-  display: flex;
-  margin-top: 27px;
-  margin-left: 5px;
+.table th,
+.table td {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
 }
 
-.tombol .btn {
-  background-color: #967c55;
+.table th {
+  background-color: #f2f2f2;
   font-size: 12px;
-  font-weight: bold;
-  height: 30px;
-  width: 75px;
-  color: white;
-}
-
-.tombol .btn:hover {
-  color: white;
-}
-
-.print {
-  margin-left: 8px;
-}
-
-.print .btn {
-  background-color: #967c55;
-  height: 30px;
-  width: 30px;
-  align-content: center;
-  color: white;
-  display: flex; /* Menggunakan flexbox */
-  justify-content: center; /* Untuk membuat konten berada di tengah */
-  align-items: center; /* Untuk memusatkan vertikal jika diperlukan */
+  font-weight: 600;
 }
 </style>
