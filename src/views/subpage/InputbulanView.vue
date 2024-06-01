@@ -296,7 +296,11 @@ const submitForm = function () {
     }
   });
   axios
-    .post("/api/itemKegiatanRKA", this.form)
+    .post("/api/itemKegiatanRKA", this.form, {
+      headers: {
+        Authorization: 'Bearer ' + sessionStorage.getItem('bearer')
+      }
+    })
     .then((response) => {
       console.log(response.data);
       // Handle successful response, e.g., show success message
