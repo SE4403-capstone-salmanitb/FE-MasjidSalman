@@ -20,7 +20,7 @@
                       type="text"
                       class="form-control"
                       id="kebutuhan1"
-                      v-model="uraian"
+                      v-model="form.uraian"
                     />
                   </div>
                   <div class="row">
@@ -32,7 +32,7 @@
                         type="number"
                         class="form-control"
                         id="nilaisatuan1"
-                        v-model="nilai_satuan"
+                        v-model="form.nilai_satuan"
                       />
                     </div>
 
@@ -42,7 +42,7 @@
                         type="number"
                         class="form-control"
                         id="qty1"
-                        v-model="quantity"
+                        v-model="form.quantity"
                       />
                     </div>
 
@@ -52,7 +52,7 @@
                         type="text"
                         class="form-control"
                         id="unit1"
-                        v-model="quantity_unit"
+                        v-model="form.quantity_unit"
                       />
                     </div>
 
@@ -62,7 +62,7 @@
                         type="number"
                         class="form-control"
                         id="fren1"
-                        v-model="frequency"
+                        v-model="form.frequency"
                       />
                     </div>
 
@@ -72,7 +72,7 @@
                         type="text"
                         class="form-control"
                         id="unt1"
-                        v-model="frequency_unit"
+                        v-model="form.frequency_unit"
                       />
                     </div>
 
@@ -85,7 +85,7 @@
                         class="form-control"
                         id="sumberdana1"
                         style="width: 304px"
-                        v-model="sumber_dana"
+                        v-model="form.sumber_dana"
                       />
                       <!-- <select
                         class="form-control"
@@ -117,7 +117,7 @@
                       type="checkbox"
                       id="inlineCheckbox1"
                       value="option1"
-                      v-model="dana_jan"
+                      v-model="form.dana_jan"
                     />
                     <label class="form-check-label" for="inlineCheckbox1"
                       >Januari</label
@@ -129,7 +129,7 @@
                       type="checkbox"
                       id="inlineCheckbox2"
                       value="option2"
-                      v-model="dana_feb"
+                      v-model="form.dana_feb"
                     />
                     <label class="form-check-label" for="inlineCheckbox2"
                       >Februari</label
@@ -141,7 +141,7 @@
                       type="checkbox"
                       id="inlineCheckbox3"
                       value="option3"
-                      v-model="dana_mar"
+                      v-model="form.dana_mar"
                     />
                     <label class="form-check-label" for="inlineCheckbox3"
                       >Maret</label
@@ -153,7 +153,7 @@
                       type="checkbox"
                       id="inlineCheckbox4"
                       value="option4"
-                      v-model="dana_apr"
+                      v-model="form.dana_apr"
                     />
                     <label class="form-check-label" for="inlineCheckbox4"
                       >April</label
@@ -165,7 +165,7 @@
                       type="checkbox"
                       id="inlineCheckbox5"
                       value="option5"
-                      v-model="dana_mei"
+                      v-model="form.dana_mei"
                     />
                     <label class="form-check-label" for="inlineCheckbox5"
                       >Mei</label
@@ -177,7 +177,7 @@
                       type="checkbox"
                       id="inlineCheckbox6"
                       value="option6"
-                      v-model="dana_jun"
+                      v-model="form.dana_jun"
                     />
                     <label class="form-check-label" for="inlineCheckbox6"
                       >Juni</label
@@ -189,7 +189,7 @@
                       type="checkbox"
                       id="inlineCheckbox7"
                       value="option7"
-                      v-model="dana_jul"
+                      v-model="form.dana_jul"
                     />
                     <label class="form-check-label" for="inlineCheckbox7"
                       >Juli</label
@@ -201,7 +201,7 @@
                       type="checkbox"
                       id="inlineCheckbox8"
                       value="option8"
-                      v-model="dana_aug"
+                      v-model="form.dana_aug"
                     />
                     <label class="form-check-label" for="inlineCheckbox8"
                       >Agustus</label
@@ -213,7 +213,7 @@
                       type="checkbox"
                       id="inlineCheckbox9"
                       value="option9"
-                      v-model="dana_sep"
+                      v-model="form.dana_sep"
                     />
                     <label class="form-check-label" for="inlineCheckbox9"
                       >September</label
@@ -225,7 +225,7 @@
                       type="checkbox"
                       id="inlineCheckbox10"
                       value="option10"
-                      v-model="dana_oct"
+                      v-model="form.dana_oct"
                     />
                     <label class="form-check-label" for="inlineCheckbox10"
                       >Oktober</label
@@ -237,7 +237,7 @@
                       type="checkbox"
                       id="inlineCheckbox11"
                       value="option11"
-                      v-model="dana_nov"
+                      v-model="form.dana_nov"
                     />
                     <label class="form-check-label" for="inlineCheckbox11"
                       >November</label
@@ -249,7 +249,7 @@
                       type="checkbox"
                       id="inlineCheckbox12"
                       value="option12"
-                      v-model="dana_dec"
+                      v-model="form.dana_dec"
                     />
                     <label class="form-check-label" for="inlineCheckbox12"
                       >Desember</label
@@ -263,7 +263,7 @@
                       type="text"
                       class="form-control"
                       id="judulkegiatan1"
-                      v-model="id_judul_kegiatan"
+                      v-model="form.id_judul_kegiatan"
                     />
                   </div>
                 </div>
@@ -272,7 +272,7 @@
                 <button
                   type="button"
                   class="btn tambah-btn"
-                  @click="submitForm"
+                  v-on:click="()=>submitForm()"
                 >
                   Simpan
                 </button>
@@ -285,10 +285,27 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts">
 import Sidebar from "@/components/SidebarView.vue";
-import { onMounted, ref } from "vue";
 import axios from "@/lib/axios";
+
+const submitForm = function () {
+  Object.keys(this.form).forEach((key) => {
+    if (typeof this.form[key] === "boolean") {
+      this.form[key] = this.form[key] ? 1 : 0;
+    }
+  });
+  axios
+    .post("/api/itemKegiatanRKA", this.form)
+    .then((response) => {
+      console.log(response.data);
+      // Handle successful response, e.g., show success message
+    })
+    .catch((error) => {
+      console.error(error);
+      // Handle error, e.g., show error message
+    });
+}
 
 export default {
   data() {
@@ -324,23 +341,8 @@ export default {
     cardContainer.addEventListener("click", this.handleButtonClick);
   },
   methods: {
-    submitForm() {
-      Object.keys(this.form).forEach((key) => {
-        if (typeof this.form[key] === "boolean") {
-          this.form[key] = this.form[key] ? 1 : 0;
-        }
-      });
-      axios
-        .post("/api/itemKegiatanRKA", this.form)
-        .then((response) => {
-          console.log(response.data);
-          // Handle successful response, e.g., show success message
-        })
-        .catch((error) => {
-          console.error(error);
-          // Handle error, e.g., show error message
-        });
-    },
+    submitForm,
+
   },
   components: {
     Sidebar,
