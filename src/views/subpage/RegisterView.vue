@@ -156,7 +156,7 @@ button {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("E:\Materi\TA\Website\salmanitb\src\assets\background.jpg");
+  background-image: url("https://picsum.photos/200/300/?blur");
   background-size: cover;
   z-index: -1;
 }
