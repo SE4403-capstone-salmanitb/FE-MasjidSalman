@@ -111,6 +111,10 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
   },
+  {
+    path: '/:catchAll(.*)*',
+    component: () => import('../views/ErrorNotFound.vue'),
+  },
 ];
 
 const router = new VueRouter({
