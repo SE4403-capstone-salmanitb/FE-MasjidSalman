@@ -191,7 +191,7 @@ button:disabled {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url("E:\\Materi\\TA\\Website\\salmanitb\\src\\assets\\background.jpg");
+  background-image: url("@/assets/background.jpg");
   background-size: cover;
   z-index: -1;
 }

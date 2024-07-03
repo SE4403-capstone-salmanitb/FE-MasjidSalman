@@ -3,10 +3,10 @@
     <div class="background-image"></div>
     <div class="login-card">
       <h2>Register</h2>
-      <form action="#" method="post" @click="store">
+      <form @submit.prevent="store">
         <div class="input-container">
           <input
-            v-model="username"
+            v-model="form.username"
             type="text"
             id="username"
             placeholder="Username"
@@ -14,7 +14,7 @@
         </div>
         <div class="input-container">
           <input
-            v-model="password"
+            v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
             id="password"
             placeholder="Enter your password"
@@ -30,10 +30,15 @@
           ></b-icon-eye-fill>
         </div>
         <div class="input-container">
-          <input v-model="email" type="text" id="email" placeholder="Email" />
+          <input
+            v-model="form.email"
+            type="text"
+            id="email"
+            placeholder="Email"
+          />
         </div>
+        <button type="submit">Daftar</button>
       </form>
-      <button type="submit">Daftar</button>
       <div class="akun">
         Sudah punya akun? <router-link to="/">Login</router-link>
       </div>
@@ -41,7 +46,7 @@
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import axios from "@/lib/axios";
 
 export default {
@@ -51,15 +56,11 @@ export default {
       form: {
         username: "",
         password: "",
-
         email: "",
       },
     };
   },
   methods: {
-    login() {
-      // Implement your login logic here
-    },
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword;
     },
@@ -84,12 +85,23 @@ export default {
   align-items: center;
 }
 
+.background-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("@/assets/background.jpg"); /* Update with correct path */
+  background-size: cover;
+  z-index: -1;
+}
+
 .input-container {
   background: #fff;
   width: 532px;
   height: 67px;
   border-radius: 13px;
-  padding: 10px 20 px;
+  padding: 10px 20px;
   margin: 13px auto;
   display: flex;
   align-items: center;
@@ -113,24 +125,11 @@ button {
   color: white;
   padding: 10px 20px;
   border: none;
-  border-radius: 4px;
   cursor: pointer;
   font-size: 16px;
   margin-top: 39px;
   font-size: 20px;
   font-weight: bold;
-  border-radius: 13px;
-}
-
-.background-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("E:\Materi\TA\Website\salmanitb\src\assets\background.jpg");
-  background-size: cover;
-  z-index: -1;
 }
 
 h2 {
