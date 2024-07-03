@@ -2,6 +2,8 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/subpage/LoginView.vue";
+
+// subpage
 import RegisterView from "../views/subpage/RegisterView.vue";
 import LupaView from "../views/subpage/LupaView.vue";
 import InputView from "../views/subpage/InputView.vue";
@@ -9,8 +11,14 @@ import InputkpiView from "../views/subpage/InputkpiView.vue";
 import InputrkaView from "../views/subpage/InputrkaView.vue";
 import InputanggaranView from "../views/subpage/InputanggaranView.vue";
 import InputbulanView from "../views/subpage/InputbulanView.vue";
+import InputdeskripsiView from "../views/subpage/InputdeskripsiView.vue";
+import InputevaluasiView from "../views/subpage/InputevaluasiView.vue";
+import InputpenggunaView from "../views/subpage/InputpenggunaView.vue";
+import InputpenerimaView from "../views/subpage/InputpenerimaView.vue";
 
+// mainpage
 import ProfileView from "../views/mainpage/ProfileView.vue";
+import testView from "../views/mainpage/testV.vue";
 import KpiView from "../views/mainpage/KpiView.vue";
 import ProgramView from "../views/mainpage/ProgramView.vue";
 import RekapView from "../views/mainpage/RekapView.vue";
@@ -25,6 +33,11 @@ const routes = [
     path: "/",
     name: "login",
     component: LoginView,
+  },
+  {
+    path: "/test",
+    name: "testView",
+    component: testView,
   },
   {
     path: "/register",
@@ -50,6 +63,26 @@ const routes = [
     path: "/inputkpi",
     name: "inputkpi",
     component: InputkpiView,
+  },
+  {
+    path: "/inputdeskripsi",
+    name: "inputdeskripsi",
+    component: InputdeskripsiView,
+  },
+  {
+    path: "/inputevaluasi",
+    name: "inputevaluasi",
+    component: InputevaluasiView,
+  },
+  {
+    path: "/inputpengguna",
+    name: "inputpengguna",
+    component: InputpenggunaView,
+  },
+  {
+    path: "/inputpenerima",
+    name: "inputpenerima",
+    component: InputpenerimaView,
   },
   {
     path: "/inputrka",
@@ -110,10 +143,6 @@ const routes = [
     // which is lazy-loaded when the route is visited.
     component: () =>
       import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
-  },
-  {
-    path: '/:catchAll(.*)*',
-    component: () => import('../views/ErrorNotFound.vue'),
   },
 ];
 
