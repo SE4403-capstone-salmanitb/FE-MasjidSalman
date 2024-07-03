@@ -9,7 +9,7 @@
         <div class="container text-center">
           <div class="row">
             <div class="teks">Program</div>
-            <div class="dropdown">
+            <div class="dropdown1">
               <b-dropdown
                 id="dropdown-1"
                 class="m-md-2"
@@ -20,17 +20,14 @@
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
-                  v-for="(option, index) in options"
+                  v-for="(option, index) in programOptions"
                   :key="index"
                 >
-                  {{ option }}
+                  {{ option.nama }}
                 </b-dropdown-item>
               </b-dropdown>
             </div>
             <div class="tombol">
-              <button type="button" class="btn">
-                Filter<b-icon-funnel-fill></b-icon-funnel-fill>
-              </button>
               <div class="print">
                 <button type="button" class="btn">
                   <b-icon-printer-fill
@@ -39,151 +36,129 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="pilihan">
-          <button
-            type="button"
-            class="btn penjelasan-btn"
-            :class="{ active: isPenjelasanActive }"
-            @click="toggleActive('penjelasan')"
-          >
-            Penjelasan
-          </button>
-          <button
-            type="button"
-            class="btn resume-btn"
-            :class="{ active: isResumeActive }"
-            @click="toggleActive('resume')"
-          >
-            Resume
-          </button>
-        </div>
-        <div class="box-text">
-          <p class="text-area">{{ selectedOption }}</p>
-          <div class="additional-text">
-            <p class="total">Nilai Total : Rp</p>
-            <p class="nilai">100.000.000</p>
-            <div class="container-box">
-              <button type="button" class="btn" @click="goToInputPage">
-                <b-icon-plus></b-icon-plus>
+            <div class="tahun">Tahun</div>
+            <div class="tahun1">
+              <div class="dropdown1">
+                <select
+                  v-model="selectedYear"
+                  class="m-md-2"
+                  style="width: 90px; height: 38px"
+                >
+                  <option v-for="year in years" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+            </div>
+            <div class="pilihan">
+              <button
+                type="button"
+                class="btn penjelasan-btn"
+                :class="{ active: isPenjelasanActive }"
+                @click="toggleActive('penjelasan')"
+              >
+                Penjelasan
               </button>
+              <button
+                type="button"
+                class="btn resume-btn"
+                :class="{ active: isResumeActive }"
+                @click="toggleActive('resume')"
+              >
+                Resume
+              </button>
+            </div>
+            <div class="text-box">
+              <p class="text-area">{{ selectedOption }}</p>
+              <div class="additional-text">
+                <p class="total">Nilai Total :</p>
+                <p class="nilai">{{ formatCurrency(totalNilai) }}</p>
+                <div class="container-box">
+                  <button type="button" class="btn" @click="goToInputPage">
+                    <b-icon-plus></b-icon-plus>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <div class="tabel-container1">
-          <table class="tabel" v-if="!showResumeTable">
+        <div class="table-container1" v-if="isPenjelasanActive">
+          <table class="tabel">
             <thead>
               <tr>
-                <th style="width: 40px">No.</th>
-                <!-- Set lebar kolom No. -->
-                <th>Program-Kegiatan</th>
-                <th>Deskripsi Singkat</th>
-                <th>Output/Keluaran</th>
-                <th>Nominal Anggaran</th>
-                <th style="text-align: center"></th>
+                <th style="width: 40px; font-weight: bold">No.</th>
+                <th style="width: 160px; font-weight: bold">
+                  Program-Kegiatan
+                </th>
+                <th style="width: 250px; font-weight: bold">
+                  Deskripsi Singkat
+                </th>
+                <th style="width: 250px; font-weight: bold">Output/Keluaran</th>
+                <th style="width: 275px; font-weight: bold">
+                  Nominal Anggaran
+                </th>
+                <th style="width: 50px; text-align: center"></th>
               </tr>
             </thead>
             <tbody>
-              <template
-                v-if="
-                  programAnggaranByOption &&
-                  programAnggaranByOption.length === 0
-                "
-              >
-                <tr>
-                  <td colspan="6" class="text-center">Data masih kosong</td>
-                </tr>
-              </template>
-              <template v-else>
-                <!-- Isi tabel dapat diperoleh dari data program yang dipilih -->
-                <tr
-                  v-for="(program, index) in programAnggaranByOption"
-                  :key="index"
-                >
-                  <td>{{ program.no }}</td>
-                  <td>
-                    <template v-if="!program.isEditing">{{
-                      program.program
-                    }}</template>
-                    <input type="text" v-model="program.program" v-else />
-                  </td>
-                  <td>
-                    <template v-if="!program.isEditing">{{
-                      program.deskripsi
-                    }}</template>
-                    <input type="text" v-model="program.deskripsi" v-else />
-                  </td>
-                  <td>
-                    <template v-if="!program.isEditing">{{
-                      program.output
-                    }}</template>
-                    <input type="text" v-model="program.output" v-else />
-                  </td>
-                  <td>
-                    <template v-if="!program.isEditing">{{
-                      program.anggaran
-                    }}</template>
-                    <input type="text" v-model="program.anggaran" v-else />
-                  </td>
-                  <td style="text-align: center">
-                    <!-- Tombol Edit -->
-                    <button
-                      type="button"
-                      class="edit-btn"
-                      @click="editProgram(program)"
-                    >
-                      <b-icon
-                        :icon="
-                          program.isEditing ? 'save-fill' : 'pencil-square'
-                        "
-                      ></b-icon>
-                    </button>
-                  </td>
-                </tr>
-              </template>
+              <tr v-for="item in filteredData" :key="item.id">
+                <td>{{ item.id }}</td>
+                <td>{{ item.nama }}</td>
+                <td>{{ item.deskripsi }}</td>
+                <td>{{ item.output }}</td>
+                <td>{{ formatCurrency(item.total_anggaran) }}</td>
+                <td style="text-align: center">
+                  <button
+                    type="button"
+                    class="edit-btn"
+                    @click="editProgram(item)"
+                  >
+                    <b-icon
+                      :icon="item.isEditing ? 'save-fill' : 'pencil-square'"
+                    ></b-icon>
+                  </button>
+                </td>
+              </tr>
             </tbody>
           </table>
-
-          <table class="tabel resume-table" v-else>
+        </div>
+        <div class="table-container1" v-if="isResumeActive">
+          <table class="tabel">
             <thead>
               <tr>
-                <th>No.</th>
-                <th>Program-Kegiatan</th>
-                <th>Pusat</th>
-                <th>RAS</th>
-                <th>Kepesertaan</th>
-                <th>Pihak Ketiga</th>
-                <th>Wakaf Salman</th>
-                <th>Total Anggaran</th>
+                <th style="font-weight: bold; width: 40px">No.</th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Program-Kegiatan
+                </th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Pusat
+                </th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">RAS</th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Kepesertaan
+                </th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Pihak Ketiga
+                </th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Wakaf Salman
+                </th>
+                <th style="font-weight: bold; width: calc((100%) / 7)">
+                  Total Anggaran
+                </th>
               </tr>
             </thead>
             <tbody>
-              <template
-                v-if="
-                  programResumeByOption && programResumeByOption.length === 0
-                "
-              >
-                <tr>
-                  <td colspan="8" class="text-center">Data masih kosong</td>
-                </tr>
-              </template>
-              <template v-else>
-                <!-- Isi tabel saat tombol "Resume" diklik -->
-                <tr
-                  v-for="(program, index) in programResumeByOption"
-                  :key="index"
-                >
-                  <td>{{ program.no }}</td>
-                  <td>{{ program.program }}</td>
-                  <td>{{ program.pusat }}</td>
-                  <td>{{ program.ras }}</td>
-                  <td>{{ program.kepesertaan }}</td>
-                  <td>{{ program.pihakKetiga }}</td>
-                  <td>{{ program.wakafSalman }}</td>
-                  <td>{{ program.totalAnggaran }}</td>
-                </tr>
-              </template>
+              <tr v-for="item in filteredData" :key="item.id">
+                <td>{{ item.id }}</td>
+                <td>{{ item.nama }}</td>
+                <td>{{ formatCurrency(item.dana_pusat) }}</td>
+                <td>{{ formatCurrency(item.ras) }}</td>
+                <td>{{ formatCurrency(item.kepesertaan) }}</td>
+                <td>{{ formatCurrency(item.pihak_ketiga) }}</td>
+                <td>{{ formatCurrency(item.wakaf_salman) }}</td>
+                <td>{{ formatCurrency(item.total_anggaran) }}</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -194,299 +169,177 @@
 
 <script>
 import Sidebar from "@/components/SidebarView.vue";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 export default {
+  components: {
+    Sidebar,
+  },
   data() {
     return {
-      showResumeTable: false,
-      // programResume: {
-      //   "PROGRAM KEPUSTAKAAN": [
-      //     {
-      //       no: 1,
-      //       program: "Pembangunan Perpustakaan",
-      //       pusat: 50000000, // Rp 50.000.000
-      //       ras: 10000000, // Rp 10.000.000
-      //       kepesertaan: 25000000, // Rp 25.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 15000000, // Rp 15.000.000
-      //       totalAnggaran: 500000000, // Rp 500.000.000
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "Peningkatan Literasi",
-      //       pusat: 30000000, // Rp 30.000.000
-      //       ras: 0, // Rp 0
-      //       kepesertaan: 80000000, // Rp 80.000.000
-      //       pihakKetiga: 50000000, // Rp 50.000.000
-      //       wakafSalman: 0, // Rp 0
-      //       totalAnggaran: 300000000, // Rp 300.000.000
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "Kampanye Lingkungan",
-      //       pusat: 20000000, // Rp 20.000.000
-      //       ras: 50000000, // Rp 50.000.000
-      //       kepesertaan: 40000000, // Rp 40.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 20000000, // Rp 20.000.000
-      //       totalAnggaran: 200000000, // Rp 200.000.000
-      //     },
-      //   ],
-      //   "PROGRAM INTELEKTUALITAS": [
-      //     // Data untuk opsi "PROGRAM INTELEKTUALITAS"
-      //     {
-      //       no: 1,
-      //       program: "c",
-      //       pusat: 50000000, // Rp 50.000.000
-      //       ras: 10000000, // Rp 10.000.000
-      //       kepesertaan: 25000000, // Rp 25.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 15000000, // Rp 15.000.000
-      //       totalAnggaran: 500000000, // Rp 500.000.000
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "b",
-      //       pusat: 30000000, // Rp 30.000.000
-      //       ras: 0, // Rp 0
-      //       kepesertaan: 80000000, // Rp 80.000.000
-      //       pihakKetiga: 50000000, // Rp 50.000.000
-      //       wakafSalman: 0, // Rp 0
-      //       totalAnggaran: 300000000, // Rp 300.000.000
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "a",
-      //       pusat: 20000000, // Rp 20.000.000
-      //       ras: 50000000, // Rp 50.000.000
-      //       kepesertaan: 40000000, // Rp 40.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 20000000, // Rp 20.000.000
-      //       totalAnggaran: 200000000, // Rp 200.000.000
-      //     },
-      //   ],
-      //   "PROGRAM EKOLITERASI": [
-      //     // Data untuk opsi "PROGRAM EKOLITERASI"
-      //     {
-      //       no: 1,
-      //       program: "diac",
-      //       pusat: 50000000, // Rp 50.000.000
-      //       ras: 10000000, // Rp 10.000.000
-      //       kepesertaan: 25000000, // Rp 25.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 15000000, // Rp 15.000.000
-      //       totalAnggaran: 500000000, // Rp 500.000.000
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "aku",
-      //       pusat: 30000000, // Rp 30.000.000
-      //       ras: 0, // Rp 0
-      //       kepesertaan: 80000000, // Rp 80.000.000
-      //       pihakKetiga: 50000000, // Rp 50.000.000
-      //       wakafSalman: 0, // Rp 0
-      //       totalAnggaran: 300000000, // Rp 300.000.000
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "kamu",
-      //       pusat: 20000000, // Rp 20.000.000
-      //       ras: 50000000, // Rp 50.000.000
-      //       kepesertaan: 40000000, // Rp 40.000.000
-      //       pihakKetiga: 0, // Rp 0
-      //       wakafSalman: 20000000, // Rp 20.000.000
-      //       totalAnggaran: 200000000, // Rp 200.000.000
-      //     },
-      //   ],
-      //   "SUPPORTING SYSTEM": [
-      //     // Data untuk opsi "SUPPORTING SYSTEM"
-      //   ],
-      // },
-
-      // programAnggaran: {
-      //   "PROGRAM KEPUSTAKAAN": [
-      //     {
-      //       no: 1,
-      //       program: "Pembangunan Perpustakaan",
-      //       deskripsi: "Membangun perpustakaan di setiap desa",
-      //       output: "Jumlah perpustakaan yang dibangun",
-      //       anggaran: "500.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "Peningkatan Literasi",
-      //       deskripsi: "Melakukan pelatihan literasi untuk masyarakat",
-      //       output: "Jumlah peserta pelatihan",
-      //       anggaran: "300.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "Kampanye Lingkungan",
-      //       deskripsi: "Mengadakan kampanye tentang pentingnya lingkungan",
-      //       output: "Jumlah orang yang terlibat dalam kampanye",
-      //       anggaran: "200.000.000",
-      //       isEditing: false,
-      //     },
-      //   ],
-      //   "PROGRAM INTELEKTUALITAS": [
-      //     // Data untuk opsi "PROGRAM INTELEKTUALITAS"
-      //     {
-      //       no: 1,
-      //       program: "c",
-      //       deskripsi: "Membangun perpustakaan di setiap desa",
-      //       output: "Jumlah perpustakaan yang dibangun",
-      //       anggaran: "500.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "b",
-      //       deskripsi: "Melakukan pelatihan literasi untuk masyarakat",
-      //       output: "Jumlah peserta pelatihan",
-      //       anggaran: "300.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "a",
-      //       deskripsi: "Mengadakan kampanye tentang pentingnya lingkungan",
-      //       output: "Jumlah orang yang terlibat dalam kampanye",
-      //       anggaran: "200.000.000",
-      //       isEditing: false,
-      //     },
-      //   ],
-      //   "PROGRAM EKOLITERASI": [
-      //     // Data untuk opsi "PROGRAM EKOLITERASI"
-      //     {
-      //       no: 1,
-      //       program: "dia",
-      //       deskripsi: "Membangun perpustakaan di setiap desa",
-      //       output: "Jumlah perpustakaan yang dibangun",
-      //       anggaran: "500.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 2,
-      //       program: "kamu",
-      //       deskripsi: "Melakukan pelatihan literasi untuk masyarakat",
-      //       output: "Jumlah peserta pelatihan",
-      //       anggaran: "300.000.000",
-      //       isEditing: false,
-      //     },
-      //     {
-      //       no: 3,
-      //       program: "aku",
-      //       deskripsi: "Mengadakan kampanye tentang pentingnya lingkungan",
-      //       output: "Jumlah orang yang terlibat dalam kampanye",
-      //       anggaran: "200.000.000",
-      //       isEditing: false,
-      //     },
-      //   ],
-      //   "SUPPORTING SYSTEM": [
-      //     // Data untuk opsi "SUPPORTING SYSTEM"
-      //   ],
-      // },
-      programResume: [],
-      programAnggaran: [],
-      options: [
-        "PROGRAM KEPUSTAKAAN",
-        "PROGRAM INTELEKTUALITAS",
-        "PROGRAM EKOLITERASI",
-        "SUPPORTING SYSTEM",
-      ],
+      data: [], // Initialize as empty array
+      programOptions: [],
+      rencanaAnggaranData: [], // Initialize as empty array
       selectedOptionIndex: null,
+      selectedYear: new Date().getFullYear(),
+      years: this.generateYears(),
       isPenjelasanActive: true,
       isResumeActive: false,
     };
   },
   computed: {
+    filteredData() {
+      let filtered = this.data;
+
+      if (this.selectedOptionIndex !== null) {
+        const selectedProgramId =
+          this.programOptions[this.selectedOptionIndex].id;
+        filtered = filtered.filter(
+          (item) => item.id_program === selectedProgramId
+        );
+      }
+
+      if (this.selectedYear !== null) {
+        filtered = filtered.filter((item) => item.tahun === this.selectedYear);
+      }
+
+      // Log to check the mapping
+      console.log("Filtered Data before mapping:", filtered);
+      console.log(
+        "Rencana Anggaran Data for mapping:",
+        this.rencanaAnggaranData
+      );
+
+      // Map rencana anggaran data to filtered data
+      filtered = filtered.map((item) => {
+        const rencanaItem = this.rencanaAnggaranData.find(
+          (ra) => ra.id === item.id
+        );
+        return {
+          ...item,
+          dana_pusat: rencanaItem ? rencanaItem.Dana_Pusat : "N/A",
+          ras: rencanaItem ? rencanaItem.Dana_RAS : "N/A",
+          kepesertaan: rencanaItem ? rencanaItem.Dana_Kepesertaan : "N/A",
+          pihak_ketiga: rencanaItem ? rencanaItem.Dana_Pihak_Ketiga : "N/A",
+          wakaf_salman: rencanaItem ? rencanaItem.Dana_Wakaf_Salman : "N/A",
+          total_anggaran: rencanaItem ? rencanaItem.Total_Dana : "N/A",
+        };
+      });
+
+      // Log to check the mapped data
+      console.log("Filtered Data after mapping:", filtered);
+
+      // Sort data by ID
+      return filtered.sort((a, b) => a.id - b.id);
+    },
     selectedOption() {
       return this.selectedOptionIndex !== null
-        ? this.options[this.selectedOptionIndex]
+        ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
     },
-    programAnggaranByOption() {
-      return this.programAnggaran[this.selectedOption];
-    },
-    programResumeByOption() {
-      return this.programResume[this.selectedOption];
+    totalNilai() {
+      // Calculate the total value of total_anggaran
+      return this.filteredData.reduce((sum, item) => {
+        // Ensure the value is a number and not 'N/A'
+        const totalAnggaran = parseFloat(item.total_anggaran);
+        return sum + (isNaN(totalAnggaran) ? 0 : totalAnggaran);
+      }, 0);
     },
   },
   mounted() {
-    // Panggil method untuk mendapatkan data program dari database
-    this.fetchProgramData();
+    this.fetchData();
+    this.fetchProgramOptions();
+    this.fetchRencanaAnggaranData();
   },
   methods: {
-    fetchProgramData() {
-      // Ganti URL dengan endpoint API yang sesuai
-      axios
-        .get("/api/program")
-        .then((response) => {
-          this.programAnggaran = response.data.programAnggaran;
-          this.programResume = response.data.programResume;
-        })
-        .catch((error) => {
-          console.error("Gagal mengambil data program:", error);
-        });
+    async fetchData() {
+      try {
+        const response = await axios.get("/api/programKegiatanRKA");
+        console.log("Response from API:", response.data); // Log the response from API for inspection
+        this.data = response.data.data; // Extract actual data from API response
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
     },
-    editProgram(program) {
-      // Toggle isEditing saat tombol edit diklik
-      program.isEditing = !program.isEditing;
-      // Simpan perubahan ke database
-      this.saveChanges(program);
-      // Lakukan sesuatu dengan program yang diedit
-      console.log("Editing program:", program);
+    async fetchProgramOptions() {
+      try {
+        const response = await axios.get("/api/program");
+        this.programOptions = response.data; // Assuming response.data is an array of program options
+      } catch (error) {
+        console.error("Error fetching program options:", error);
+      }
     },
-    saveChanges(program) {
-      // Simpan perubahan ke database
-      // Di sini Anda dapat menggunakan metode atau API yang sesuai untuk menyimpan perubahan ke database
-      // Misalnya, Anda dapat menggunakan Axios untuk membuat permintaan HTTP ke API Anda
-      // dengan payload yang berisi data yang diperbarui.
-      // Contoh:
-      axios
-        .put("/api/program/" + program.id, program)
-        .then((response) => {
-          console.log("Perubahan disimpan:", response.data);
-        })
-        .catch((error) => {
-          console.error("Gagal menyimpan perubahan:", error);
-        });
-    },
-    goToInputPage() {
-      // Mengarahkan ke halaman input
-      this.$router.push({ path: "/inputrka" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
+    async fetchRencanaAnggaranData() {
+      try {
+        const response = await axios.get("/api/custom/rencanaAnggaran");
+        console.log("Rencana Anggaran Data:", response.data); // Log the response data
+        this.rencanaAnggaranData = response.data; // Store the rencana anggaran data
+      } catch (error) {
+        console.error("Error fetching rencana anggaran data:", error);
+      }
     },
     selectOption(index) {
       this.selectedOptionIndex = index;
+    },
+    generateYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = currentYear; i >= currentYear - 3; i--) {
+        years.push(i);
+      }
+      return years;
+    },
+    goToInputPage() {
+      this.$router.push({ path: "/inputrka" });
     },
     toggleActive(button) {
       if (button === "penjelasan") {
         this.isPenjelasanActive = true;
         this.isResumeActive = false;
-        this.showResumeTable = false;
       } else {
         this.isPenjelasanActive = false;
         this.isResumeActive = true;
-        this.showResumeTable = true;
       }
     },
-  },
-  components: {
-    Sidebar,
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
+    },
+    editProgram(item) {
+      item.isEditing = !item.isEditing;
+      this.saveChanges(item);
+      console.log("Editing program:", item);
+    },
   },
 };
 </script>
 
 <style>
-.box-text {
+.dropdown {
+  width: auto; /* Atur lebar dropdown agar menyesuaikan dengan panjang teks */
+  min-width: 270px; /* Lebar minimum dropdown */
+}
+
+.dropdown1 .dropdown-menu {
+  width: 100%; /* Menyesuaikan lebar menu dropdown dengan lebar dropdown */
+  max-height: 300px; /* Atur tinggi maksimum dropdown jika terdapat banyak opsi */
+  overflow-y: auto; /* Aktifkan scroll jika terdapat banyak opsi */
+  font-size: 12px;
+}
+
+.dropdown .dropdown-menu .dropdown-item {
+  white-space: normal; /* Biarkan teks panjang memanjang */
+  font-size: 12px;
+}
+
+.text-box {
   height: 40px;
-  width: 1116px;
+  width: 1300px;
   background-color: #d9d9d9;
   margin-top: 21px; /* Jarak antara kotak dan teks */
-  margin-right: 30px;
+  margin-right: 15px;
   margin-left: 15px;
   display: flex;
   justify-content: space-between; /* Menempatkan elemen ke ujung kiri dan kanan */
@@ -539,6 +392,14 @@ export default {
   color: white;
   height: 31px;
   width: 31px;
+}
+
+.tabel {
+  margin-bottom: 10px;
+}
+
+.tabel th {
+  background-color: #f2f2f2;
 }
 
 .container-box .btn:hover {
@@ -594,12 +455,12 @@ export default {
   font-weight: bold;
 }
 
-.dropdown {
+.dropdown1 {
   margin-top: 14px;
   margin-bottom: 38px;
 }
 
-.dropdown .m-md-2 {
+.dropdown1 .m-md-2 {
   border: 1px solid black;
   background-color: white;
 }
@@ -612,6 +473,7 @@ export default {
 
 .tahun {
   margin-top: 30px;
+  margin-left: 15px;
   font-weight: bold;
 }
 
