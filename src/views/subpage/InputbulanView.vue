@@ -1,6 +1,44 @@
 <template>
   <div class="profile">
     <Sidebar />
+    <div v-if="isNotificationVisible" :class="notificationClass">
+      <div class="row">
+        <b-icon-check-circle
+          v-if="notificationType === 'success'"
+          style="
+            margin-right: 12px;
+            margin-left: 15px;
+            margin-top: 14px;
+            width: 30px;
+            height: 30px;
+          "
+        ></b-icon-check-circle>
+        <b-icon-exclamation-circle
+          v-if="notificationType === 'error'"
+          style="
+            margin-right: 12px;
+            margin-left: 15px;
+            margin-top: 14px;
+            width: 30px;
+            height: 30px;
+          "
+        ></b-icon-exclamation-circle>
+        <div class="notification-header">
+          <p class="notification-title">{{ notificationMessage }}</p>
+          <p class="notification-content">{{ notificationDetail }}</p>
+        </div>
+        <b-icon-x
+          @click="closeNotification"
+          style="
+            margin-left: 47px;
+            margin-right: 12px;
+            margin-top: 14px;
+            width: 30px;
+            height: 30px;
+          "
+        ></b-icon-x>
+      </div>
+    </div>
     <div class="card-container">
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
@@ -272,7 +310,7 @@
                 <button
                   type="button"
                   class="btn tambah-btn"
-                  v-on:click="()=>submitForm()"
+                  v-on:click="() => submitForm()"
                 >
                   Simpan
                 </button>
@@ -298,22 +336,43 @@ const submitForm = function () {
   axios
     .post("/api/itemKegiatanRKA", this.form, {
       headers: {
-        Authorization: 'Bearer ' + sessionStorage.getItem('bearer')
-      }
+        Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+      },
     })
-    .then((response) => {
-      console.log(response.data);
+    .then(() => {
       // Handle successful response, e.g., show success message
+      this.notificationMessage = "Berhasil";
+      this.notificationDetail = "Data berhasil di upload";
+      this.notificationType = "success";
+      this.isNotificationVisible = true;
+      setTimeout(() => {
+        this.notificationMessage = "";
+        this.notificationDetail = "";
+        this.notificationType = "";
+      }, 10000); // Reset notifikasi setelah 3 detik
+      // Redirect to RKA page after successful submission
+      window.location.href = "/rka";
     })
-    .catch((error) => {
-      console.error(error);
+    .catch(() => {
+      this.notificationMessage = "Gagal";
+      this.notificationDetail = "Gagal menginput data";
+      this.notificationType = "error";
+      this.isNotificationVisible = true;
       // Handle error, e.g., show error message
     });
-}
+};
+
+const closeNotification = function () {
+  this.isNotificationVisible = false;
+};
 
 export default {
   data() {
     return {
+      notificationMessage: "",
+      notificationDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
       form: {
         uraian: "",
         nilai_satuan: "",
@@ -346,10 +405,19 @@ export default {
   },
   methods: {
     submitForm,
-
+    closeNotification,
   },
   components: {
     Sidebar,
+  },
+  computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
   },
 };
 </script>
