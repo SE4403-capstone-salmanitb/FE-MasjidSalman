@@ -7,7 +7,6 @@ import LoginView from "../views/subpage/LoginView.vue";
 import RegisterView from "../views/subpage/RegisterView.vue";
 import LupaView from "../views/subpage/LupaView.vue";
 import InputView from "../views/subpage/InputView.vue";
-import InputkpiView from "../views/subpage/InputkpiView.vue";
 import InputrkaView from "../views/subpage/InputrkaView.vue";
 import InputanggaranView from "../views/subpage/InputanggaranView.vue";
 import InputbulanView from "../views/subpage/InputbulanView.vue";
@@ -60,11 +59,6 @@ const routes = [
     component: InputView,
   },
   {
-    path: "/inputkpi",
-    name: "inputkpi",
-    component: InputkpiView,
-  },
-  {
     path: "/inputdeskripsi",
     name: "inputdeskripsi",
     component: InputdeskripsiView,
@@ -104,6 +98,7 @@ const routes = [
     name: "persetujuan",
     component: PersetujuanView,
   },
+
   {
     path: "/profile",
     name: "profile",
