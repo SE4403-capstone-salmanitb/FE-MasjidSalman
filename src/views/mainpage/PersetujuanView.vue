@@ -55,27 +55,33 @@
                   </td>
                   <td
                     :class="{
-                      'verified-color': account.verification === 'Verified',
+                      'verified-color':
+                        account.verification === 'Terverifikasi',
                       'not-verified-color':
-                        account.verification === 'Not Verified',
+                        account.verification === 'Tidak Terverifikasi',
                     }"
                     style="text-align: center"
                   >
                     {{ account.verification }}
                   </td>
                   <td style="text-align: center; position: relative">
-                    <button
-                      type="button"
-                      style="border-style: none"
+                    <b-icon-three-dots-vertical
+                      style="color: black"
                       @click="toggleActions(index)"
+                    ></b-icon-three-dots-vertical>
+
+                    <div
+                      v-if="activeRow === index"
+                      class="actions-dropdown"
+                      style="width: max-content"
                     >
-                      <b-icon-three-dots-vertical></b-icon-three-dots-vertical>
-                    </button>
-                    <div v-if="activeRow === index" class="actions-dropdown">
-                      <button @click="deleteUser(account, index)">
+                      <button
+                        @click="deleteUser(account, index)"
+                        style="color: black"
+                      >
                         Delete
                       </button>
-                      <button @click="selectUser(account)">
+                      <button @click="selectUser(account)" style="color: black">
                         Jadikan Pengguna
                       </button>
                     </div>
@@ -84,6 +90,16 @@
               </template>
             </tbody>
           </table>
+        </div>
+        <div class="tombol1">
+          <button
+            type="button"
+            class="btn"
+            style="margin-bottom: 210px; margin-right: 14px"
+            @click="showRegisterPopup"
+          >
+            Tambah
+          </button>
         </div>
       </div>
     </div>
@@ -127,6 +143,131 @@
         </div>
       </div>
     </div>
+    <!-- Pop-up Register -->
+    <div v-if="showPopup" class="popup-overlay">
+      <div class="kartu-login">
+        <b-icon-x
+          style="width: 30px; height: 30px; margin-left: 550px"
+          @click="closePopup"
+        ></b-icon-x>
+        <p class="regist">Registrasi</p>
+
+        <div class="inputan">
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="Username"
+            autocomplete="username"
+            required
+          />
+        </div>
+        <div class="inputan">
+          <input
+            v-model="form.password"
+            :type="showPassword ? 'text' : 'password'"
+            id="password"
+            placeholder="Enter your password"
+            required
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div class="inputan">
+          <input
+            v-model="form.password_confirmation"
+            :type="showPassword ? 'text' : 'password'"
+            id="password_confirmation"
+            placeholder="Re-Enter your password"
+            required
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div class="inputan">
+          <input
+            v-model="form.email"
+            type="email"
+            id="email"
+            placeholder="Email"
+            required
+          />
+        </div>
+        <div
+          class="tombol-submit"
+          type="submit"
+          @click="store"
+          style="margin-bottom: 80px"
+        >
+          Daftarkan
+        </div>
+      </div>
+    </div>
+    <!-- Pop-up Verification Link Sent -->
+    <div v-if="showVerificationPopup" class="popup-overlay">
+      <div class="verification-card">
+        <b-icon-check-circle-fill
+          style="color: #4caf50; width: 126px; height: 126px"
+        ></b-icon-check-circle-fill>
+        <p style="font-size: 32px; font-weight: bold">
+          Link verifikasi telah dikirimkan ke email kamu.
+        </p>
+        <p style="font-size: 18px">
+          Segera cek email dan klik tombol "Verifikasi Email" agar bisa
+          melanjutkan proses pendaftaran Kartu prakerja.
+        </p>
+        <div class="verification-buttons">
+          <button
+            @click="resendVerificationLink"
+            style="
+              width: 259px;
+              height: 47px;
+              background-color: #967c55;
+              color: white;
+              font-size: 16px;
+              font-weight: bolder;
+              border-radius: 8px;
+              margin-bottom: 10px;
+            "
+          >
+            Kirim Ulang Link
+          </button>
+        </div>
+        <div class="verification-buttons">
+          <button
+            @click="closePopup"
+            style="
+              width: 259px;
+              height: 47px;
+              background-color: #967c55;
+              color: white;
+              font-size: 16px;
+              font-weight: bolder;
+              border-radius: 8px;
+            "
+          >
+            Kembali
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -141,6 +282,15 @@ export default {
       itemsPerPage: 5, // Default jumlah item per halaman
       activeRow: null, // To track which row's actions dropdown is open
       confirmDelete: null, // Untuk melacak pengguna yang akan dihapus
+      showPopup: false, // Untuk menampilkan pop-up register
+      showVerificationPopup: false, // Untuk menampilkan pop-up verifikasi
+      form: {
+        name: "",
+        password: "",
+        password_confirmation: "",
+        email: "",
+      },
+      showPassword: false, // Untuk toggle visibilitas password
     };
   },
 
@@ -190,11 +340,51 @@ export default {
           this.dataAkun = response.data.map((account) => ({
             ...account,
             tipe_user: account.is_admin === 1 ? "Admin" : "Pengguna",
+            verification: account.email_verified_at
+              ? "Terverifikasi"
+              : "Tidak Terverifikasi",
           }));
         })
         .catch((error) => {
           console.error("Error fetching data:", error);
         });
+    },
+    showRegisterPopup() {
+      this.showPopup = true;
+    },
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
+    closePopup() {
+      this.showPopup = false;
+    },
+    store() {
+      // Implementasi untuk menyimpan data register baru
+      axios
+        .post("/register", this.form, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then((response) => {
+          console.log("User registered successfully:", response.data);
+          this.showPopup = false; // Tutup pop-up setelah submit
+          this.showVerificationPopup = true; // Tampilkan pop-up verifikasi
+          // Optionally, refresh the account list or update the state
+          this.fetchDataFromApi();
+        })
+        .catch((error) => {
+          if (error.response) {
+            console.log("Error registering user:", error.response.data);
+          } else {
+            console.log("Error registering user:", error.message);
+          }
+        });
+    },
+    resendVerificationLink() {
+      // Implementasi untuk mengirim ulang link verifikasi
+      console.log("Resending verification link to:", this.form.email);
+      // Implementasikan logika kirim ulang link di sini, misalnya memanggil API
     },
   },
 
@@ -206,6 +396,77 @@ export default {
 </script>
 
 <style>
+.verification-card {
+  width: 850px;
+  height: 500px;
+  background-color: white;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+  align-content: center;
+  align-items: center;
+}
+
+.regist {
+  font-weight: bold;
+  margin-top: 80px;
+
+  font-size: 32px;
+}
+
+.inputan {
+  padding: 10px 20px;
+  margin-bottom: 18px;
+  width: 532px;
+  height: 67px;
+  border-radius: 13px;
+  background-color: #f5f5f5;
+  display: flex;
+}
+
+.inputan input {
+  background-color: #f5f5f5;
+  border-style: none;
+}
+
+.tombol-submit {
+  width: 532px;
+  height: 67px;
+  background-color: #967c55;
+  border-radius: 13px;
+  align-content: center;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+.profile {
+  position: relative;
+}
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.kartu-login {
+  background-color: white;
+  padding: 20px;
+  width: 630px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
 .confirmation-popup {
   position: fixed;
   top: 0;

@@ -27,14 +27,12 @@
                 </b-dropdown-item>
               </b-dropdown>
             </div>
-            <div class="tombol">
-              <div class="print">
-                <button type="button" class="btn">
-                  <b-icon-printer-fill
-                    style="width: 20px; height: 20px"
-                  ></b-icon-printer-fill>
-                </button>
-              </div>
+            <div class="print-tombol">
+              <button type="button" class="print-icon" @click="downloadExcel">
+                <b-icon-file-earmark-spreadsheet-fill
+                  style="width: 20px; height: 20px"
+                ></b-icon-file-earmark-spreadsheet-fill>
+              </button>
             </div>
             <div class="tahun">Tahun</div>
             <div class="tahun1">
@@ -43,7 +41,6 @@
                   v-model="selectedYear"
                   class="m-md-2"
                   style="width: 90px; height: 38px"
-                  @change="fetchRKAKPI"
                 >
                   <option v-for="year in years" :key="year" :value="year">
                     {{ year }}
@@ -66,27 +63,67 @@
               <table class="table table-fixed-width">
                 <thead>
                   <tr>
-                    <th style="width: 45px">No</th>
-                    <th style="width: 185px">Nama Program - Kegiatan</th>
-                    <th style="width: 396px">Indikator</th>
-                    <th style="width: 504px">Target</th>
+                    <th>No</th>
+                    <th>Nama Kegiatan</th>
+                    <th>Indikator</th>
+                    <th>Target</th>
                     <th style="text-align: center"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="(item, index) in processedDataRKAKPI"
-                    :key="generateUniqueKey(item, index)"
-                  >
-                    <td>{{ item.displayNumber ? item.overallCounter : "" }}</td>
-                    <td>{{ item.nama }}</td>
-                    <td>{{ item.indikator }}</td>
-                    <td>{{ item.target }}</td>
+                  <tr v-for="item in filteredData" :key="item.id">
+                    <td>{{ item.program.displayId || "" }}</td>
+                    <td>
+                      <div v-if="item.isEditing">
+                        <input
+                          type="text"
+                          v-model="item.program.nama"
+                          class="form-control"
+                          :disabled="
+                            item.indikator === 'tidak ada data' &&
+                            item.target === 'tidak ada data'
+                          "
+                        />
+                      </div>
+                      <div v-else>
+                        {{ item.program.displayNama || "" }}
+                      </div>
+                    </td>
+                    <td>
+                      <div v-if="item.isEditing">
+                        <input
+                          type="text"
+                          v-model="item.indikator"
+                          class="form-control"
+                          :disabled="item.indikator === 'tidak ada data'"
+                        />
+                      </div>
+                      <div v-else>
+                        {{ item.indikator }}
+                      </div>
+                    </td>
+                    <td>
+                      <div v-if="item.isEditing">
+                        <input
+                          type="text"
+                          v-model="item.target"
+                          class="form-control"
+                          :disabled="item.target === 'tidak ada data'"
+                        />
+                      </div>
+                      <div v-else>
+                        {{ item.target }}
+                      </div>
+                    </td>
                     <td style="text-align: center">
                       <button
                         type="button"
                         class="edit-btn"
-                        @click="editProgram(item)"
+                        @click="toggleEdit(item)"
+                        :disabled="
+                          item.indikator === 'tidak ada data' &&
+                          item.target === 'tidak ada data'
+                        "
                       >
                         <b-icon
                           :icon="item.isEditing ? 'save-fill' : 'pencil-square'"
@@ -97,7 +134,6 @@
                 </tbody>
               </table>
             </div>
-            <!-- Akhir dari elemen tabel -->
           </div>
         </div>
       </div>
@@ -108,6 +144,7 @@
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
+import * as XLSX from "xlsx";
 
 export default {
   components: {
@@ -120,7 +157,9 @@ export default {
       selectedProgramId: null,
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
-      dataRKAKPI: [],
+      indicators: [],
+      programs: [],
+      mergedData: [],
     };
   },
   computed: {
@@ -129,46 +168,14 @@ export default {
         ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
     },
-    processedDataRKAKPI() {
-      let previousProgramName = null;
-      let indicatorCounter = 1;
-      let overallCounter = 1;
-      return this.dataRKAKPI.map((item, index) => {
-        let displayNumber = false;
-        if (index === 0 || item.nama !== previousProgramName) {
-          previousProgramName = item.nama;
-          displayNumber = true;
-          indicatorCounter = overallCounter; // Set indicatorCounter to the overall counter
-          overallCounter++; // Increment the overall counter for each unique program name
-        } else {
-          item = { ...item, nama: "" };
-        }
-        const processedItem = {
-          ...item,
-          indicatorCounter,
-          displayNumber,
-          overallCounter: displayNumber ? indicatorCounter : overallCounter - 1,
-        };
-        if (displayNumber) indicatorCounter++;
-        return processedItem;
-      });
-    },
-  },
-  mounted() {
-    this.fetchProgramOptions().then(() => {
-      if (this.programOptions.length > 0) {
-        this.selectedOptionIndex = 0;
-        this.selectedProgramId = this.programOptions[0].id;
-        this.fetchRKAKPI();
-      }
-    });
-  },
-  watch: {
-    selectedOptionIndex(newIndex) {
-      if (newIndex !== null) {
-        this.selectedProgramId = this.programOptions[newIndex].id;
-        this.fetchRKAKPI();
-      }
+    filteredData() {
+      return this.mergedData.filter(
+        (item) =>
+          (this.selectedOptionIndex === null ||
+            item.program.id_program ===
+              this.programOptions[this.selectedOptionIndex].id) &&
+          item.program.tahun === this.selectedYear
+      );
     },
   },
   methods: {
@@ -180,44 +187,131 @@ export default {
         console.error("Error fetching program options:", error);
       }
     },
-    async fetchRKAKPI() {
-      try {
-        const rkakpiResponse = await axios.get("/api/custom/RKAKPI", {
-          params: {
-            id_program: this.selectedProgramId,
-            year: this.selectedYear,
-          },
+    fetchIndicators() {
+      axios
+        .get("/api/keyPerformanceIndicator")
+        .then((response) => {
+          this.indicators = response.data.map((item) => ({
+            ...item,
+            isEditing: false,
+          }));
+          console.log("KPI DATA:", this.indicators);
+          this.fetchPrograms(); // Fetch programs after indicators
+        })
+        .catch((error) => {
+          console.error("Error fetching indicators:", error);
         });
-        const kpiResponse = await axios.get("/api/keyPerformanceIndicator", {
-          params: {
-            year: this.selectedYear,
-          },
+    },
+    fetchPrograms() {
+      axios
+        .get("/api/programKegiatanKPI")
+        .then((response) => {
+          this.programs = response.data;
+          console.log("Program DATA:", this.programs);
+          this.mergeData(); // Merge data after fetching programs
+        })
+        .catch((error) => {
+          console.error("Error fetching programs:", error);
         });
+    },
+    mergeData() {
+      // Map indicators with corresponding programs
+      let mergedData = this.indicators.map((indicator) => {
+        const program = this.programs.find(
+          (p) => p.id === indicator.id_program_kegiatan_kpi
+        );
+        return {
+          ...indicator,
+          program: program
+            ? program
+            : {
+                id: "Unknown",
+                nama: "Unknown",
+                tahun: "Unknown",
+                id_program: "Unknown",
+              },
+        };
+      });
 
-        const rkakpiData = rkakpiResponse.data;
-        const kpiData = kpiResponse.data.data;
+      // Add programs that do not have corresponding indicators
+      this.programs.forEach((program) => {
+        const indicatorExists = mergedData.some(
+          (item) => item.program.id === program.id
+        );
+        if (!indicatorExists) {
+          mergedData.push({
+            id: null,
+            indikator: "tidak ada data",
+            target: "tidak ada data",
+            program: {
+              ...program,
+            },
+          });
+        }
+      });
 
-        this.dataRKAKPI = rkakpiData.flatMap((rkakpiItem) => {
-          const matchingKPIItems = kpiData.filter(
-            (kpi) => kpi.id_program_kegiatan_kpi === rkakpiItem.id
-          );
-          return matchingKPIItems.length > 0
-            ? matchingKPIItems.map((kpiItem) => ({
-                ...rkakpiItem,
-                indikator: kpiItem.indikator,
-                target: kpiItem.target,
-              }))
-            : [
-                {
-                  ...rkakpiItem,
-                  indikator: "N/A",
-                  target: "N/A",
-                },
-              ];
-        });
-      } catch (error) {
-        console.error("Error fetching RKAKPI or KPI data:", error);
+      // Move item with id 1 to the top
+      mergedData = mergedData.sort((a, b) => {
+        if (a.program.id === 1) return -1;
+        if (b.program.id === 1) return 1;
+        return a.program.id - b.program.id;
+      });
+
+      // Blank out duplicate "Nama Kegiatan" and "No"
+      let seenIds = new Set();
+      let seenNames = new Set();
+      mergedData = mergedData.map((item) => {
+        const displayId = seenIds.has(item.program.id) ? "" : item.program.id;
+        const displayNama = seenNames.has(item.program.nama)
+          ? ""
+          : item.program.nama;
+        seenIds.add(item.program.id);
+        seenNames.add(item.program.nama);
+
+        return {
+          ...item,
+          program: {
+            ...item.program,
+            displayId,
+            displayNama,
+          },
+        };
+      });
+
+      this.mergedData = mergedData;
+    },
+
+    toggleEdit(item) {
+      if (item.isEditing) {
+        this.saveIndicator(item);
+        this.saveProgram(item.program);
       }
+      item.isEditing = !item.isEditing;
+    },
+    saveIndicator(item) {
+      axios
+        .put(`/api/keyPerformanceIndicator/${item.id}`, {
+          indikator: item.indikator,
+          target: item.target,
+        })
+        .then((response) => {
+          console.log("Indicator saved:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error saving indicator:", error);
+        });
+    },
+    saveProgram(program) {
+      axios
+        .put(`/api/programKegiatanKPI/${program.id}`, {
+          nama: program.nama,
+        })
+        .then((response) => {
+          console.log("Program saved:", response.data);
+        })
+        .catch((error) => {
+          console.error("Error saving program:", error);
+        });
     },
     selectOption(index) {
       this.selectedOptionIndex = index;
@@ -231,22 +325,49 @@ export default {
       return years;
     },
     goToInputPage() {
-      // Mengarahkan ke halaman input
-      this.$router.push({ path: "/input" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
+      this.$router.push({ path: "/input" });
     },
-    generateUniqueKey(item, index) {
-      return `${item.id}_${index}`;
+    downloadExcel() {
+      const kpiData = this.filteredData.map((item, index) => ({
+        No: index + 1,
+        "Nama Kegiatan": item.program.nama,
+        Indikator: item.indikator,
+        Target: item.target,
+      }));
+
+      const wb = XLSX.utils.book_new();
+      const kpiSheet = XLSX.utils.json_to_sheet(kpiData);
+
+      // Auto-fit columns for kpiSheet
+      const kpiCols = Object.keys(kpiData[0] || {}).map((key) => ({
+        wch: Math.max(
+          ...kpiData.map((item) =>
+            item[key] ? item[key].toString().length : 0
+          )
+        ),
+      }));
+      kpiSheet["!cols"] = kpiCols;
+
+      XLSX.utils.book_append_sheet(wb, kpiSheet, "KPI");
+
+      const fileName = `KPI_${this.selectedYear}.xlsx`;
+      XLSX.writeFile(wb, fileName);
     },
-    editProgram(item) {
-      item.isEditing = !item.isEditing;
-      this.saveChanges(item);
-      console.log("Editing program:", item);
-    },
+  },
+  mounted() {
+    this.fetchProgramOptions();
+    this.fetchIndicators();
   },
 };
 </script>
 
 <style>
+input {
+  width: 100%;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
 .dropdown {
   width: auto; /* Atur lebar dropdown agar menyesuaikan dengan panjang teks */
   min-width: 270px; /* Lebar minimum dropdown */

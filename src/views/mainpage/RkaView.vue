@@ -27,14 +27,12 @@
                 </b-dropdown-item>
               </b-dropdown>
             </div>
-            <div class="tombol">
-              <div class="print">
-                <button type="button" class="btn">
-                  <b-icon-printer-fill
-                    style="width: 20px; height: 20px"
-                  ></b-icon-printer-fill>
-                </button>
-              </div>
+            <div class="print-tombol">
+              <button type="button" class="print-icon" @click="downloadExcel">
+                <b-icon-file-earmark-spreadsheet-fill
+                  style="width: 20px; height: 20px"
+                ></b-icon-file-earmark-spreadsheet-fill>
+              </button>
             </div>
             <div class="tahun">Tahun</div>
             <div class="tahun1">
@@ -42,7 +40,6 @@
                 <select
                   v-model="selectedYear"
                   class="m-md-2"
-                  @change="filterCustomData"
                   style="width: 90px; height: 38px"
                 >
                   <option v-for="year in years" :key="year" :value="year">
@@ -70,14 +67,14 @@
               </button>
             </div>
             <div v-if="isBulanActive">
-              <div v-for="(data, index) in filteredCustomData" :key="index">
+              <div v-for="program in filteredProgramKegiatan" :key="program.id">
                 <div class="box-text" style="margin-bottom: 10px">
-                  <p class="text-area">
-                    {{ data.nama ? data.nama : "No data available" }}
-                  </p>
+                  <p class="text-area">{{ program.nama }}</p>
                   <div class="additional-text">
                     <p class="total">Nilai Total :</p>
-                    <p class="nilai">{{ calculateTotal([data]) }}</p>
+                    <p class="nilai">
+                      {{ formatCurrency(totalNilaiByProgramId(program.id)) }}
+                    </p>
                     <div class="container-box">
                       <button type="button" class="btn" @click="goToInputPage">
                         <b-icon-plus></b-icon-plus>
@@ -85,17 +82,13 @@
                     </div>
                   </div>
                 </div>
-                <template v-if="showKegiatanNama(data.id)">
+                <div>
                   <div
-                    v-for="(kegiatan, kegiatanIndex) in kegiatanNama[data.id]"
-                    :key="kegiatanIndex"
+                    v-for="judul in filteredJudulKegiatan(program.id)"
+                    :key="judul.id"
                   >
                     <p class="text-kebutuhan">
-                      {{
-                        kegiatan.nama
-                          ? kegiatan.nama
-                          : "Pengumpulan & Review Naskah"
-                      }}
+                      {{ judul.nama }}
                       <b-icon
                         icon="plus-square"
                         style="color: #967c55"
@@ -106,7 +99,7 @@
                       <table class="tabel">
                         <thead>
                           <tr>
-                            <th style="width: 40px; font-weight: bold">ID</th>
+                            <th style="width: 40px; font-weight: bold">No</th>
                             <th style="width: 154px; font-weight: bold">
                               Uraian
                             </th>
@@ -218,33 +211,230 @@
                             <!-- Tambahkan kolom lain sesuai dengan data yang ada -->
                           </tr>
                         </thead>
-                        <tbody
-                          v-if="getTableDataByJudul(kegiatan.id).length > 0"
-                        >
+                        <tbody>
+                          <tr v-if="filteredItems(judul.id).length === 0">
+                            <td colspan="16" class="text-center">
+                              Tidak ada data
+                            </td>
+                          </tr>
                           <tr
-                            v-for="item in getTableDataByJudul(kegiatan.id)"
+                            v-for="(item, index) in filteredItems(judul.id)"
                             :key="item.id"
                           >
-                            <td>{{ item.id }}</td>
-                            <td>{{ item.uraian }}</td>
-                            <td>{{ item.dana_jan }}</td>
-                            <td>{{ item.dana_feb }}</td>
-                            <td>{{ item.dana_mar }}</td>
-                            <td>{{ item.dana_apr }}</td>
-                            <td>{{ item.dana_mei }}</td>
-                            <td>{{ item.dana_jun }}</td>
-                            <td>{{ item.dana_jul }}</td>
-                            <td>{{ item.dana_aug }}</td>
-                            <td>{{ item.dana_sep }}</td>
-                            <td>{{ item.dana_oct }}</td>
-                            <td>{{ item.dana_nov }}</td>
-                            <td>{{ item.dana_dec }}</td>
-                            <td>{{ item.total }}</td>
+                            <td>{{ index + 1 }}</td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.uraian"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.uraian }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_jan"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_jan
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_feb"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_feb
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_mar"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_mar
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_apr"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_apr
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_mei"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_mei
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_jun"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_jun
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_jul"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_jul
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_aug"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_aug
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_sep"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_sep
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_oct"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_oct
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_nov"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_nov
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.dana_dec"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{
+                                  item.dana_dec
+                                    ? item.nilai_satuan * item.quantity
+                                    : 0
+                                }}
+                              </div>
+                            </td>
+
+                            <td>
+                              {{ calculateTotal(item) }}
+                            </td>
                             <td style="text-align: center">
                               <button
                                 type="button"
                                 class="edit-btn"
-                                @click="editProgram(item)"
+                                @click="toggleEdit(item)"
                               >
                                 <b-icon
                                   :icon="
@@ -255,32 +445,23 @@
                                 ></b-icon>
                               </button>
                             </td>
-                            <!-- Tambahkan data lain sesuai dengan kolom tabel -->
-                          </tr>
-                        </tbody>
-                        <tbody v-else>
-                          <tr>
-                            <td colspan="16" style="text-align: center">
-                              Tidak ada data
-                            </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </div>
-                </template>
+                </div>
               </div>
             </div>
             <div v-else>
-              <!-- Content for anggaran -->
-              <div v-for="(data, index) in filteredCustomData" :key="index">
-                <div class="box-text">
-                  <p class="text-area">
-                    {{ data.nama ? data.nama : "No data available" }}
-                  </p>
+              <div v-for="program in filteredProgramKegiatan" :key="program.id">
+                <div class="box-text" style="margin-bottom: 10px">
+                  <p class="text-area">{{ program.nama }}</p>
                   <div class="additional-text">
                     <p class="total">Nilai Total :</p>
-                    <p class="nilai">{{ calculateTotal([data]) }}</p>
+                    <p class="nilai">
+                      {{ formatCurrency(totalNilaiByProgramId(program.id)) }}
+                    </p>
                     <div class="container-box">
                       <button type="button" class="btn" @click="goToInputPage">
                         <b-icon-plus></b-icon-plus>
@@ -288,27 +469,24 @@
                     </div>
                   </div>
                 </div>
-                <template v-if="showKegiatanNama(data.id)">
+                <div>
                   <div
-                    v-for="(kegiatan, kegiatanIndex) in kegiatanNama[data.id]"
-                    :key="kegiatanIndex"
+                    v-for="judul in filteredJudulKegiatan(program.id)"
+                    :key="judul.id"
                   >
                     <p class="text-kebutuhan">
-                      {{
-                        kegiatan.nama
-                          ? kegiatan.nama
-                          : "Pengumpulan & Review Naskah"
-                      }}
+                      {{ judul.nama }}
                       <b-icon
                         icon="plus-square"
                         style="color: #967c55"
+                        @click="goToInputBulan"
                       ></b-icon>
                     </p>
                     <div class="table-container1">
                       <table class="tabel">
                         <thead>
                           <tr>
-                            <th style="font-weight: bold; width: 40px">ID</th>
+                            <th style="font-weight: bold; width: 40px">No</th>
                             <th style="font-weight: bold; width: 225px">
                               Uraian
                             </th>
@@ -371,41 +549,121 @@
                             >
                               Sumber Dana
                             </th>
-                            <th
-                              style="
-                                font-weight: bold;
-                                width: calc((100% - 40px) / 12);
-                              "
-                            >
-                              Keterangan
-                            </th>
                             <th style="width: 50px"></th>
-                            <!-- Tambahkan kolom lain sesuai dengan data yang ada -->
                           </tr>
                         </thead>
-                        <tbody
-                          v-if="getTableDataByJudul(kegiatan.id).length > 0"
-                        >
+                        <tbody>
+                          <tr v-if="filteredItems(judul.id).length === 0">
+                            <td colspan="15" class="text-center">
+                              Tidak ada data
+                            </td>
+                          </tr>
                           <tr
-                            v-for="item in getTableDataByJudul(kegiatan.id)"
+                            v-for="(item, index) in filteredItems(judul.id)"
                             :key="item.id"
                           >
-                            <td>{{ item.id }}</td>
-                            <td>{{ item.uraian }}</td>
-                            <td>{{ formatCurrency(item.nilai_satuan) }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.quantity_unit }}</td>
-                            <td>{{ item.frequency }}</td>
-                            <td>{{ item.frequency_unit }}</td>
-                            <td>{{ item.vol }}</td>
-                            <td>{{ formatCurrency(item.nilai_total) }}</td>
-                            <td>{{ item.sumber_dana }}</td>
-                            <td></td>
+                            <td>{{ index + 1 }}</td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.uraian"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.uraian }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.nilai_satuan"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ formatCurrency(item.nilai_satuan) }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.quantity"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.quantity }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.quantity_unit"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.quantity_unit }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.frequency"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.frequency }}
+                              </div>
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.frequency_unit"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.frequency_unit }}
+                              </div>
+                            </td>
+                            <td>
+                              {{ item.quantity * item.frequency }}
+                            </td>
+                            <td>
+                              {{
+                                formatCurrency(
+                                  item.quantity *
+                                    item.frequency *
+                                    item.nilai_satuan
+                                )
+                              }}
+                            </td>
+                            <td>
+                              <div v-if="item.isEditing">
+                                <input
+                                  type="text"
+                                  v-model="item.sumber_dana"
+                                  class="form-control"
+                                />
+                              </div>
+                              <div v-else>
+                                {{ item.sumber_dana }}
+                              </div>
+                            </td>
                             <td style="text-align: center">
                               <button
                                 type="button"
                                 class="edit-btn"
-                                @click="editProgram(item)"
+                                @click="toggleEdit(item)"
                               >
                                 <b-icon
                                   :icon="
@@ -416,20 +674,12 @@
                                 ></b-icon>
                               </button>
                             </td>
-                            <!-- Tambahkan data lain sesuai dengan kolom tabel -->
-                          </tr>
-                        </tbody>
-                        <tbody v-else>
-                          <tr>
-                            <td colspan="12" style="text-align: center">
-                              Tidak ada data
-                            </td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
                   </div>
-                </template>
+                </div>
               </div>
             </div>
           </div>
@@ -442,6 +692,7 @@
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
+import * as XLSX from "xlsx";
 
 export default {
   components: {
@@ -454,12 +705,11 @@ export default {
       selectedProgramId: null,
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
-      customData: [],
+      itemKegiatan: [],
+      judulKegiatan: [],
+      programKegiatan: [],
       isBulanActive: true,
       isAnggaranActive: false,
-      filteredCustomData: [], // New property for filtered data
-      tableData: [], // Initialize as an empty array to store multiple items
-      kegiatanNama: {}, // Initialize as an empty object to store nama from /api/judulKegiatanRKA by id_program_kegiatan_rka
     };
   },
   computed: {
@@ -468,31 +718,49 @@ export default {
         ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
     },
+    filteredProgramKegiatan() {
+      if (this.selectedOptionIndex !== null) {
+        const selectedProgram = this.programOptions[this.selectedOptionIndex];
+        return this.programKegiatan.filter(
+          (program) =>
+            program.id_program === selectedProgram.id &&
+            program.tahun === this.selectedYear
+        );
+      }
+      return [];
+    },
     programBulanByOption() {
       return this.programBulan[this.selectedOption];
     },
     programAnggaranByOption() {
       return this.programAnggaran[this.selectedOption];
     },
-  },
-  mounted() {
-    this.fetchProgramOptions();
-    this.fetchCustomData();
-    this.fetchTableData();
-    this.fetchKegiatanNama();
-  },
-
-  methods: {
-    toggleActive(button) {
-      if (button === "bulan") {
-        this.isBulanActive = true;
-        this.isAnggaranActive = false;
-      } else {
-        this.isBulanActive = false;
-        this.isAnggaranActive = true;
-      }
+    filteredJudulKegiatan() {
+      return (programId) => {
+        return this.judulKegiatan.filter(
+          (judul) => judul.id_program_kegiatan_rka === programId
+        );
+      };
     },
-
+    totalNilaiByProgramId() {
+      return (programId) => {
+        return this.judulKegiatan
+          .filter((judul) => judul.id_program_kegiatan_rka === programId)
+          .reduce((total, judul) => {
+            const items = this.itemKegiatan.filter(
+              (item) => item.id_judul_kegiatan === judul.id
+            );
+            const totalNilai = items.reduce(
+              (sum, item) =>
+                sum + item.quantity * item.frequency * item.nilai_satuan,
+              0
+            );
+            return total + totalNilai;
+          }, 0);
+      };
+    },
+  },
+  methods: {
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
@@ -501,137 +769,8 @@ export default {
         console.error("Error fetching program options:", error);
       }
     },
-    async fetchCustomData() {
-      try {
-        const response = await axios.get("/api/custom/tahunanRKA");
-        console.log("Custom Data Response:", response.data); // Log the response data for debugging
-        this.customData = response.data; // Store the entire array
-        this.filterCustomData(); // Filter the custom data based on the selected program and year
-      } catch (error) {
-        console.error("Error fetching custom data:", error);
-      }
-    },
-    async fetchTableData() {
-      try {
-        const response = await axios.get("/api/itemKegiatanRKA");
-        console.log("Table Data: ", response.data); // Debugging log
-        // Process the table data to include calculated values for dana columns and the total
-        this.tableData = response.data.data.map((item) => {
-          const total = [
-            item.dana_jan,
-            item.dana_feb,
-            item.dana_mar,
-            item.dana_apr,
-            item.dana_mei,
-            item.dana_jun,
-            item.dana_jul,
-            item.dana_aug,
-            item.dana_sep,
-            item.dana_oct,
-            item.dana_nov,
-            item.dana_dec,
-          ].reduce(
-            (sum, dana) => sum + (dana ? item.nilai_satuan * item.quantity : 0),
-            0
-          );
-
-          // Calculate Vol as Qty * Frq
-          const vol = item.quantity * item.frequency;
-          const nilai_total = item.nilai_satuan * vol;
-
-          return {
-            ...item,
-            dana_jan: item.dana_jan ? item.nilai_satuan * item.quantity : 0,
-            dana_feb: item.dana_feb ? item.nilai_satuan * item.quantity : 0,
-            dana_mar: item.dana_mar ? item.nilai_satuan * item.quantity : 0,
-            dana_apr: item.dana_apr ? item.nilai_satuan * item.quantity : 0,
-            dana_mei: item.dana_mei ? item.nilai_satuan * item.quantity : 0,
-            dana_jun: item.dana_jun ? item.nilai_satuan * item.quantity : 0,
-            dana_jul: item.dana_jul ? item.nilai_satuan * item.quantity : 0,
-            dana_aug: item.dana_aug ? item.nilai_satuan * item.quantity : 0,
-            dana_sep: item.dana_sep ? item.nilai_satuan * item.quantity : 0,
-            dana_oct: item.dana_oct ? item.nilai_satuan * item.quantity : 0,
-            dana_nov: item.dana_nov ? item.nilai_satuan * item.quantity : 0,
-            dana_dec: item.dana_dec ? item.nilai_satuan * item.quantity : 0,
-            total,
-            vol, // Add the calculated vol value
-            nilai_total,
-          };
-        });
-      } catch (error) {
-        console.error("Error fetching table data:", error);
-      }
-    },
-    async fetchKegiatanNama() {
-      try {
-        const response = await axios.get("/api/judulKegiatanRKA");
-        console.log("Kegiatan Nama Response:", response.data); // Log the response data for debugging
-        // Process response.data to map id_program_kegiatan_rka to their respective 'nama' values
-        this.kegiatanNama = {};
-        response.data.data.forEach((item) => {
-          if (!this.kegiatanNama[item.id_program_kegiatan_rka]) {
-            this.kegiatanNama[item.id_program_kegiatan_rka] = [];
-          }
-          this.kegiatanNama[item.id_program_kegiatan_rka].push({
-            id: item.id,
-            nama: item.nama,
-          });
-        });
-
-        // Move the item with id 1 to the top of each array in kegiatanNama
-        Object.keys(this.kegiatanNama).forEach((key) => {
-          const items = this.kegiatanNama[key];
-          const index = items.findIndex((item) => item.id === 1);
-          if (index > -1) {
-            const [item] = items.splice(index, 1);
-            items.unshift(item);
-          }
-        });
-      } catch (error) {
-        console.error("Error fetching kegiatan nama:", error);
-      }
-    },
     selectOption(index) {
       this.selectedOptionIndex = index;
-      this.selectedProgramId = this.programOptions[index].id; // Set the selected program ID
-      this.filterCustomData(); // Filter custom data based on selected program and year
-    },
-    calculateTotal(filteredData) {
-      const totalSum = filteredData.reduce((sum, item) => {
-        const tableData = this.getTableDataByJudul(item.id);
-        const totalSum = tableData.reduce(
-          (total, data) => total + data.total,
-          0
-        );
-        return sum + totalSum;
-      }, 0);
-
-      return this.formatCurrency(totalSum); // Menggunakan formatCurrency untuk mengubah ke format mata uang
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(value);
-    },
-    filterCustomData() {
-      if (this.selectedProgramId && this.selectedYear) {
-        this.filteredCustomData = this.customData.filter(
-          (item) =>
-            item.id_program === this.selectedProgramId &&
-            item.tahun === this.selectedYear
-        );
-      } else if (this.selectedProgramId) {
-        this.filteredCustomData = this.customData.filter(
-          (item) => item.id_program === this.selectedProgramId
-        );
-      } else if (this.selectedYear) {
-        this.filteredCustomData = this.customData.filter(
-          (item) => item.tahun === this.selectedYear
-        );
-      } else {
-        this.filteredCustomData = this.customData;
-      }
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -641,17 +780,101 @@ export default {
       }
       return years;
     },
-    showKegiatanNama(id) {
-      // Function to check if kegiatanNama has data for the given id
-      return (
-        Array.isArray(this.kegiatanNama[id]) && this.kegiatanNama[id].length > 0
+    toggleActive(button) {
+      if (button === "bulan") {
+        this.isBulanActive = true;
+        this.isAnggaranActive = false;
+      } else {
+        this.isBulanActive = false;
+        this.isAnggaranActive = true;
+      }
+    },
+    async fetchItemKegiatan() {
+      try {
+        const response = await axios.get("/api/itemKegiatanRKA");
+        this.itemKegiatan = response.data.map((item) => ({
+          ...item,
+          isEditing: false,
+        }));
+        this.sortItemKegiatan();
+        console.log("Data item kegiatan:", this.itemKegiatan);
+      } catch (error) {
+        console.error("Error fetching item kegiatan:", error);
+      }
+    },
+    async fetchJudulKegiatan() {
+      try {
+        const response = await axios.get("/api/judulKegiatanRKA");
+        this.judulKegiatan = response.data;
+        this.sortJudulKegiatan();
+        console.log("Data judul kegiatan:", this.judulKegiatan);
+      } catch (error) {
+        console.error("Error fetching judul kegiatan:", error);
+      }
+    },
+    async fetchProgramKegiatan() {
+      try {
+        const response = await axios.get("/api/programKegiatanRKA");
+        this.programKegiatan = response.data;
+        this.sortProgramKegiatan();
+        console.log("Program Kegiatan kegiatan:", this.programKegiatan);
+      } catch (error) {
+        console.error("Error fetching program kegiatan:", error);
+      }
+    },
+    sortItemKegiatan() {
+      this.itemKegiatan.sort((a, b) => {
+        if (a.id === 1) return -1;
+        if (b.id === 1) return 1;
+        return a.id - b.id;
+      });
+    },
+    sortJudulKegiatan() {
+      this.judulKegiatan.sort((a, b) => {
+        if (a.id === 1) return -1;
+        if (b.id === 1) return 1;
+        return a.id - b.id;
+      });
+    },
+    sortProgramKegiatan() {
+      this.programKegiatan.sort((a, b) => {
+        if (a.id === 1) return -1;
+        if (b.id === 1) return 1;
+        return a.id - b.id;
+      });
+    },
+    filteredItems(idJudul) {
+      return this.itemKegiatan.filter(
+        (item) => item.id_judul_kegiatan === idJudul
       );
     },
-    getTableDataByJudul(id_judul_kegiatan) {
-      // Function to get the table data for a given id_judul_kegiatan
-      return this.tableData.filter(
-        (item) => item.id_judul_kegiatan === id_judul_kegiatan
-      );
+    toggleEdit(item) {
+      if (item.isEditing) {
+        this.saveItem(item);
+      }
+      item.isEditing = !item.isEditing;
+    },
+    async saveItem(item) {
+      try {
+        await axios.put(`/api/itemKegiatanRKA/${item.id}`, {
+          uraian: item.uraian,
+          nilai_satuan: item.nilai_satuan,
+          quantity: item.quantity,
+          quantity_unit: item.quantity_unit,
+          frequency: item.frequency,
+          frequency_unit: item.frequency_unit,
+          sumber_dana: item.sumber_dana,
+        });
+        console.log("Item updated successfully");
+      } catch (error) {
+        console.error("Error saving item:", error);
+      }
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
     },
     goToInputPage() {
       // Mengarahkan ke halaman input
@@ -661,6 +884,139 @@ export default {
       // Mengarahkan ke halaman input
       this.$router.push({ path: "/inputbulan" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
     },
+    setInitialSelectedOption() {
+      const initialOptionIndex = this.programOptions.findIndex(
+        (option) => option.id === 1
+      );
+      if (initialOptionIndex !== -1) {
+        this.selectedOptionIndex = initialOptionIndex;
+      }
+    },
+    calculateTotal(item) {
+      return item.dana_jan
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_feb
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_mar
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_apr
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_mei
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_jun
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_jul
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_aug
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_sep
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_oct
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_nov
+        ? item.nilai_satuan * item.quantity
+        : 0 + item.dana_dec
+        ? item.nilai_satuan * item.quantity
+        : 0;
+    },
+    downloadExcel() {
+      const penjelasanData = [];
+      const resumeData = [];
+
+      // Mengambil data dari tabel penjelasan
+      this.filteredProgramKegiatan.forEach((program) => {
+        this.filteredJudulKegiatan(program.id).forEach((judul) => {
+          this.filteredItems(judul.id).forEach((item, itemIndex) => {
+            penjelasanData.push({
+              No: itemIndex + 1,
+              Uraian: item.uraian,
+              Jan: item.dana_jan ? item.nilai_satuan * item.quantity : 0,
+              Feb: item.dana_feb ? item.nilai_satuan * item.quantity : 0,
+              Mar: item.dana_mar ? item.nilai_satuan * item.quantity : 0,
+              Apr: item.dana_apr ? item.nilai_satuan * item.quantity : 0,
+              Mei: item.dana_mei ? item.nilai_satuan * item.quantity : 0,
+              Jun: item.dana_jun ? item.nilai_satuan * item.quantity : 0,
+              Jul: item.dana_jul ? item.nilai_satuan * item.quantity : 0,
+              Agust: item.dana_aug ? item.nilai_satuan * item.quantity : 0,
+              Sep: item.dana_sep ? item.nilai_satuan * item.quantity : 0,
+              Okt: item.dana_oct ? item.nilai_satuan * item.quantity : 0,
+              Nov: item.dana_nov ? item.nilai_satuan * item.quantity : 0,
+              Des: item.dana_dec ? item.nilai_satuan * item.quantity : 0,
+              Total: this.calculateTotal(item),
+            });
+          });
+        });
+      });
+
+      // Mengambil data dari tabel resume
+      this.filteredProgramKegiatan.forEach((program) => {
+        this.filteredJudulKegiatan(program.id).forEach((judul) => {
+          this.filteredItems(judul.id).forEach((item, itemIndex) => {
+            resumeData.push({
+              No: itemIndex + 1,
+              Uraian: item.uraian,
+              "Nilai Satuan": this.formatCurrency(item.nilai_satuan),
+              Qty: item.quantity,
+              "Qty Unit": item.quantity_unit,
+              Frq: item.frequency,
+              "Frq Unit": item.frequency_unit,
+              Vol: item.quantity * item.frequency,
+              "Nilai Total": this.formatCurrency(
+                item.quantity * item.frequency * item.nilai_satuan
+              ),
+              "Sumber Dana": item.sumber_dana,
+            });
+          });
+        });
+      });
+
+      const wb = XLSX.utils.book_new();
+      const penjelasanSheet = XLSX.utils.json_to_sheet(penjelasanData);
+      const resumeSheet = XLSX.utils.json_to_sheet(resumeData);
+
+      // Auto-fit columns for penjelasanSheet
+      const penjelasanCols = Object.keys(penjelasanData[0] || {}).map(
+        (key) => ({
+          wch: Math.max(
+            ...penjelasanData.map((item) =>
+              item[key] ? item[key].toString().length : 0
+            )
+          ),
+        })
+      );
+      penjelasanSheet["!cols"] = penjelasanCols;
+
+      // Auto-fit columns for resumeSheet
+      const resumeCols = Object.keys(resumeData[0] || {}).map((key) => ({
+        wch: Math.max(
+          ...resumeData.map((item) =>
+            item[key] ? item[key].toString().length : 0
+          )
+        ),
+      }));
+      resumeSheet["!cols"] = resumeCols;
+
+      XLSX.utils.book_append_sheet(wb, penjelasanSheet, "Penjelasan");
+      XLSX.utils.book_append_sheet(wb, resumeSheet, "Resume");
+
+      // Use the selected year in the file name
+      const fileName = `RKA_${this.selectedYear}.xlsx`;
+
+      XLSX.writeFile(wb, fileName);
+    },
+  },
+  watch: {
+    selectedYear() {
+      this.fetchProgramKegiatan();
+    },
+  },
+  mounted() {
+    this.fetchProgramOptions().then(() => {
+      this.setInitialSelectedOption();
+    });
+    this.fetchItemKegiatan();
+    this.fetchJudulKegiatan();
+    this.fetchProgramKegiatan();
   },
 };
 </script>

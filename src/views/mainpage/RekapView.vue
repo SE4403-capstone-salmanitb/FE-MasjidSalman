@@ -15,29 +15,53 @@
             <thead>
               <tr>
                 <th style="font-weight: bold">No</th>
-                <th style="font-weight: bold; width: 200px">
-                  Nama Program-Kegiatan
-                </th>
+                <th style="font-weight: bold">Program Kegiatan</th>
                 <th style="font-weight: bold">Target</th>
-                <th style="font-weight: bold">Jan</th>
-                <th style="font-weight: bold">Feb</th>
-                <th style="font-weight: bold">Mar</th>
-                <th style="font-weight: bold">Apr</th>
-                <th style="font-weight: bold">Mei</th>
-                <th style="font-weight: bold">Jun</th>
-                <th style="font-weight: bold">Jul</th>
-                <th style="font-weight: bold">Agust</th>
-                <th style="font-weight: bold">Sep</th>
-                <th style="font-weight: bold">Okt</th>
-                <th style="font-weight: bold">Nov</th>
-                <th style="font-weight: bold">Des</th>
+
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Jan
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Feb
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Mar
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Apr
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Mei
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Jun
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Jul
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Agust
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Sep
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Okt
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Nov
+                </th>
+                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
+                  Des
+                </th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="item in data" :key="item.key">
-                <td>{{ item.id }}</td>
-                <td>{{ item.nama }}</td>
+              <tr v-for="(item, index) in combinedData" :key="index">
+                <td>{{ item.no }}</td>
+                <td>{{ item.program.displayName }}</td>
                 <td>{{ item.target }}</td>
+
                 <td>{{ item.jan }}</td>
                 <td>{{ item.feb }}</td>
                 <td>{{ item.mar }}</td>
@@ -45,7 +69,7 @@
                 <td>{{ item.mei }}</td>
                 <td>{{ item.jun }}</td>
                 <td>{{ item.jul }}</td>
-                <td>{{ item.august }}</td>
+                <td>{{ item.aug }}</td>
                 <td>{{ item.sep }}</td>
                 <td>{{ item.oct }}</td>
                 <td>{{ item.nov }}</td>
@@ -61,10 +85,11 @@
 
 <script>
 import axios from "@/lib/axios";
+
 export default {
   data() {
     return {
-      data: [], // Menyimpan data yang digabungkan dari ketiga API
+      combinedData: [], // Array to store combined program and KPI data
     };
   },
   methods: {
@@ -72,188 +97,194 @@ export default {
       // Fungsi ini akan mengarahkan pengguna kembali ke halaman sebelumnya
       this.$router.go(-1); // Menggunakan Vue Router untuk navigasi kembali
     },
-    async fetchData() {
-      try {
-        // Ambil data dari ketiga API
-        const [response1, response2, response3] = await Promise.all([
-          axios.get("/api/custom/RKAKPI"),
-          axios.get("/api/keyPerformanceIndicator"),
-          axios.get("/api/itemKegiatanRKA"),
-        ]);
+    fetchPrograms() {
+      // Fetch all required data and combine them
+      axios
+        .get("/api/programKegiatanKPI")
+        .then((responseProgram) => {
+          const programData = responseProgram.data;
 
-        const dataRKAKPI = response1.data;
-        const dataKPI = response2.data.data; // Akses array data dari objek dataKPI
-        const dataItemKegiatanRKA = response3.data.data; // Akses array data dari objek dataItemKegiatanRKA
+          axios
+            .get("/api/keyPerformanceIndicator")
+            .then((responseKPI) => {
+              const kpiData = responseKPI.data;
 
-        // Logging all data received
-        console.log("dataRKAKPI:", dataRKAKPI);
-        console.log("dataKPI:", dataKPI);
-        console.log("dataItemKegiatanRKA:", dataItemKegiatanRKA);
+              axios
+                .get("/api/laporanKPIBulanan")
+                .then((responseLaporan) => {
+                  const laporanData = responseLaporan.data;
 
-        // Check if data received are arrays
-        if (!Array.isArray(dataRKAKPI)) {
-          throw new Error("Data from RKAKPI API is not an array");
-        }
-        if (!Array.isArray(dataKPI)) {
-          throw new Error("Data from KPI API is not an array");
-        }
-        if (!Array.isArray(dataItemKegiatanRKA)) {
-          throw new Error("Data from itemKegiatanRKA API is not an array");
-        }
+                  axios
+                    .get("/api/itemKegiatanRKA")
+                    .then((responseItemKegiatan) => {
+                      const itemKegiatanData = responseItemKegiatan.data;
 
-        // Sort dataKPI by ID
-        dataKPI.sort((a, b) => a.id - b.id);
+                      let combinedData = [];
+                      let displayedPrograms = new Set();
+                      let noCounter = 1; // Initialize counter for "No" column
 
-        let mergedData = [];
+                      programData.forEach((program) => {
+                        const relatedKPIs = kpiData.filter(
+                          (kpi) => kpi.id_program_kegiatan_kpi === program.id
+                        );
 
-        // Gabungkan data berdasarkan ID dan id_program_kegiatan_kpi
-        dataRKAKPI.forEach((item) => {
-          const targets = dataKPI.filter(
-            (kpi) => kpi.id_program_kegiatan_kpi === item.id
-          );
-          const itemKegiatan = dataItemKegiatanRKA.find(
-            (kegiatan) => kegiatan.id === item.id
-          );
+                        if (relatedKPIs.length) {
+                          relatedKPIs.forEach((kpi) => {
+                            const relatedLaporan = laporanData.find(
+                              (laporan) => laporan.id_kpi === kpi.id
+                            );
 
-          const getMonthlyValue = (month, kegiatan) => {
-            return kegiatan && kegiatan[`dana_${month}`]
-              ? kegiatan.nilai_satuan * kegiatan.quantity
-              : "0";
-          };
+                            const relatedItemKegiatan = itemKegiatanData.find(
+                              (item) => item.id === kpi.id
+                            );
 
-          const jan = getMonthlyValue("jan", itemKegiatan);
-          const feb = getMonthlyValue("feb", itemKegiatan);
-          const mar = getMonthlyValue("mar", itemKegiatan);
-          const apr = getMonthlyValue("apr", itemKegiatan);
-          const mei = getMonthlyValue("mei", itemKegiatan);
-          const jun = getMonthlyValue("jun", itemKegiatan);
-          const jul = getMonthlyValue("jul", itemKegiatan);
-          const august = getMonthlyValue("aug", itemKegiatan);
-          const sep = getMonthlyValue("sep", itemKegiatan);
-          const oct = getMonthlyValue("oct", itemKegiatan);
-          const nov = getMonthlyValue("nov", itemKegiatan);
-          const dec = getMonthlyValue("dec", itemKegiatan);
+                            const isDuplicate = displayedPrograms.has(
+                              program.id
+                            );
 
-          if (targets.length > 0) {
-            targets.forEach((target) => {
-              mergedData.push({
-                id: item.id,
-                nama: item.nama,
-                target: target.target,
-                jan: jan,
-                feb: feb,
-                mar: mar,
-                apr: apr,
-                mei: mei,
-                jun: jun,
-                jul: jul,
-                august: august,
-                sep: sep,
-                oct: oct,
-                nov: nov,
-                dec: dec,
-                key: `${item.id}-${target.target}`,
-              });
+                            const capaianValue = relatedLaporan
+                              ? relatedLaporan.capaian
+                              : "0";
+
+                            combinedData.push({
+                              no: isDuplicate ? "" : noCounter,
+                              program: {
+                                ...program,
+                                displayName: isDuplicate ? "" : program.nama,
+                              },
+                              target: kpi.target,
+                              capaian: capaianValue,
+                              jan: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_jan === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              feb: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_feb === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              mar: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_mar === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              apr: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_apr === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              mei: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_mei === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              jun: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_jun === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              jul: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_jul === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              aug: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_aug === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              sep: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_sep === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              oct: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_oct === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              nov: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_nov === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                              dec: relatedItemKegiatan
+                                ? relatedItemKegiatan.dana_dec === 1
+                                  ? capaianValue
+                                  : "0"
+                                : "0",
+                            });
+                            if (!isDuplicate) {
+                              displayedPrograms.add(program.id);
+                              noCounter++; // Increment the counter for the first occurrence
+                            }
+                          });
+                        } else {
+                          const isDuplicate = displayedPrograms.has(program.id);
+                          combinedData.push({
+                            no: isDuplicate ? "" : noCounter,
+                            program: {
+                              ...program,
+                              displayName: isDuplicate ? "" : program.nama,
+                            },
+                            target: "Tidak ada data",
+                            capaian: "0",
+                            jan: "0",
+                            feb: "0",
+                            mar: "0",
+                            apr: "0",
+                            mei: "0",
+                            jun: "0",
+                            jul: "0",
+                            aug: "0",
+                            sep: "0",
+                            oct: "0",
+                            nov: "0",
+                            dec: "0",
+                          });
+                          if (!isDuplicate) {
+                            displayedPrograms.add(program.id);
+                            noCounter++; // Increment the counter for the first occurrence
+                          }
+                        }
+                      });
+
+                      // Sort combinedData by program.id
+                      combinedData.sort((a, b) => a.program.id - b.program.id);
+
+                      // Update numbering to start from 1 at the top
+                      let currentNo = 1;
+                      combinedData.forEach((item) => {
+                        if (item.no !== "") {
+                          item.no = currentNo++;
+                        }
+                      });
+
+                      this.combinedData = combinedData;
+                    })
+                    .catch((error) => {
+                      console.error(
+                        "Error fetching Item Kegiatan RKA data:",
+                        error
+                      );
+                    });
+                })
+                .catch((error) => {
+                  console.error("Error fetching Laporan KPI data:", error);
+                });
+            })
+            .catch((error) => {
+              console.error("Error fetching KPI data:", error);
             });
-          } else {
-            mergedData.push({
-              id: item.id,
-              nama: item.nama,
-              target: "Tidak ada target",
-              jan: jan,
-              feb: feb,
-              mar: mar,
-              apr: apr,
-              mei: mei,
-              jun: jun,
-              jul: jul,
-              august: august,
-              sep: sep,
-              oct: oct,
-              nov: nov,
-              dec: dec,
-              key: `${item.id}-no-target`,
-            });
-          }
+        })
+        .catch((error) => {
+          console.error("Error fetching program data:", error);
         });
-
-        // Tambahkan data KPI yang tidak ada di RKAKPI
-        dataKPI.forEach((kpi) => {
-          if (
-            !dataRKAKPI.find((item) => item.id === kpi.id_program_kegiatan_kpi)
-          ) {
-            const itemKegiatan = dataItemKegiatanRKA.find(
-              (kegiatan) => kegiatan.id === kpi.id_program_kegiatan_kpi
-            );
-
-            const getMonthlyValue = (month, kegiatan) => {
-              return kegiatan && kegiatan[`dana_${month}`]
-                ? kegiatan.nilai_satuan * kegiatan.quantity
-                : "Tidak ada data";
-            };
-
-            const jan = getMonthlyValue("jan", itemKegiatan);
-            const feb = getMonthlyValue("feb", itemKegiatan);
-            const mar = getMonthlyValue("mar", itemKegiatan);
-            const apr = getMonthlyValue("apr", itemKegiatan);
-            const mei = getMonthlyValue("mei", itemKegiatan);
-            const jun = getMonthlyValue("jun", itemKegiatan);
-            const jul = getMonthlyValue("jul", itemKegiatan);
-            const august = getMonthlyValue("aug", itemKegiatan);
-            const sep = getMonthlyValue("sep", itemKegiatan);
-            const oct = getMonthlyValue("oct", itemKegiatan);
-            const nov = getMonthlyValue("nov", itemKegiatan);
-            const dec = getMonthlyValue("dec", itemKegiatan);
-
-            mergedData.push({
-              id: kpi.id_program_kegiatan_kpi,
-              nama: "Tidak ada nama", // Placeholder if nama not available
-              target: kpi.target,
-              jan: jan,
-              feb: feb,
-              mar: mar,
-              apr: apr,
-              mei: mei,
-              jun: jun,
-              jul: jul,
-              august: august,
-              sep: sep,
-              oct: oct,
-              nov: nov,
-              dec: dec,
-              key: `${kpi.id_program_kegiatan_kpi}-${kpi.target}`,
-            });
-          }
-        });
-
-        // Sort mergedData by ID
-        mergedData.sort((a, b) => a.id - b.id);
-
-        // Handle duplicate IDs and names
-        let previousID = "";
-        let previousNama = "";
-        mergedData = mergedData.map((item) => {
-          if (item.id === previousID) {
-            item.id = "";
-          } else {
-            previousID = item.id;
-          }
-          if (item.nama === previousNama) {
-            item.nama = "";
-          } else {
-            previousNama = item.nama;
-          }
-          return item;
-        });
-
-        this.data = mergedData; // Menyimpan data yang telah digabungkan
-      } catch (error) {
-        console.error("Error fetching data:", error.message);
-      }
     },
   },
   mounted() {
-    this.fetchData(); // Memanggil fungsi fetchData ketika komponen dimuat
+    this.fetchPrograms(); // Fetch programs and KPI data when component is mounted
   },
 };
 </script>

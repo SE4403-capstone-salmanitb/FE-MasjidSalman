@@ -11,7 +11,7 @@
         </div>
         <div class="profile-content">
           <div class="profile-picture">
-            <label for="file-input" class="change-profile-label">
+            <label class="change-profile-label" @click="showRegisterPopup">
               Ubah Foto
             </label>
             <input
@@ -40,7 +40,42 @@
               </p>
             </div>
           </div>
-          <button class="logout-button">Logout</button>
+          <button class="logout-button" @click="logout">Logout</button>
+        </div>
+      </div>
+    </div>
+    <!-- Pop-up Edit -->
+    <div v-if="showPopup" class="popup-overlay">
+      <div class="kartu-edit">
+        <b-icon-x
+          style="width: 30px; height: 30px; margin-left: 550px"
+          @click="closePopup"
+        ></b-icon-x>
+        <p class="regist">Edit Profile</p>
+
+        <div class="inputan">
+          <input
+            v-model="user.name"
+            type="text"
+            placeholder="name"
+            autocomplete="name"
+          />
+        </div>
+        <div class="inputan">
+          <input
+            v-model="user.profile_picture"
+            type="text"
+            placeholder="Masukkan URL foto Profile"
+          />
+        </div>
+
+        <div
+          class="tombol-submit"
+          type="submit"
+          style="margin-bottom: 80px"
+          @click="submitForm"
+        >
+          Simpan
         </div>
       </div>
     </div>
@@ -61,6 +96,12 @@ export default {
       userName: "", // Menyimpan nama pengguna
       userEmail: "",
       userId: null, // Set userId sesuai dengan pengguna yang diinginkan
+      showPopup: false, // Untuk menampilkan pop-up register
+      user: {
+        name: "",
+        profile_picture: "",
+      },
+      showPassword: false, // Untuk toggle visibilitas password
     };
   },
   created() {
@@ -102,7 +143,7 @@ export default {
         if (user) {
           this.profilePicture = user.profile_picture;
           this.userName = user.name; // Set nama pengguna
-          this.userEmail = user.email; // Set nama pengguna
+          this.userEmail = user.email; // Set email pengguna
           if (!this.profilePicture) {
             console.error("Profile picture URL is not available");
           }
@@ -113,6 +154,40 @@ export default {
         console.error("Error fetching profile data:", error);
       }
     },
+    submitForm() {
+      console.log("Form Data:", this.user);
+
+      axios
+        .put("/user", this.user, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/test";
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
     handleFileChange(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -121,8 +196,32 @@ export default {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.profilePicture = e.target.result;
+        this.uploadProfilePicture(file);
       };
       reader.readAsDataURL(file);
+    },
+    handleEditFileChange(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      this.user.profile_picture = file;
+    },
+
+    showRegisterPopup() {
+      this.showPopup = true;
+    },
+    closePopup() {
+      this.showPopup = false;
+    },
+
+    async logout() {
+      try {
+        await axios.post("/logout");
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("bearer");
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
     },
   },
 };
@@ -132,6 +231,17 @@ export default {
 .profile-content {
   display: flex;
   position: relative;
+}
+
+.kartu-edit {
+  background-color: white;
+  padding: 20px;
+  width: 630px;
+  height: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .logout-button {
