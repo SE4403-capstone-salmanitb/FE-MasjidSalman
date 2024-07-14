@@ -8,6 +8,7 @@
         <div class="input-container">
           <input
             v-model="email"
+            style="background-color: #f5f5f5"
             type="email"
             placeholder="Email"
             autocomplete="username"
@@ -21,11 +22,11 @@
         </button>
       </form>
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-      <div class="akun">
-        Tidak punya akun? <router-link to="/register">Daftar</router-link>
+      <div v-if="successMessage" class="success-message">
+        {{ successMessage }}
       </div>
-      <div class="lupa">
-        <router-link to="/lupa" style="color: red">Lupa Password</router-link>
+      <div class="akun">
+        Sudah punya akun? <router-link to="/">Login</router-link>
       </div>
     </div>
   </div>
@@ -33,15 +34,36 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-// import axios from "@/lib/axios"; // Sesuaikan path sesuai struktur proyek Anda
+import axios from "@/lib/axios"; // Sesuaikan path sesuai struktur proyek Anda
 
 const email = ref("");
 const isLoading = ref(false);
 const errorMessage = ref("");
+const successMessage = ref("");
 
 const onSubmit = async () => {
   isLoading.value = true;
   errorMessage.value = "";
+  successMessage.value = "";
+
+  try {
+    const result = await axios.post("/forgot-password", { email: email.value });
+    if (result.status === 200) {
+      successMessage.value = "Link reset password telah dikirim ke email Anda.";
+    } else {
+      throw new Error(result.data.message);
+    }
+  } catch (error) {
+    console.error(
+      "Error saat mengirim permintaan:",
+      error.response?.data || error.message
+    );
+    errorMessage.value =
+      error.response?.data.message ||
+      "Gagal mengirim link reset password. Silakan coba lagi.";
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
 
@@ -57,13 +79,12 @@ const onSubmit = async () => {
 }
 
 .input-container {
-  background: #fff;
+  background: #f5f5f5;
   width: 100%;
   max-width: 532px;
   height: 67px;
   border-radius: 13px;
   padding: 10px 20px;
-  margin: 13px auto;
   display: flex;
   align-items: center;
 }

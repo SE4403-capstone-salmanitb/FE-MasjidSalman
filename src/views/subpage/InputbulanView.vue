@@ -47,6 +47,25 @@
         <div class="container">
           <form>
             <div class="card-container1">
+              <div class="mb-3">
+                <label for="id_program" class="form-label"
+                  >Nama Judul Kegiatan</label
+                >
+                <select
+                  class="form-control"
+                  v-model="form.nama_program"
+                  @change="updateIdProgram"
+                  required
+                >
+                  <option
+                    v-for="program in programOptions"
+                    :key="program.id"
+                    :value="program.nama"
+                  >
+                    {{ program.nama }}
+                  </option>
+                </select>
+              </div>
               <div
                 class="card1 mb-3"
                 style="max-width: 1067px; max-height: 354"
@@ -59,6 +78,7 @@
                       class="form-control"
                       id="kebutuhan1"
                       v-model="form.uraian"
+                      required
                     />
                   </div>
                   <div class="row">
@@ -71,6 +91,7 @@
                         class="form-control"
                         id="nilaisatuan1"
                         v-model="form.nilai_satuan"
+                        required
                       />
                     </div>
 
@@ -81,6 +102,7 @@
                         class="form-control"
                         id="qty1"
                         v-model="form.quantity"
+                        required
                       />
                     </div>
 
@@ -91,6 +113,7 @@
                         class="form-control"
                         id="unit1"
                         v-model="form.quantity_unit"
+                        required
                       />
                     </div>
 
@@ -101,6 +124,7 @@
                         class="form-control"
                         id="fren1"
                         v-model="form.frequency"
+                        required
                       />
                     </div>
 
@@ -111,6 +135,7 @@
                         class="form-control"
                         id="unt1"
                         v-model="form.frequency_unit"
+                        required
                       />
                     </div>
 
@@ -118,32 +143,19 @@
                       <label for="sumberdana" class="form-label"
                         >Sumber Dana</label
                       >
-                      <input
-                        type="text"
+                      <select
                         class="form-control"
-                        id="sumberdana1"
-                        style="width: 304px"
                         v-model="form.sumber_dana"
-                      />
-                      <!-- <select
-                        class="form-control"
-                        id="sumberdana1"
                         style="width: 304px"
-                        v-model="sumber_dana"
+                        required
                       >
-                        <option value="">Pilih Sumber Dana</option>
-                        <option value="Dana Pusat">Dana Pusat</option>
-                        <option value="Dana RAS">Dana RAS</option>
-                        <option value="Dana kepesertaan">
-                          Dana kepesertaan
-                        </option>
-                        <option value="Dana pihak ketiga">
-                          Dana pihak ketiga
-                        </option>
-                        <option value="Dana pusat wakaf salman">
-                          Dana pusat wakaf salman
-                        </option>
-                      </select> -->
+                        <option value="" disabled>Pilih Sumber Dana</option>
+                        <option value="Pusat">Pusat</option>
+                        <option value="RAS">RAS</option>
+                        <option value="Kepesertaan">Kepesertaan</option>
+                        <option value="Pihak Ketiga">Pihak Ketiga</option>
+                        <option value="Wakaf Salman">Wakaf Salman</option>
+                      </select>
                     </div>
                   </div>
                   <div class="mb-3">
@@ -156,6 +168,7 @@
                       id="inlineCheckbox1"
                       value="option1"
                       v-model="form.dana_jan"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox1"
                       >Januari</label
@@ -168,6 +181,7 @@
                       id="inlineCheckbox2"
                       value="option2"
                       v-model="form.dana_feb"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox2"
                       >Februari</label
@@ -180,6 +194,7 @@
                       id="inlineCheckbox3"
                       value="option3"
                       v-model="form.dana_mar"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox3"
                       >Maret</label
@@ -192,6 +207,7 @@
                       id="inlineCheckbox4"
                       value="option4"
                       v-model="form.dana_apr"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox4"
                       >April</label
@@ -204,6 +220,7 @@
                       id="inlineCheckbox5"
                       value="option5"
                       v-model="form.dana_mei"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox5"
                       >Mei</label
@@ -216,6 +233,7 @@
                       id="inlineCheckbox6"
                       value="option6"
                       v-model="form.dana_jun"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox6"
                       >Juni</label
@@ -228,6 +246,7 @@
                       id="inlineCheckbox7"
                       value="option7"
                       v-model="form.dana_jul"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox7"
                       >Juli</label
@@ -240,6 +259,7 @@
                       id="inlineCheckbox8"
                       value="option8"
                       v-model="form.dana_aug"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox8"
                       >Agustus</label
@@ -252,6 +272,7 @@
                       id="inlineCheckbox9"
                       value="option9"
                       v-model="form.dana_sep"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox9"
                       >September</label
@@ -264,6 +285,7 @@
                       id="inlineCheckbox10"
                       value="option10"
                       v-model="form.dana_oct"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox10"
                       >Oktober</label
@@ -276,6 +298,7 @@
                       id="inlineCheckbox11"
                       value="option11"
                       v-model="form.dana_nov"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox11"
                       >November</label
@@ -288,20 +311,23 @@
                       id="inlineCheckbox12"
                       value="option12"
                       v-model="form.dana_dec"
+                      required
                     />
                     <label class="form-check-label" for="inlineCheckbox12"
                       >Desember</label
                     >
                   </div>
-                  <div class="mb-3">
+                  <div class="mb-3" style="margin-top: 20px">
                     <label for="judulkegiatan" class="form-label"
-                      >Judul kegiatan</label
+                      >ID Judul kegiatan</label
                     >
                     <input
                       type="text"
                       class="form-control"
                       id="judulkegiatan1"
                       v-model="form.id_judul_kegiatan"
+                      required
+                      readonly
                     />
                   </div>
                 </div>
@@ -310,7 +336,7 @@
                 <button
                   type="button"
                   class="btn tambah-btn"
-                  v-on:click="() => submitForm()"
+                  @click="submitForm"
                 >
                   Simpan
                 </button>
@@ -323,48 +349,9 @@
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
-
-const submitForm = function () {
-  Object.keys(this.form).forEach((key) => {
-    if (typeof this.form[key] === "boolean") {
-      this.form[key] = this.form[key] ? 1 : 0;
-    }
-  });
-  axios
-    .post("/api/itemKegiatanRKA", this.form, {
-      headers: {
-        Authorization: "Bearer " + sessionStorage.getItem("bearer"),
-      },
-    })
-    .then(() => {
-      // Handle successful response, e.g., show success message
-      this.notificationMessage = "Berhasil";
-      this.notificationDetail = "Data berhasil di upload";
-      this.notificationType = "success";
-      this.isNotificationVisible = true;
-      setTimeout(() => {
-        this.notificationMessage = "";
-        this.notificationDetail = "";
-        this.notificationType = "";
-      }, 10000); // Reset notifikasi setelah 3 detik
-      // Redirect to RKA page after successful submission
-      window.location.href = "/rka";
-    })
-    .catch(() => {
-      this.notificationMessage = "Gagal";
-      this.notificationDetail = "Gagal menginput data";
-      this.notificationType = "error";
-      this.isNotificationVisible = true;
-      // Handle error, e.g., show error message
-    });
-};
-
-const closeNotification = function () {
-  this.isNotificationVisible = false;
-};
 
 export default {
   data() {
@@ -374,6 +361,8 @@ export default {
       notificationType: "", // error, success
       isNotificationVisible: false,
       form: {
+        nama_program: "",
+        nama: "",
         uraian: "",
         nilai_satuan: "",
         quantity: "",
@@ -396,16 +385,105 @@ export default {
         id_judul_kegiatan: "",
         // Add more form fields here as needed
       },
+      programOptions: [],
+      showAddInput: false,
+      newProgram: "",
     };
   },
   mounted() {
-    // Attach event listener to the parent element for both Tambah and Hapus buttons
-    const cardContainer = document.querySelector(".card-container1");
-    cardContainer.addEventListener("click", this.handleButtonClick);
+    this.fetchProgramOptions();
   },
   methods: {
-    submitForm,
-    closeNotification,
+    fetchProgramOptions() {
+      axios
+        .get("/api/judulKegiatanRKA", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then((response) => {
+          this.programOptions = response.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching program options:", error);
+        });
+    },
+    updateIdProgram() {
+      const selectedProgram = this.programOptions.find(
+        (program) => program.nama === this.form.nama_program
+      );
+      if (selectedProgram) {
+        this.form.id_judul_kegiatan = selectedProgram.id;
+      } else {
+        this.form.id_judul_kegiatan = "";
+      }
+    },
+    submitForm() {
+      // Convert boolean to integer for checkboxes
+      Object.keys(this.form).forEach((key) => {
+        if (typeof this.form[key] === "boolean") {
+          this.form[key] = this.form[key] ? 1 : 0;
+        }
+      });
+      // Log form data for debugging
+      console.log("Form Data:", this.form);
+
+      if (
+        ![
+          "Pusat",
+          "RAS",
+          "Kepesertaan",
+          "Pihak Ketiga",
+          "Wakaf Salman",
+        ].includes(this.form.sumber_dana)
+      ) {
+        this.notificationMessage = "Gagal";
+        this.notificationDetail = "Inputan pada sumber dana tidak sesuai";
+        this.notificationType = "error";
+        this.isNotificationVisible = true;
+        setTimeout(() => {
+          this.notificationMessage = "";
+          this.notificationDetail = "";
+          this.notificationType = "";
+          this.isNotificationVisible = false;
+        }, 10000); // Reset notification after 10 seconds
+        return;
+      }
+
+      axios
+        .post("/api/itemKegiatanRKA", this.form, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/rka";
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    closeNotification() {
+      this.isNotificationVisible = false;
+    },
   },
   components: {
     Sidebar,

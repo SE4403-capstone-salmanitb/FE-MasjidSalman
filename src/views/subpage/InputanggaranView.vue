@@ -8,41 +8,50 @@
         </div>
         <div class="container">
           <form>
-            <div class="mb-3">
-              <label for="namabidangprogram" class="form-label"
-                >Nama Bidang Program</label
-              >
-              <input
-                type="program"
-                class="form-control"
-                id="namabidangprogram1"
-              />
-            </div>
-            <div class="mb-3">
-              <label for="namaprogramkegiatan" class="form-label"
-                >Nama Program Kegiatan</label
-              >
-              <input
-                type="program"
-                class="form-control"
-                id="namaprogramkegiatan1"
-              />
-            </div>
             <div class="card-container1">
+              <div class="mb-3">
+                <label for="id_program" class="form-label">Nama Program</label>
+                <select
+                  class="form-control"
+                  v-model="formjudul.nama_program"
+                  @change="updateIdProgram"
+                  required
+                >
+                  <option
+                    v-for="program in programOptions"
+                    :key="program.id"
+                    :value="program.nama"
+                  >
+                    {{ program.nama }}
+                  </option>
+                </select>
+              </div>
               <div
                 class="card1 mb-3"
                 style="max-width: 1067px; max-height: 354"
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="judulkegiatan" class="form-label"
-                      >Judul Kegiatan</label
+                    <label for="nama" class="form-label">Judul Kegiatan</label>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="nama1"
+                      v-model="formjudul.nama"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="id_program_kegiatan_rka" class="form-label"
+                      >ID Kegiatan RKA</label
                     >
                     <input
-                      type="judulkegiatan"
+                      type="text"
                       class="form-control"
-                      id="judulkegiatan1"
-                      v-model="judulkegiatan"
+                      id="id_program_kegiatan_rka1"
+                      v-model="formjudul.id_program_kegiatan_rka"
+                      required
+                      readonly
                     />
                   </div>
 
@@ -58,17 +67,66 @@
                     >
                       Hapus
                     </button>
-                    <button type="button" class="btn tambah-btn">Tambah</button>
+                    <button
+                      type="button"
+                      class="btn tambah-btn"
+                      @click="SubmitForm"
+                    >
+                      Tambah
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
             <div class="tombol1">
-              <button type="button" class="btn" @click="goToInputPage">
+              <button
+                type="button"
+                class="btn"
+                @click="submitForm"
+                style="margin-bottom: 210px"
+              >
                 Simpan
               </button>
             </div>
           </form>
+        </div>
+      </div>
+      <div v-if="isNotificationVisible" :class="notificationClass">
+        <div class="row">
+          <b-icon-check-circle
+            v-if="notificationType === 'success'"
+            style="
+              margin-right: 12px;
+              margin-left: 15px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-check-circle>
+          <b-icon-exclamation-circle
+            v-if="notificationType === 'error'"
+            style="
+              margin-right: 12px;
+              margin-left: 15px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-exclamation-circle>
+          <div class="notification-header">
+            <p class="notification-title">{{ notificationMessage }}</p>
+            <p class="notification-content">{{ notificationDetail }}</p>
+          </div>
+          <b-icon-x
+            @click="closeNotification"
+            style="
+              margin-left: 47px;
+              margin-right: 12px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-x>
         </div>
       </div>
     </div>
@@ -77,67 +135,140 @@
 
 <script>
 import Sidebar from "@/components/SidebarView.vue";
+import axios from "@/lib/axios";
 
 export default {
   data() {
     return {
-      selectedYear: new Date().getFullYear(), // Mengatur tahun saat ini sebagai nilai awal
-      years: this.generateYears(), // Menghasilkan daftar tahun
+      formjudul: {
+        nama_program: "",
+        nama: "",
+        id_program_kegiatan_rka: "",
+      },
+      programOptions: [],
+      showAddInput: false,
+      newProgram: "",
+      notificationMessage: "",
+      notificationDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
     };
   },
   mounted() {
-    // Attach event listener to the parent element for both Tambah and Hapus buttons
-    const cardContainer = document.querySelector(".card-container1");
-    cardContainer.addEventListener("click", this.handleButtonClick);
+    this.fetchProgramOptions();
   },
   methods: {
-    handleButtonClick(event) {
-      // Check if the clicked element is either "Tambah" or "Hapus" button
-      if (event.target.classList.contains("tambah-btn")) {
-        // Clone the existing card template
-        const existingCard = document.querySelector(".card1");
-        const newCard = existingCard.cloneNode(true);
-
-        // Clear input values of the new card
-        newCard
-          .querySelectorAll("input")
-          .forEach((input) => (input.value = ""));
-
-        // Add the new card below the existing ones
-        const cardContainer = document.querySelector(".card-container1");
-        cardContainer.appendChild(newCard);
-
-        // Show "Hapus" button only in duplicated containers
-        const cardContainers = document.querySelectorAll(".card1");
-        cardContainers.forEach((container) => {
-          const hapusButton = container.querySelector(".hapus-btn");
-          hapusButton.style.display =
-            cardContainers.length > 1 ? "inline-block" : "none";
+    fetchProgramOptions() {
+      axios
+        .get("/api/programKegiatanRKA", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then((response) => {
+          this.programOptions = response.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching program options:", error);
         });
-      } else if (event.target.classList.contains("hapus-btn")) {
-        // Remove the parent card when "Hapus" button is clicked
-        event.target.closest(".card1").remove();
-
-        // Hide "Hapus" button if there's only one container left
-        const cardContainers = document.querySelectorAll(".card1");
-        cardContainers.forEach((container) => {
-          const hapusButton = container.querySelector(".hapus-btn");
-          hapusButton.style.display =
-            cardContainers.length > 1 ? "inline-block" : "none";
-        });
+    },
+    updateIdProgram() {
+      const selectedProgram = this.programOptions.find(
+        (program) => program.nama === this.formjudul.nama_program
+      );
+      if (selectedProgram) {
+        this.formjudul.id_program_kegiatan_rka = selectedProgram.id;
+      } else {
+        this.formjudul.id_program_kegiatan_rka = "";
       }
     },
-    generateYears() {
-      const currentYear = new Date().getFullYear();
-      const years = [];
-      for (let i = currentYear; i >= currentYear - 3; i--) {
-        years.push(i);
-      }
-      return years;
+    submitForm() {
+      console.log("Form Data:", this.formjudul);
+
+      axios
+        .post("/api/judulKegiatanRKA", this.formjudul, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/rka";
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    SubmitForm() {
+      console.log("Form Data:", this.formjudul);
+
+      axios
+        .post("/api/judulKegiatanRKA", this.formjudul, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    closeNotification() {
+      this.isNotificationVisible = false;
+    },
+
+    goToInputPage() {
+      // Mengarahkan ke halaman input
+      this.$router.push({ path: "/rka" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
     },
   },
   components: {
     Sidebar,
+  },
+  computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
   },
 };
 </script>

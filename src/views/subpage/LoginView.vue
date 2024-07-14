@@ -17,7 +17,10 @@
             required
           />
         </div>
-        <div class="input-container">
+        <div
+          class="input-container"
+          style="margin-top: 12px; margin-bottom: 15px"
+        >
           <input
             v-model="password"
             :type="showPassword ? 'text' : 'password'"
@@ -35,16 +38,16 @@
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
         </div>
-        <div class="form-check">
-          <input
-            class="form-check-input"
-            type="checkbox"
-            v-model="rememberMe"
-            id="flexCheckDefault"
-          />
-          <label class="form-check-label" for="flexCheckDefault">
+        <div style="text-align: left">
+          <b-form-checkbox
+            id="checkbox-1"
+            name="checkbox-1"
+            value="accepted"
+            unchecked-value="not_accepted"
+            style="font-weight: bold"
+          >
             Remember Me
-          </label>
+          </b-form-checkbox>
         </div>
         <button type="submit" :disabled="isLoading">
           <span v-if="isLoading">Loading...</span>
@@ -52,10 +55,8 @@
         </button>
       </form>
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-      <div class="akun">
-        Tidak punya akun? <router-link to="/register">Daftar</router-link>
-      </div>
-      <div class="lupa">
+
+      <div class="lupa" s>
         <router-link to="/lupa" style="color: red">Lupa Password</router-link>
       </div>
     </div>
@@ -132,13 +133,13 @@ onMounted(() => {
 }
 
 .input-container {
-  background: #fff;
+  background: #f5f5f5;
   width: 100%;
   max-width: 532px;
   height: 67px;
   border-radius: 13px;
   padding: 10px 20px;
-  margin: 13px auto;
+
   display: flex;
   align-items: center;
 }
@@ -155,6 +156,7 @@ onMounted(() => {
 
 .input-container input {
   width: 100%;
+  background-color: #f5f5f5;
   padding: 10px 0;
   border-radius: 15px;
   border: 0;
@@ -231,7 +233,8 @@ p {
   color: red;
   font-weight: 600;
   font-size: 16px;
-  margin-top: 11px;
+  margin-top: 25px;
+  margin-bottom: 50px;
 }
 
 .error-message {

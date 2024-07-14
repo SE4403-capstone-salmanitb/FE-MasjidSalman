@@ -4,54 +4,31 @@
     <div class="card-container">
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
-          <p>Form Input</p>
+          <p>Test</p>
         </div>
         <div class="container">
           <form>
-            <div class="mb-3">
-              <label for="namabidangprogram" class="form-label"
-                >Nama Bidang Program</label
-              >
-              <div class="dropdown-with-addition">
+            <div class="card-container1">
+              <div class="mb-3">
+                <label for="id_program" class="form-label">Nama Program</label>
                 <select
-                  v-model="bidangprogram"
                   class="form-control"
-                  id="namabidangprogram1"
-                  @change="handleProgramChange"
+                  v-model="formrka.nama_program"
+                  @change="updateIdProgram"
+                  required
                 >
-                  <option value="">Pilih Bidang Program</option>
-                  <option value="PROGRAM KEPUSTAKAAN">
-                    PROGRAM KEPUSTAKAAN
-                  </option>
-                  <option value="PROGRAM INTELEKTUALITAS">
-                    PROGRAM INTELEKTUALITAS
-                  </option>
-                  <option value="PROGRAM EKOLITERASI">
-                    PROGRAM EKOLITERASI
-                  </option>
-                  <option value="SUPPORTING SYSTEM">SUPPORTING SYSTEM</option>
                   <option
-                    value="__add__"
-                    style="text-align: center; color: #5897fb"
+                    v-for="program in programOptions"
+                    :key="program.id"
+                    :value="program.nama"
                   >
-                    ---Tambah program lain----<b-icon-person-add
-                    ></b-icon-person-add>
+                    {{ program.nama }}
                   </option>
                 </select>
-                <input
-                  v-if="showAddInput"
-                  type="text"
-                  class="form-control"
-                  v-model="newProgram"
-                  placeholder="Masukkan Bidang Program Baru"
-                />
               </div>
-            </div>
-
-            <div class="card-container1">
               <div
                 class="card1 mb-3"
-                style="max-width: 1067px; max-height: 354"
+                style="max-width: 1067px; max-height: fit-content"
               >
                 <div class="form">
                   <div class="mb-3">
@@ -62,7 +39,8 @@
                       type="text"
                       class="form-control"
                       id="programkegiatan1"
-                      v-model="programkegiatan"
+                      v-model="formrka.nama"
+                      required
                     />
                   </div>
                   <div class="mb-3">
@@ -71,7 +49,8 @@
                       type="text"
                       class="form-control"
                       id="deskripsi1"
-                      v-model="deskripsi"
+                      v-model="formrka.deskripsi"
+                      required
                       rows="3"
                     ></textarea>
                   </div>
@@ -81,50 +60,41 @@
                       type="text"
                       class="form-control"
                       id="output1"
-                      v-model="output"
+                      v-model="formrka.output"
+                      required
                     />
                   </div>
                   <div class="row">
                     <div class="mb-3">
-                      <label for="tahunkegiatan" class="form-label"
-                        >Tahun Kegiatan</label
-                      >
-                      <select
-                        v-model="selectedYear"
+                      <label for="tahun" class="form-label">Tahun</label>
+                      <input
+                        type="text"
                         class="form-control"
-                        id="tahunkegiatan1"
-                        style="width: 490px; margin-right: 20px"
-                      >
-                        <option v-for="year in years" :key="year" :value="year">
-                          {{ year }}
-                        </option>
-                      </select>
+                        id="tahun1"
+                        v-model="formrka.tahun"
+                        style="width: 490px"
+                        required
+                      />
                     </div>
                     <div class="mb-3">
-                      <label for="sumberdana" class="form-label"
-                        >Sumber Dana</label
+                      <label for="id_program" class="form-label"
+                        >ID Program</label
                       >
-                      <select
-                        v-model="sumberdana"
+                      <input
+                        type="text"
                         class="form-control"
-                        id="sumberdana1"
-                      >
-                        <option value="">Pilih Sumber Dana</option>
-                        <option value="Dana Pusat">Dana Pusat</option>
-                        <option value="Dana RAS">Dana RAS</option>
-                        <option value="Dana kepesertaan">
-                          Dana kepesertaan
-                        </option>
-                        <option value="Dana pihak ketiga">
-                          Dana pihak ketiga
-                        </option>
-                        <option value="Dana pusat wakaf salman">
-                          Dana pusat wakaf salman
-                        </option>
-                      </select>
+                        id="id_program1"
+                        v-model="formrka.id_program"
+                        style="width: 490px"
+                        required
+                        readonly
+                      />
                     </div>
                   </div>
-                  <div class="tombol">
+                  <div
+                    class="tombol"
+                    style="align-content: right; align-content: right"
+                  >
                     <button
                       type="button"
                       class="btn hapus-btn"
@@ -136,52 +106,113 @@
                     >
                       Hapus
                     </button>
-                    <button type="button" class="btn tambah-btn">Tambah</button>
+                    <button
+                      type="button"
+                      class="btn tambah-btn"
+                      style="align-content: right; align-content: right"
+                    >
+                      Tambah
+                    </button>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="tombol1">
-              <button type="button" class="btn" @click="saveData">
+            <div class="tombol1" style="margin-bottom: 272px">
+              <button type="button" class="btn" @click="submitForm">
                 Simpan
               </button>
             </div>
           </form>
         </div>
       </div>
+      <div v-if="isNotificationVisible" :class="notificationClass">
+        <div class="row">
+          <b-icon-check-circle
+            v-if="notificationType === 'success'"
+            style="
+              margin-right: 12px;
+              margin-left: 15px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-check-circle>
+          <b-icon-exclamation-circle
+            v-if="notificationType === 'error'"
+            style="
+              margin-right: 12px;
+              margin-left: 15px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-exclamation-circle>
+          <div class="notification-header">
+            <p class="notification-title">{{ notificationMessage }}</p>
+            <p class="notification-content">{{ notificationDetail }}</p>
+          </div>
+          <b-icon-x
+            @click="closeNotification"
+            style="
+              margin-left: 47px;
+              margin-right: 12px;
+              margin-top: 14px;
+              width: 30px;
+              height: 30px;
+            "
+          ></b-icon-x>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
 
 export default {
   data() {
     return {
-      selectedYear: new Date().getFullYear(),
-      years: this.generateYears(),
+      formrka: {
+        nama_program: "",
+        nama: "",
+        deskripsi: "",
+        output: "",
+        tahun: "",
+        id_program: "",
+      },
+      programOptions: [],
       showAddInput: false,
       newProgram: "",
-      sumberdana: "",
-      programkegiatan: "", // Menambahkan data kegiatan, deskripsi, dan output ke data
-      deskripsi: "",
-      output: "",
+      notificationMessage: "",
+      notificationDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
     };
   },
   mounted() {
     // Attach event listener to the parent element for both Tambah and Hapus buttons
     const cardContainer = document.querySelector(".card-container1");
     cardContainer.addEventListener("click", this.handleButtonClick);
+
+    // Fetch program options from the API
+    this.fetchProgramOptions();
   },
   methods: {
-    handleProgramChange(event) {
-      if (event.target.value === "__add__") {
-        this.showAddInput = true;
-      } else {
-        this.showAddInput = false;
-      }
+    fetchProgramOptions() {
+      axios
+        .get("/api/program", {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then((response) => {
+          this.programOptions = response.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching program options:", error);
+        });
     },
     handleButtonClick(event) {
       // Check if the clicked element is either "Tambah" or "Hapus" button
@@ -219,44 +250,65 @@ export default {
         });
       }
     },
-    saveData() {
-      // Mengumpulkan data formulir
-      const formData = {
-        bidangprogram: this.bidangprogram,
-        sumberdana: this.sumberdana,
-        selectedYear: this.selectedYear,
-        programkegiatan: this.programkegiatan,
-        deskripsi: this.deskripsi,
-        output: this.output,
-      };
+    updateIdProgram() {
+      const selectedProgram = this.programOptions.find(
+        (program) => program.nama === this.formrka.nama_program
+      );
+      if (selectedProgram) {
+        this.formrka.id_program = selectedProgram.id;
+      } else {
+        this.formrka.id_program = "";
+      }
+    },
+    submitForm() {
+      console.log("Form Data:", this.formrka);
 
-      // Kirim data ke backend server menggunakan Axios
       axios
-        .post("/api/programKegiatanRKA", formData)
-        .then((response) => {
-          // Tambahkan logika jika simpan berhasil
-          console.log(response.data);
-          // Misalnya, tampilkan pesan sukses kepada pengguna
-          alert("Data berhasil disimpan!");
+        .post("/api/programKegiatanRKA", this.formrka, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/penjrka";
         })
         .catch((error) => {
-          // Tambahkan logika jika simpan gagal
-          console.error("Terjadi kesalahan:", error);
-          // Misalnya, tampilkan pesan kesalahan kepada pengguna
-          alert("Terjadi kesalahan saat menyimpan data.");
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
         });
     },
-    generateYears() {
-      const currentYear = new Date().getFullYear();
-      const years = [];
-      for (let i = currentYear; i >= currentYear - 3; i--) {
-        years.push(i);
-      }
-      return years;
+    closeNotification() {
+      this.isNotificationVisible = false;
     },
   },
   components: {
     Sidebar,
+  },
+  computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
   },
 };
 </script>

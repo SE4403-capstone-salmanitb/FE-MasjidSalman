@@ -40,128 +40,74 @@
           ></b-icon-x>
         </div>
       </div>
+
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
-          <p>Form Input Penerima Manfaat</p>
+          <p>Form Input</p>
         </div>
         <div class="container">
           <form>
-            <div class="row">
-              <div class="mb-3" style="margin-left: 20px">
-                <label for="namabidangprogram" class="form-label"
-                  >Nama Bidang Program</label
-                >
-                <div class="dropdown-with-addition">
-                  <select
-                    class="form-control"
-                    id="namabidangprogram1"
-                    @change="handleProgramChange"
-                    style="width: 705px; height: 38px"
-                  >
-                    <option value="">Pilih Bidang Program</option>
-                    <option value="PROGRAM KEPUSTAKAAN">
-                      PROGRAM KEPUSTAKAAN
-                    </option>
-                    <option value="PROGRAM INTELEKTUALITAS">
-                      PROGRAM INTELEKTUALITAS
-                    </option>
-                    <option value="PROGRAM EKOLITERASI">
-                      PROGRAM EKOLITERASI
-                    </option>
-                    <option value="SUPPORTING SYSTEM">SUPPORTING SYSTEM</option>
-                    <option
-                      value="__add__"
-                      style="text-align: center; color: #5897fb"
-                    >
-                      ---Tambah program lain----
-                    </option>
-                  </select>
-                  <input
-                    v-if="showAddInput"
-                    type="text"
-                    class="form-control"
-                    v-model="newProgram"
-                    placeholder="Masukkan Bidang Program Baru"
-                    style="width: 680px"
-                  />
-                </div>
-              </div>
+            <div class="card-container1">
               <div class="mb-3">
-                <label for="bulan" class="form-label">Bulan</label>
+                <label for="id_program" class="form-label"
+                  >Nama Laporan Bulanan</label
+                >
                 <select
-                  v-model="selectedMonth"
+                  style="width: 100%"
                   class="form-control"
-                  id="bulankegiatan1"
-                  style="width: 138px; margin-right: 20px"
+                  v-model="form.kode"
+                  @change="updateIdLaporanBulanan"
+                  required
                 >
                   <option
-                    v-for="(month, index) in months"
-                    :key="index"
-                    :value="index + 1"
+                    v-for="program in LaporanBulanan"
+                    :key="program.id"
+                    :value="program.kode"
                   >
-                    {{ month }}
+                    {{ program.kode }}
                   </option>
                 </select>
               </div>
-              <div class="mb-3">
-                <label for="tahunkegiatan" class="form-label"
-                  >Tahun Kegiatan</label
-                >
-                <select
-                  v-model="selectedYear"
-                  class="form-control"
-                  id="tahunkegiatan1"
-                  style="width: 138px; margin-right: 20px"
-                >
-                  <option v-for="year in years" :key="year" :value="year">
-                    {{ year }}
-                  </option>
-                </select>
-              </div>
-            </div>
-            <div class="card-container1">
-              <div class="card1 mb-3" style="max-width: 1067px">
-                <div
-                  v-for="(entry, index) in formEntries"
-                  :key="index"
-                  class="form mb-3"
-                  style="
-                    background-color: #d9d9d9;
-                    padding: 16px;
-                    margin-bottom: 16px;
-                  "
-                >
+              <div
+                class="card1 mb-3"
+                style="max-width: 1067px; max-height: 354"
+              >
+                <div class="form">
                   <div class="mb-3">
                     <label for="kategori" class="form-label">Kategori</label>
-                    <select
-                      v-model="selectedYear"
-                      class="form-control"
-                      id="tahunkegiatan1"
-                      style="width: 960px; height: 47px; margin-right: 20px"
-                    >
-                      <option v-for="year in years" :key="year" :value="year">
-                        {{ year }}
-                      </option>
-                    </select>
-                  </div>
-                  <div class="mb-3">
-                    <label for="rutinitas" class="form-label">Rutinitas</label>
                     <input
                       type="text"
                       class="form-control"
-                      v-model="entry.rutinitas"
-                      style="width: 960px; height: 47px"
+                      id="kategori1"
+                      style="width: 100%"
+                      v-model="form.kategori"
+                      required
                     />
                   </div>
                   <div class="mb-3">
-                    <label for="penyaluran" class="form-label"
+                    <label for="tipe_rutinitas" class="form-label"
+                      >Rutinitas</label
+                    >
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="tipe_rutinitas1"
+                      v-model="form.tipe_rutinitas"
+                      style="width: 100%"
+                      required
+                    />
+                  </div>
+                  <div class="mb-3">
+                    <label for="tipe_penyaluran" class="form-label"
                       >Penyaluran</label
                     >
                     <input
                       type="text"
                       class="form-control"
-                      v-model="entry.penyaluran"
-                      style="width: 960px; height: 47px"
+                      id="tipe_penyaluran1"
+                      v-model="form.tipe_penyaluran"
+                      style="width: 100%"
+                      required
                     />
                   </div>
                   <div class="row">
@@ -170,8 +116,10 @@
                       <input
                         type="text"
                         class="form-control"
-                        v-model="entry.rencana"
-                        style="width: 470px; height: 47px"
+                        id="rencana1"
+                        v-model="form.rencana"
+                        style="width: 490px"
+                        required
                       />
                     </div>
                     <div class="mb-3">
@@ -181,30 +129,44 @@
                       <input
                         type="text"
                         class="form-control"
-                        v-model="entry.realisasi"
-                        style="width: 470px; height: 47px"
+                        id="realisasi1"
+                        v-model="form.realisasi"
+                        style="width: 490px"
+                        required
                       />
                     </div>
                   </div>
-                  <div class="tombol">
-                    <button
-                      type="button"
-                      class="btn hapus-btn"
-                      style="
-                        display: none;
-                        background-color: #ff0000;
-                        margin-right: 14px;
-                      "
+
+                  <div class="mb-3">
+                    <label for="idlaporanbulanan" class="form-label"
+                      >ID Laporan Bulanan</label
                     >
-                      Hapus
-                    </button>
-                    <button type="button" class="btn tambah-btn">Tambah</button>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="idlaporanbulanan1"
+                      style="width: 100%"
+                      v-model="form.id_laporan_bulanan"
+                      required
+                      readonly
+                    />
                   </div>
+                </div>
+                <div class="tombol">
+                  <button
+                    type="button"
+                    class="btn tambah-btn"
+                    style="margin-left: 14px"
+                    @click="submitForms"
+                  >
+                    Tambah
+                  </button>
                 </div>
               </div>
             </div>
-            <div class="tombol1">
-              <button type="button" class="btn" @click="goToInputPage">
+
+            <div class="tombol1" style="margin-bottom: 204px">
+              <button type="button" class="btn" @click="submitForm">
                 Simpan
               </button>
             </div>
@@ -217,114 +179,65 @@
 
 <script>
 import Sidebar from "@/components/SidebarView.vue";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 export default {
   data() {
     return {
-      months: [
-        "Januari",
-        "Februari",
-        "Maret",
-        "April",
-        "Mei",
-        "Juni",
-        "Juli",
-        "Agustus",
-        "September",
-        "Oktober",
-        "November",
-        "Desember",
-      ],
-      selectedMonth: new Date().getMonth() + 1, // Mengatur bulan saat ini sebagai nilai awal
-      selectedYear: new Date().getFullYear(), // Mengatur tahun saat ini sebagai nilai awal
-      years: this.generateYears(), // Menghasilkan daftar tahun
+      form: {
+        kode: "",
+        kategori: "",
+        tipe_rutinitas: "",
+        tipe_penyaluran: "",
+        rencana: "",
+        realisasi: "",
+        id_laporan_bulanan: "",
+      },
+      LaporanBulanan: [],
       showAddInput: false,
+      newProgram: "",
       notificationMessage: "",
       notificationDetail: "",
       notificationType: "", // error, success
       isNotificationVisible: false,
-      newProgram: "",
-      kpi: "",
-      target: "",
-      formEntries: [{ kpi: "", target: "" }], // Initial form entry
     };
   },
   mounted() {
-    // Attach event listener to the parent element for both Tambah and Hapus buttons
-    const cardContainer = document.querySelector(".card-container1");
-    cardContainer.addEventListener("click", this.handleButtonClick);
+    this.fetchLaporanBulanan();
   },
   methods: {
-    handleButtonClick(event) {
-      // Check if the clicked element is either "Tambah" or "Hapus" button
-      if (event.target.classList.contains("tambah-btn")) {
-        // Clone the existing card template
-        const existingCard = document.querySelector(".card1");
-        const newCard = existingCard.cloneNode(true);
-
-        // Clear input values of the new card
-        newCard
-          .querySelectorAll("input")
-          .forEach((input) => (input.value = ""));
-
-        // Add the new card below the existing ones
-        const cardContainer = document.querySelector(".card-container1");
-        cardContainer.appendChild(newCard);
-
-        // Show "Hapus" button only in duplicated containers
-        const cardContainers = document.querySelectorAll(".card1");
-        cardContainers.forEach((container) => {
-          const hapusButton = container.querySelector(".hapus-btn");
-          hapusButton.style.display =
-            cardContainers.length > 1 ? "inline-block" : "none";
-        });
-      } else if (event.target.classList.contains("hapus-btn")) {
-        // Remove the parent card when "Hapus" button is clicked
-        event.target.closest(".card1").remove();
-
-        // Hide "Hapus" button if there's only one container left
-        const cardContainers = document.querySelectorAll(".card1");
-        cardContainers.forEach((container) => {
-          const hapusButton = container.querySelector(".hapus-btn");
-          hapusButton.style.display =
-            cardContainers.length > 1 ? "inline-block" : "none";
-        });
-      }
-    },
-    handleProgramChange(event) {
-      if (event.target.value === "__add__") {
-        this.showAddInput = true;
-      } else {
-        this.showAddInput = false;
-      }
-    },
-    addEntry() {
-      this.formEntries.push({ kpi: "", target: "" });
-    },
-    removeEntry(index) {
-      if (this.formEntries.length > 1) {
-        this.formEntries.splice(index, 1);
-      }
-    },
-    generateYears() {
-      const currentYear = new Date().getFullYear();
-      return Array.from({ length: 10 }, (v, i) => currentYear - i);
-    },
-    saveEntries() {
-      // Implement the save logic here
-      console.log("Saving entries:", this.formEntries);
-    },
-    closeNotification() {
-      this.isNotificationVisible = false;
-    },
-    goToInputPage() {
+    fetchLaporanBulanan() {
       axios
-        .post("/url/untuk/menyimpan/data", {
-          kpi: this.kpi,
-          target: this.target,
+        .get("/api/laporanBulanan")
+        .then((response) => {
+          console.log("API Response:", response.data); // Log response data
+          this.LaporanBulanan = response.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching Laporan Bulanan:", error);
+        });
+    },
+
+    updateIdLaporanBulanan() {
+      const selectedProgram = this.LaporanBulanan.find(
+        (program) => program.kode === this.form.kode
+      );
+      console.log("Selected Program:", selectedProgram); // Log selected program
+      if (selectedProgram) {
+        this.form.id_laporan_bulanan = selectedProgram.id;
+      }
+    },
+    submitForm() {
+      console.log("Form Data:", this.form);
+
+      axios
+        .post("/api/penerimaManfaat", this.form, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
         })
         .then(() => {
+          // Handle successful response, e.g., show success message
           this.notificationMessage = "Berhasil";
           this.notificationDetail = "Data berhasil di upload";
           this.notificationType = "success";
@@ -333,14 +246,57 @@ export default {
             this.notificationMessage = "";
             this.notificationDetail = "";
             this.notificationType = "";
-          }, 3000); // Reset notifikasi setelah 3 detik
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/program";
         })
-        .catch(() => {
+        .catch((error) => {
+          // Handle error, e.g., show error message
           this.notificationMessage = "Gagal";
-          this.notificationDetail = "Gagal menginput data";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
           this.notificationType = "error";
           this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
         });
+    },
+    submitForms() {
+      console.log("Form Data:", this.form);
+
+      axios
+        .post("/api/penerimaManfaat", this.form, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/inputpenerima";
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    closeNotification() {
+      this.isNotificationVisible = false;
     },
   },
   components: {
