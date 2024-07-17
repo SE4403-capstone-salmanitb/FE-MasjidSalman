@@ -8,6 +8,25 @@
         </div>
         <div class="container text-center">
           <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  v-model="selectedBidang"
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                  @change="mergeData"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.nama"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                </select>
+              </div>
+            </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
               <b-dropdown
@@ -20,10 +39,13 @@
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
-                  v-for="(option, index) in programOptions"
+                  v-for="(option, index) in filteredProgramOptions"
                   :key="index"
                 >
                   {{ option.nama }}
+                </b-dropdown-item>
+                <b-dropdown-item @click="navigateToInputProgram">
+                  Tambahkan Program
                 </b-dropdown-item>
               </b-dropdown>
             </div>
@@ -153,6 +175,8 @@ export default {
   data() {
     return {
       programOptions: [],
+      bidangOptions: [],
+      selectedBidang: "",
       selectedOptionIndex: null,
       selectedProgramId: null,
       selectedYear: new Date().getFullYear(),
@@ -168,6 +192,17 @@ export default {
         ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
     },
+    filteredProgramOptions() {
+      return this.programOptions.filter(
+        (option) => option.id_bidang === this.selectedBidangId
+      );
+    },
+    selectedBidangId() {
+      const selectedBidang = this.bidangOptions.find(
+        (bidang) => bidang.nama === this.selectedBidang
+      );
+      return selectedBidang ? selectedBidang.id : null;
+    },
     filteredData() {
       return this.mergedData.filter(
         (item) =>
@@ -178,7 +213,31 @@ export default {
       );
     },
   },
+  watch: {
+    selectedBidang() {
+      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
+      this.mergeData();
+    },
+  },
   methods: {
+    async fetchBidangOptions() {
+      // New method to fetch bidang options
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
+        this.setDefaultSelectedBidang();
+      } catch (error) {
+        console.error("Error fetching bidang options:", error);
+      }
+    },
+    setDefaultSelectedBidang() {
+      const defaultBidang = this.bidangOptions.find(
+        (option) => option.id === 1
+      );
+      if (defaultBidang) {
+        this.selectedBidang = defaultBidang.nama;
+      }
+    },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
@@ -353,10 +412,14 @@ export default {
       const fileName = `KPI_${this.selectedYear}.xlsx`;
       XLSX.writeFile(wb, fileName);
     },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
   },
   mounted() {
     this.fetchProgramOptions();
     this.fetchIndicators();
+    this.fetchBidangOptions();
   },
 };
 </script>

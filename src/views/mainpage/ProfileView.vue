@@ -79,6 +79,40 @@
         </div>
       </div>
     </div>
+    <b-icon-check-circle
+      v-if="notificationType === 'success'"
+      style="
+        margin-right: 12px;
+        margin-left: 15px;
+        margin-top: 14px;
+        width: 30px;
+        height: 30px;
+      "
+    ></b-icon-check-circle>
+    <b-icon-exclamation-circle
+      v-if="notificationType === 'error'"
+      style="
+        margin-right: 12px;
+        margin-left: 15px;
+        margin-top: 14px;
+        width: 30px;
+        height: 30px;
+      "
+    ></b-icon-exclamation-circle>
+    <div class="notification-header">
+      <p class="notification-title">{{ notificationMessage }}</p>
+      <p class="notification-content">{{ notificationDetail }}</p>
+    </div>
+    <b-icon-x
+      @click="closeNotification"
+      style="
+        margin-left: 47px;
+        margin-right: 12px;
+        margin-top: 14px;
+        width: 30px;
+        height: 30px;
+      "
+    ></b-icon-x>
   </div>
 </template>
 
@@ -90,8 +124,21 @@ export default {
   components: {
     Sidebar,
   },
+  computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
+  },
   data() {
     return {
+      notificationMessage: "",
+      notificationDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
       profilePicture: null,
       userName: "", // Menyimpan nama pengguna
       userEmail: "",
@@ -105,55 +152,20 @@ export default {
     };
   },
   created() {
-    this.fetchUserId();
+    this.fetchProfileData();
   },
   methods: {
-    async fetchUserId() {
-      try {
-        // Simulating fetching user ID from an authentication service
-        // Replace this with actual logic to fetch the user ID
-        const userId = await this.getUserIdFromAuthService();
-        this.userId = userId;
-        this.fetchProfileData();
-      } catch (error) {
-        console.error("Error fetching user ID:", error);
+    fetchProfileData() {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (user) {
+        this.profilePicture = user.profile_picture;
+        this.userName = user.name; // Set nama pengguna
+        this.userEmail = user.email; // Set email pengguna
+      } else {
+        console.error("User data is not available in session storage");
       }
     },
-    async getUserIdFromAuthService() {
-      // Simulate an async call to fetch user ID
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(2); // Example user ID
-        }, 1000);
-      });
-    },
-    async fetchProfileData() {
-      if (!this.userId) {
-        console.error("User ID is not provided");
-        return;
-      }
 
-      try {
-        const response = await axios.get("/user");
-        console.log("API Response:", response.data); // Debugging log
-
-        // Cari pengguna berdasarkan userId
-        const user = response.data.find((user) => user.id === this.userId);
-
-        if (user) {
-          this.profilePicture = user.profile_picture;
-          this.userName = user.name; // Set nama pengguna
-          this.userEmail = user.email; // Set email pengguna
-          if (!this.profilePicture) {
-            console.error("Profile picture URL is not available");
-          }
-        } else {
-          console.error("User not found");
-        }
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-      }
-    },
     submitForm() {
       console.log("Form Data:", this.user);
 
@@ -163,7 +175,15 @@ export default {
             Authorization: "Bearer " + sessionStorage.getItem("bearer"),
           },
         })
-        .then(() => {
+        .then((response) => {
+          // Update session storage with the new user data
+          const updatedUser = response.data;
+          sessionStorage.setItem("user", JSON.stringify(updatedUser));
+
+          // Update local state with the new user data
+          this.userName = updatedUser.name;
+          this.profilePicture = updatedUser.profile_picture;
+
           // Handle successful response, e.g., show success message
           this.notificationMessage = "Berhasil";
           this.notificationDetail = "Data berhasil di upload";
@@ -175,8 +195,9 @@ export default {
             this.notificationType = "";
             this.isNotificationVisible = false;
           }, 10000); // Reset notification after 10 seconds
-          // Redirect to RKA page after successful submission
-          window.location.href = "/test";
+          window.location.href = "/profile";
+          // Refresh profile data
+          this.fetchProfileData();
         })
         .catch((error) => {
           // Handle error, e.g., show error message
@@ -187,6 +208,9 @@ export default {
           this.isNotificationVisible = true;
           console.error("Error:", error.response.data);
         });
+    },
+    closeNotification() {
+      this.isNotificationVisible = false;
     },
     handleFileChange(event) {
       const file = event.target.files[0];

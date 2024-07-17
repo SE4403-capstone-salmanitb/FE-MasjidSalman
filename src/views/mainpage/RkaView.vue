@@ -8,6 +8,24 @@
         </div>
         <div class="container text-center">
           <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  v-model="selectedBidang"
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.nama"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                </select>
+              </div>
+            </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
               <b-dropdown
@@ -20,13 +38,17 @@
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
-                  v-for="(option, index) in programOptions"
+                  v-for="(option, index) in filteredProgramOptions"
                   :key="index"
                 >
                   {{ option.nama }}
                 </b-dropdown-item>
+                <b-dropdown-item @click="navigateToInputProgram">
+                  Tambahkan Program
+                </b-dropdown-item>
               </b-dropdown>
             </div>
+
             <div class="print-tombol">
               <button type="button" class="print-icon" @click="downloadExcel">
                 <b-icon-file-earmark-spreadsheet-fill
@@ -244,9 +266,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jan
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jan
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -260,9 +284,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_feb
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_feb
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -276,9 +302,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_mar
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_mar
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -292,9 +320,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_apr
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_apr
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -308,9 +338,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_mei
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_mei
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -324,9 +356,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jun
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jun
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -340,9 +374,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jul
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jul
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -356,9 +392,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_aug
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_aug
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -372,9 +410,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_sep
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_sep
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -388,9 +428,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_oct
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_oct
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -404,9 +446,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_nov
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_nov
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
@@ -420,13 +464,14 @@
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_dec
-                                    ? item.nilai_satuan * item.quantity
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_dec
+                                      ? item.nilai_satuan * item.quantity
+                                      : 0
+                                  )
                                 }}
                               </div>
                             </td>
-
                             <td>
                               {{ calculateTotal(item) }}
                             </td>
@@ -549,9 +594,9 @@
                             >
                               Sumber Dana
                             </th>
-                            <th style="width: 50px"></th>
                           </tr>
                         </thead>
+
                         <tbody>
                           <tr v-if="filteredItems(judul.id).length === 0">
                             <td colspan="15" class="text-center">
@@ -701,6 +746,8 @@ export default {
   data() {
     return {
       programOptions: [],
+      bidangOptions: [],
+      selectedBidang: "",
       selectedOptionIndex: null,
       selectedProgramId: null,
       selectedYear: new Date().getFullYear(),
@@ -717,6 +764,17 @@ export default {
       return this.selectedOptionIndex !== null
         ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
+    },
+    filteredProgramOptions() {
+      return this.programOptions.filter(
+        (option) => option.id_bidang === this.selectedBidangId
+      );
+    },
+    selectedBidangId() {
+      const selectedBidang = this.bidangOptions.find(
+        (bidang) => bidang.nama === this.selectedBidang
+      );
+      return selectedBidang ? selectedBidang.id : null;
     },
     filteredProgramKegiatan() {
       if (this.selectedOptionIndex !== null) {
@@ -760,11 +818,29 @@ export default {
       };
     },
   },
+
   methods: {
+    async fetchBidangOptions() {
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data;
+        this.setDefaultSelectedBidang();
+      } catch (error) {
+        console.error("Error fetching bidang options:", error);
+      }
+    },
+    setDefaultSelectedBidang() {
+      const defaultBidang = this.bidangOptions.find(
+        (option) => option.id === 1
+      );
+      if (defaultBidang) {
+        this.selectedBidang = defaultBidang.nama;
+      }
+    },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
-        this.programOptions = response.data; // Assuming response.data is an array of program options
+        this.programOptions = response.data;
       } catch (error) {
         console.error("Error fetching program options:", error);
       }
@@ -870,6 +946,9 @@ export default {
         console.error("Error saving item:", error);
       }
     },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
     formatCurrency(value) {
       return new Intl.NumberFormat("id-ID", {
         style: "currency",
@@ -915,9 +994,7 @@ export default {
         ? item.nilai_satuan * item.quantity
         : 0 + item.dana_nov
         ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_dec
-        ? item.nilai_satuan * item.quantity
-        : 0;
+        : 0 + item.dana_dec;
     },
     downloadExcel() {
       const penjelasanData = [];
@@ -1009,6 +1086,9 @@ export default {
     selectedYear() {
       this.fetchProgramKegiatan();
     },
+    selectedBidang() {
+      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
+    },
   },
   mounted() {
     this.fetchProgramOptions().then(() => {
@@ -1017,6 +1097,7 @@ export default {
     this.fetchItemKegiatan();
     this.fetchJudulKegiatan();
     this.fetchProgramKegiatan();
+    this.fetchBidangOptions();
   },
 };
 </script>

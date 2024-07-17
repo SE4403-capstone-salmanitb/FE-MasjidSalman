@@ -8,6 +8,25 @@
         </div>
         <div class="container text-center">
           <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  v-model="selectedBidang"
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                  @change="combineData"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.nama"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                </select>
+              </div>
+            </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
               <b-dropdown
@@ -20,10 +39,13 @@
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
-                  v-for="(option, index) in programOptions"
+                  v-for="(option, index) in filteredProgramOptions"
                   :key="index"
                 >
                   {{ option.nama }}
+                </b-dropdown-item>
+                <b-dropdown-item @click="navigateToInputProgram">
+                  Tambahkan Program
                 </b-dropdown-item>
               </b-dropdown>
             </div>
@@ -50,6 +72,12 @@
                   </option>
                 </select>
               </div>
+            </div>
+
+            <div class="print-tombol">
+              <button type="button" class="acc" @click="showAccModal">
+                ACC Data
+              </button>
             </div>
             <div class="pilihan">
               <button
@@ -206,6 +234,38 @@
         </div>
       </div>
     </div>
+
+    <!-- Confirmation Modal -->
+    <b-modal
+      id="acc-modal"
+      ref="accModal"
+      hide-footer
+      title="Konfirmasi ACC Data"
+    >
+      <!-- <div class="icon-konfirmasi">
+        <b-icon-exclamation-circle-fill
+          font-scale="5"
+          style="color: #967c55; margin-bottom: 25px"
+        ></b-icon-exclamation-circle-fill>
+      </div> -->
+
+      <p class="teks-konfirmasi" style="margin-bottom: 15px">
+        Apakah anda ingin melakukan acc pada data?
+      </p>
+      <p class="info" style="margin-bottom: 30px">
+        Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
+      </p>
+      <div class="tombol-konfirmasi">
+        <b-button variant="secondary" @click="hideAccModal" style="width: 200px"
+          >Tidak</b-button
+        >
+        <b-button
+          style="background-color: #967c55; margin-left: 15px; width: 200px"
+          @click="confirmAccData"
+          >Ya</b-button
+        >
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -225,8 +285,10 @@ export default {
       itemKegiatan: [],
       combinedData: [],
       programOptions: [],
+      bidangOptions: [], // New data property for bidang options
       selectedOptionIndex: null,
       selectedYear: new Date().getFullYear(),
+      selectedBidang: "", // New data property for selected bidang
       years: this.generateYears(),
       totalAnggaranSum: 0,
       isPenjelasanActive: true,
@@ -249,9 +311,24 @@ export default {
         (item) => item.tahun == this.selectedYear
       );
     },
+    filteredProgramOptions() {
+      return this.programOptions.filter(
+        (option) => option.id_bidang === this.selectedBidangId
+      );
+    },
+    selectedBidangId() {
+      const selectedBidang = this.bidangOptions.find(
+        (bidang) => bidang.nama === this.selectedBidang
+      );
+      return selectedBidang ? selectedBidang.id : null;
+    },
   },
   watch: {
     selectedOptionIndex() {
+      this.combineData();
+    },
+    selectedBidang() {
+      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
       this.combineData();
     },
   },
@@ -265,6 +342,16 @@ export default {
         console.error("Error fetching program options:", error);
       }
     },
+    async fetchBidangOptions() {
+      // New method to fetch bidang options
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
+        this.setDefaultSelectedBidang();
+      } catch (error) {
+        console.error("Error fetching bidang options:", error);
+      }
+    },
     setDefaultSelectedOption() {
       const defaultIndex = this.programOptions.findIndex(
         (option) => option.id === 1
@@ -273,8 +360,19 @@ export default {
         this.selectedOptionIndex = defaultIndex;
       }
     },
+    setDefaultSelectedBidang() {
+      const defaultBidang = this.bidangOptions.find(
+        (option) => option.id === 1
+      );
+      if (defaultBidang) {
+        this.selectedBidang = defaultBidang.nama;
+      }
+    },
     selectOption(index) {
       this.selectedOptionIndex = index;
+    },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -551,9 +649,22 @@ export default {
 
       XLSX.writeFile(wb, fileName);
     },
+    showAccModal() {
+      this.$refs.accModal.show();
+    },
+    hideAccModal() {
+      this.$refs.accModal.hide();
+    },
+    confirmAccData() {
+      // Handle the ACC Data confirmation logic here
+      this.hideAccModal();
+      // Add your logic to handle the ACC Data confirmation here
+      console.log("ACC Data confirmed");
+    },
   },
   mounted() {
     this.fetchProgramOptions();
+    this.fetchBidangOptions(); // Fetch bidang options when component is mounted
     this.fetchProgramKegiatan();
     this.fetchJudulKegiatan();
     this.fetchItemKegiatan();
@@ -573,6 +684,45 @@ export default {
   width: 30px;
   border-radius: 5px;
   color: white;
+}
+
+.acc {
+  align-content: center;
+  align-items: center;
+  margin-top: 25px;
+  background-color: #967c55;
+  font-size: 12px;
+  font-weight: bold;
+  height: 30px;
+  width: fit-content;
+  border-radius: 5px;
+  color: white;
+}
+
+.icon-konfirmasi {
+  text-align: center;
+}
+
+.teks-konfirmasi {
+  padding-right: 34px;
+  padding-left: 34px;
+  text-align: center;
+  font-size: 28px;
+  font-weight: bolder;
+}
+
+.info {
+  padding-right: 34px;
+  padding-left: 34px;
+  text-align: center;
+  font-size: 14px;
+  color: #9b9b9b;
+  font-weight: 600;
+}
+
+.tombol-konfirmasi {
+  text-align: center;
+  margin-bottom: 40px;
 }
 
 .dropdown {

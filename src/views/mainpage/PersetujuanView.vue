@@ -81,7 +81,18 @@
                       >
                         Delete
                       </button>
-                      <button @click="selectUser(account)" style="color: black">
+                      <button
+                        v-if="account.tipe_user === 'Pengguna'"
+                        style="color: black"
+                        @click="toggleAdminStatus(account.id)"
+                      >
+                        Jadikan Admin
+                      </button>
+                      <button
+                        v-else
+                        style="color: black"
+                        @click="toggleAdminStatus(account.id)"
+                      >
                         Jadikan Pengguna
                       </button>
                     </div>
@@ -314,15 +325,31 @@ export default {
     },
     deleteUser(account, index) {
       // Tampilkan pop-up konfirmasi
-      this.confirmDelete = index;
+      this.confirmDelete = {
+        index: index,
+        id: account.id,
+      };
     },
     deleteConfirmed() {
       // Implementasikan logika untuk menghapus pengguna
       if (this.confirmDelete !== null) {
-        console.log("Deleting user:", this.dataAkun[this.confirmDelete].name);
-        // Implementasikan logika hapus di sini, misalnya memanggil API atau memodifikasi data secara langsung
-        this.dataAkun.splice(this.confirmDelete, 1);
-        this.confirmDelete = null; // Tutup pop-up konfirmasi
+        const userId = this.confirmDelete.id;
+        axios
+          .get(`/verify-delete/${userId}`, {
+            headers: {
+              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            },
+          })
+          .then((response) => {
+            console.log("Delete verified for user:", userId);
+            // Implementasikan logika hapus di sini, misalnya memanggil API atau memodifikasi data secara langsung
+            this.dataAkun.splice(this.confirmDelete.index, 1);
+            this.confirmDelete = null; // Tutup pop-up konfirmasi
+            console.log(response);
+          })
+          .catch((error) => {
+            console.error("Error verifying delete:", error);
+          });
       }
     },
     cancelDelete() {
@@ -357,6 +384,7 @@ export default {
     },
     closePopup() {
       this.showPopup = false;
+      this.showVerificationPopup = false;
     },
     store() {
       // Implementasi untuk menyimpan data register baru
@@ -385,6 +413,31 @@ export default {
       // Implementasi untuk mengirim ulang link verifikasi
       console.log("Resending verification link to:", this.form.email);
       // Implementasikan logika kirim ulang link di sini, misalnya memanggil API
+    },
+    toggleAdminStatus(userId) {
+      // API call to toggle admin status
+      axios
+        .post(
+          `/user/${userId}/toggleAdmin`,
+          {},
+          {
+            headers: {
+              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            },
+          }
+        )
+        .then((response) => {
+          console.log(`User ${userId} admin status toggled successfully`);
+          // Optionally, refresh the account list or update the state
+          this.fetchDataFromApi();
+          console.log(response);
+        })
+        .catch((error) => {
+          console.error(
+            `Error toggling admin status for user ${userId}:`,
+            error
+          );
+        });
     },
   },
 

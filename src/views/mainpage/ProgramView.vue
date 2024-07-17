@@ -8,6 +8,24 @@
         </div>
         <div class="container text-center">
           <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  v-model="selectedBidang"
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.nama"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                </select>
+              </div>
+            </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
               <b-dropdown
@@ -20,10 +38,13 @@
               >
                 <b-dropdown-item
                   @click="selectOption(index)"
-                  v-for="(option, index) in programOptions"
+                  v-for="(option, index) in filteredProgramOptions"
                   :key="index"
                 >
                   {{ option.nama }}
+                </b-dropdown-item>
+                <b-dropdown-item @click="navigateToInputProgram">
+                  Tambahkan Program
                 </b-dropdown-item>
               </b-dropdown>
             </div>
@@ -62,8 +83,21 @@
           </div>
           <div class="kotak-deskripsi">
             <div class="kotak-teks">
+              <p class="teks-kegiatan">Data Program</p>
+            </div>
+            <div class="tombol-tambah" @click="goToInputLaporan">
+              <b-icon-plus
+                style="margin-bottom: 3px"
+                @click="goToInputLaporan"
+              ></b-icon-plus>
+            </div>
+          </div>
+
+          <div class="kotak-deskripsi">
+            <div class="kotak-teks">
               <p class="teks-kegiatan">Deskripsi Pelaksanaan Kegiatan</p>
             </div>
+
             <div class="tombol-tambah" @click="goToInputDeskripsi">
               <b-icon-plus
                 style="margin-bottom: 3px"
@@ -71,6 +105,7 @@
               ></b-icon-plus>
             </div>
           </div>
+
           <div v-for="program in filteredProgramKegiatan" :key="program.id">
             <div class="teks-pelaksanaan">
               <p>{{ program.nama }}</p>
@@ -290,6 +325,8 @@ export default {
       penerimaManfaat: [],
       itemKegiatanRKA: [],
       alokasiDana: [],
+      bidangOptions: [],
+      selectedBidang: "",
       selectedOptionIndex: null,
       selectedYear: new Date().getFullYear(),
       selectedMonth: new Date().getMonth() + 1,
@@ -320,12 +357,25 @@ export default {
     this.fetchPenerimaManfaat();
     this.fetchItemKegiatanRKA();
     this.fetchAlokasiDana();
+    this.fetchBidangOptions();
   },
   computed: {
     selectedOption() {
       return this.selectedOptionIndex !== null
         ? this.programOptions[this.selectedOptionIndex].nama
         : "PROGRAM KEPUSTAKAAN";
+    },
+    filteredProgramOptions() {
+      if (!this.selectedBidang) return [];
+      return this.programOptions.filter(
+        (option) => option.id_bidang === this.selectedBidangId
+      );
+    },
+    selectedBidangId() {
+      const selectedBidang = this.bidangOptions.find(
+        (bidang) => bidang.nama === this.selectedBidang
+      );
+      return selectedBidang ? selectedBidang.id : null;
     },
     filteredProgramKegiatan() {
       if (this.selectedOptionIndex === null) return [];
@@ -366,6 +416,11 @@ export default {
       }, 0);
     },
   },
+  watch: {
+    selectedBidang() {
+      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
+    },
+  },
   methods: {
     async fetchProgramOptions() {
       try {
@@ -375,6 +430,27 @@ export default {
       } catch (error) {
         console.error("Error fetching program options:", error);
       }
+    },
+    async fetchBidangOptions() {
+      // New method to fetch bidang options
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
+        this.setDefaultSelectedBidang();
+      } catch (error) {
+        console.error("Error fetching bidang options:", error);
+      }
+    },
+    setDefaultSelectedBidang() {
+      const defaultBidang = this.bidangOptions.find(
+        (option) => option.id === 1
+      );
+      if (defaultBidang) {
+        this.selectedBidang = defaultBidang.nama;
+      }
+    },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
     },
     async fetchExecutionData() {
       try {
@@ -514,6 +590,9 @@ export default {
     },
     goToInputPengguna() {
       this.$router.push({ path: "/inputpengguna" });
+    },
+    goToInputLaporan() {
+      this.$router.push({ path: "/inputlaporan" });
     },
   },
   components: {
