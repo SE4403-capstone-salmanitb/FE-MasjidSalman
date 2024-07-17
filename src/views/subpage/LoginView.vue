@@ -42,8 +42,7 @@
           <b-form-checkbox
             id="checkbox-1"
             name="checkbox-1"
-            value="accepted"
-            unchecked-value="not_accepted"
+            v-model="remember"
             style="font-weight: bold"
           >
             Remember Me
@@ -56,7 +55,7 @@
       </form>
       <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-      <div class="lupa" s>
+      <div class="lupa">
         <router-link to="/lupa" style="color: red">Lupa Password</router-link>
       </div>
     </div>
@@ -69,7 +68,7 @@ import axios from "@/lib/axios"; // Sesuaikan path sesuai struktur proyek Anda
 
 const email = ref("");
 const password = ref("");
-const rememberMe = ref(false);
+const remember = ref(false);
 const showPassword = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref("");
@@ -85,7 +84,7 @@ const onSubmit = async () => {
   const form = {
     email: email.value,
     password: password.value,
-    remember: rememberMe.value,
+    remember: remember.value,
   };
 
   try {
@@ -95,6 +94,7 @@ const onSubmit = async () => {
       if (result.status !== 200) {
         throw new Error(result.data);
       }
+      // Simpan data pengguna di session storage
       sessionStorage.setItem("user", JSON.stringify(result.data.user));
       sessionStorage.setItem("bearer", result.data.access_token);
       window.location.href = "/profile";

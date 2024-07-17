@@ -10,12 +10,10 @@
           <form>
             <div class="card-container1">
               <div class="mb-3">
-                <label for="id_program" class="form-label"
-                  >Nama Sub-Program</label
-                >
+                <label for="id_program" class="form-label">Nama Bidang</label>
                 <select
                   class="form-control"
-                  v-model="formjudul.nama_program"
+                  v-model="formjudul.nama_bidang"
                   @change="updateIdProgram"
                   required
                 >
@@ -34,7 +32,7 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="nama" class="form-label">Judul Kegiatan</label>
+                    <label for="nama" class="form-label">Nama Program</label>
                     <input
                       type="text"
                       class="form-control"
@@ -44,14 +42,12 @@
                     />
                   </div>
                   <div class="mb-3">
-                    <label for="id_program_kegiatan_rka" class="form-label"
-                      >ID Kegiatan RKA</label
-                    >
+                    <label for="id_bidang" class="form-label">ID Bidang</label>
                     <input
                       type="text"
                       class="form-control"
-                      id="id_program_kegiatan_rka1"
-                      v-model="formjudul.id_program_kegiatan_rka"
+                      id="id_bidang1"
+                      v-model="formjudul.id_bidang"
                       required
                       readonly
                     />
@@ -143,9 +139,9 @@ export default {
   data() {
     return {
       formjudul: {
-        nama_program: "",
+        nama_bidang: "",
         nama: "",
-        id_program_kegiatan_rka: "",
+        id_bidang: "",
       },
       programOptions: [],
       showAddInput: false,
@@ -162,7 +158,7 @@ export default {
   methods: {
     fetchProgramOptions() {
       axios
-        .get("/api/programKegiatanRKA", {
+        .get("/api/bidang", {
           headers: {
             Authorization: "Bearer " + sessionStorage.getItem("bearer"),
           },
@@ -176,19 +172,19 @@ export default {
     },
     updateIdProgram() {
       const selectedProgram = this.programOptions.find(
-        (program) => program.nama === this.formjudul.nama_program
+        (program) => program.nama === this.formjudul.nama_bidang
       );
       if (selectedProgram) {
-        this.formjudul.id_program_kegiatan_rka = selectedProgram.id;
+        this.formjudul.id_bidang = selectedProgram.id;
       } else {
-        this.formjudul.id_program_kegiatan_rka = "";
+        this.formjudul.id_bidang = "";
       }
     },
     submitForm() {
       console.log("Form Data:", this.formjudul);
 
       axios
-        .post("/api/judulKegiatanRKA", this.formjudul, {
+        .post("/api/program", this.formjudul, {
           headers: {
             Authorization: "Bearer " + sessionStorage.getItem("bearer"),
           },
@@ -206,7 +202,7 @@ export default {
             this.isNotificationVisible = false;
           }, 10000); // Reset notification after 10 seconds
           // Redirect to RKA page after successful submission
-          window.location.href = "/rka";
+          window.location.go(-1);
         })
         .catch((error) => {
           // Handle error, e.g., show error message
@@ -222,7 +218,7 @@ export default {
       console.log("Form Data:", this.formjudul);
 
       axios
-        .post("/api/judulKegiatanRKA", this.formjudul, {
+        .post("/api/program", this.formjudul, {
           headers: {
             Authorization: "Bearer " + sessionStorage.getItem("bearer"),
           },
