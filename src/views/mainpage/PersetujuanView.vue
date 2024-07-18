@@ -221,6 +221,15 @@
             required
           />
         </div>
+        <div class="inputan">
+          <input
+            v-model="form.profile_picture"
+            type="text"
+            placeholder="Profile_picture"
+            required
+          />
+        </div>
+
         <div
           class="tombol-submit"
           type="submit"
@@ -300,6 +309,7 @@ export default {
         password: "",
         password_confirmation: "",
         email: "",
+        profile_picture: "",
       },
       showPassword: false, // Untuk toggle visibilitas password
     };
