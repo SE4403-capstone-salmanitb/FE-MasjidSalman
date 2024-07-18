@@ -11,16 +11,9 @@
         </div>
         <div class="profile-content">
           <div class="profile-picture">
-            <label class="change-profile-label" @click="showRegisterPopup">
-              Ubah Foto
-            </label>
-            <input
-              id="file-input"
-              type="file"
-              accept="image/*"
-              style="display: none"
-              @change="handleFileChange"
-            />
+            <label class="change-profile-label" @click="showRegisterPopup"
+              >Ubah Foto</label
+            >
             <img
               :src="profilePicture"
               alt="Profile Picture"
@@ -32,8 +25,7 @@
             <p>{{ userName }}</p>
             <div class="info-user">
               <p style="margin-top: 71px">
-                Nama:
-                <span style="color: #001aff">{{ userName }}</span>
+                Nama: <span style="color: #001aff">{{ userName }}</span>
               </p>
               <p>
                 Email: <span style="color: #001aff">{{ userEmail }}</span>
@@ -52,7 +44,6 @@
           @click="closePopup"
         ></b-icon-x>
         <p class="regist">Edit Profile</p>
-
         <div class="inputan">
           <input
             v-model="user.name"
@@ -62,13 +53,8 @@
           />
         </div>
         <div class="inputan">
-          <input
-            v-model="user.profile_picture"
-            type="text"
-            placeholder="Masukkan URL foto Profile"
-          />
+          <input type="file" @change="handleEditFileChange" />
         </div>
-
         <div
           class="tombol-submit"
           type="submit"
@@ -146,7 +132,7 @@ export default {
       showPopup: false, // Untuk menampilkan pop-up register
       user: {
         name: "",
-        profile_picture: "",
+        profile_picture_raw: null,
       },
       showPassword: false, // Untuk toggle visibilitas password
     };
@@ -167,15 +153,22 @@ export default {
     },
 
     submitForm() {
-      console.log("Form Data:", this.user);
+      const formData = new FormData();
+      formData.append("name", this.user.name);
+      if (this.user.profile_picture_raw) {
+        formData.append("profile_picture_raw", this.user.profile_picture_raw);
+      }
 
       axios
-        .put("/user", this.user, {
+        .post("/user", formData, {
           headers: {
             Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            "Content-Type": "multipart/form-data",
           },
         })
         .then((response) => {
+          console.log("Response:", response.data);
+
           // Update session storage with the new user data
           const updatedUser = response.data;
           sessionStorage.setItem("user", JSON.stringify(updatedUser));
@@ -195,18 +188,20 @@ export default {
             this.notificationType = "";
             this.isNotificationVisible = false;
           }, 10000); // Reset notification after 10 seconds
-          window.location.href = "/profile";
+          // window.location.href = "/profile";
           // Refresh profile data
           this.fetchProfileData();
+          window.location.href = "/profile";
         })
         .catch((error) => {
+          console.error("Error:", error.response.data);
+
           // Handle error, e.g., show error message
           this.notificationMessage = "Gagal";
           this.notificationDetail =
             "Gagal menginput data: " + error.response.data.message;
           this.notificationType = "error";
           this.isNotificationVisible = true;
-          console.error("Error:", error.response.data);
         });
     },
     closeNotification() {
@@ -220,14 +215,14 @@ export default {
       const reader = new FileReader();
       reader.onload = (e) => {
         this.profilePicture = e.target.result;
-        this.uploadProfilePicture(file);
+        this.user.profile_picture_raw = file;
       };
       reader.readAsDataURL(file);
     },
     handleEditFileChange(event) {
       const file = event.target.files[0];
       if (!file) return;
-      this.user.profile_picture = file;
+      this.user.profile_picture_raw = file;
     },
 
     showRegisterPopup() {
