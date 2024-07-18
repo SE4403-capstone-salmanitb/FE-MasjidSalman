@@ -21,8 +21,8 @@
     <div class="menu">
       <div class="item">
         <router-link class="nav-link" to="/profile">
-          <b-icon-person-fill style="margin-right: 26px"></b-icon-person-fill
-          >Profile
+          <b-icon-person-fill style="margin-right: 26px"></b-icon-person-fill>
+          Profile
         </router-link>
       </div>
       <div class="item">
@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <div class="item">
+      <div class="item" v-if="isAdmin">
         <router-link
           class="nav-link"
           to="/persetujuan"
@@ -69,7 +69,7 @@
 
 <script>
 import $ from "jquery";
-import axios from "@/lib/axios";
+// import axios from "@/lib/axios";
 
 export default {
   data() {
@@ -77,56 +77,21 @@ export default {
       profilePicture: null,
       userName: "", // Menyimpan nama pengguna
       userId: null, // Set userId sesuai dengan pengguna yang diinginkan
+      isAdmin: false, // Menyimpan status admin
     };
   },
   created() {
-    this.fetchUserId();
+    this.fetchUserData();
   },
   methods: {
-    async fetchUserId() {
-      try {
-        // Simulating fetching user ID from an authentication service
-        // Replace this with actual logic to fetch the user ID
-        const userId = await this.getUserIdFromAuthService();
-        this.userId = userId;
-        this.fetchProfileData();
-      } catch (error) {
-        console.error("Error fetching user ID:", error);
-      }
-    },
-    async getUserIdFromAuthService() {
-      // Simulate an async call to fetch user ID
-      return new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(2); // Example user ID
-        }, 1000);
-      });
-    },
-    async fetchProfileData() {
-      if (!this.userId) {
-        console.error("User ID is not provided");
-        return;
-      }
-
-      try {
-        const response = await axios.get("/user");
-        console.log("API Response:", response.data); // Debugging log
-
-        // Cari pengguna berdasarkan userId
-        const user = response.data.find((user) => user.id === this.userId);
-
-        if (user) {
-          this.profilePicture = user.profile_picture;
-          this.userName = user.name; // Set nama pengguna
-          this.userEmail = user.email; // Set nama pengguna
-          if (!this.profilePicture) {
-            console.error("Profile picture URL is not available");
-          }
-        } else {
-          console.error("User not found");
-        }
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
+    fetchUserData() {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (user) {
+        this.profilePicture = user.profile_picture;
+        this.userName = user.name; // Set nama pengguna
+        this.isAdmin = user.is_admin === 1; // Set status admin
+      } else {
+        console.error("User data is not available in session storage");
       }
     },
     handleFileChange(event) {
