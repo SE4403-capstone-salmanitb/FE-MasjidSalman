@@ -78,6 +78,9 @@
                       {{ errors.bulan_laporan }}
                     </div>
                   </div>
+                  <p style="color: gray">
+                    ( Note: Harap pilih tanggal 01 untuk tiap bulan)
+                  </p>
                   <div class="tombol">
                     <button
                       type="button"

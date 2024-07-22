@@ -50,8 +50,11 @@
             <div class="card-container1">
               <div class="row">
                 <div class="mb-3">
-                  <label for="id_program" class="form-label"
-                    >Nama Laporan Bulanan</label
+                  <label
+                    for="id_program"
+                    class="form-label"
+                    style="padding-left: 18px"
+                    >Kode Program</label
                   >
                   <select
                     style="width: 511px"

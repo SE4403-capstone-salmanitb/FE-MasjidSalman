@@ -4,7 +4,7 @@
     <div class="card-container">
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
-          <p>Test</p>
+          <p>Form</p>
         </div>
         <div class="container">
           <form>
