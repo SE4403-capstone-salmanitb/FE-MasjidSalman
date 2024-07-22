@@ -7,6 +7,7 @@ import LoginView from "../views/subpage/LoginView.vue";
 import RegisterView from "../views/subpage/RegisterView.vue";
 import LupaView from "../views/subpage/LupaView.vue";
 import InputView from "../views/subpage/InputView.vue";
+import InputresetView from "../views/subpage/InputresetView.vue";
 import InputprogramView from "../views/subpage/InputprogramView.vue";
 import InputlaporanView from "../views/subpage/InputlaporanView.vue";
 import InputrkaView from "../views/subpage/InputrkaView.vue";
@@ -59,6 +60,11 @@ const routes = [
     path: "/input",
     name: "input",
     component: InputView,
+  },
+  {
+    path: "/reset",
+    name: "inputreset",
+    component: InputresetView,
   },
   {
     path: "/inputprogram",
