@@ -95,6 +95,13 @@
                       >
                         Jadikan Pengguna
                       </button>
+                      <button
+                        v-if="account.verification === 'Tidak Terverifikasi'"
+                        style="color: black"
+                        @click="sendVerificationLink(account.id)"
+                      >
+                        Link Verification
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -227,6 +234,7 @@
             type="text"
             placeholder="Profile_picture"
             required
+            readonly
           />
         </div>
 
@@ -237,6 +245,19 @@
           style="margin-bottom: 80px"
         >
           Daftarkan
+        </div>
+        <!-- Error messages -->
+        <div
+          v-if="Object.keys(registerErrors).length > 0"
+          class="error-messages"
+        >
+          <p
+            v-for="(error, key) in registerErrors"
+            :key="key"
+            style="color: red; margin-top: 5px"
+          >
+            {{ error }}
+          </p>
         </div>
       </div>
     </div>
@@ -251,7 +272,7 @@
         </p>
         <p style="font-size: 18px">
           Segera cek email dan klik tombol "Verifikasi Email" agar bisa
-          melanjutkan proses pendaftaran Kartu prakerja.
+          melanjutkan proses pendaftaran akun anda.
         </p>
         <div class="verification-buttons">
           <button
@@ -263,7 +284,7 @@
               color: white;
               font-size: 16px;
               font-weight: bolder;
-              border-radius: 8px;
+              border-radiu: 8px;
               margin-bottom: 10px;
             "
           >
@@ -309,9 +330,10 @@ export default {
         password: "",
         password_confirmation: "",
         email: "",
-        profile_picture: "",
+        profile_picture: "https://i.ibb.co.com/2qXwjX3/default-blue1.png",
       },
       showPassword: false, // Untuk toggle visibilitas password
+      registerErrors: {}, // Untuk menyimpan pesan error
     };
   },
 
@@ -408,11 +430,13 @@ export default {
           console.log("User registered successfully:", response.data);
           this.showPopup = false; // Tutup pop-up setelah submit
           this.showVerificationPopup = true; // Tampilkan pop-up verifikasi
+          this.registerErrors = {}; // Clear previous errors
           // Optionally, refresh the account list or update the state
           this.fetchDataFromApi();
         })
         .catch((error) => {
           if (error.response) {
+            this.registerErrors = error.response.data.errors; // Assign error messages
             console.log("Error registering user:", error.response.data);
           } else {
             console.log("Error registering user:", error.message);
@@ -423,6 +447,31 @@ export default {
       // Implementasi untuk mengirim ulang link verifikasi
       console.log("Resending verification link to:", this.form.email);
       // Implementasikan logika kirim ulang link di sini, misalnya memanggil API
+    },
+    sendVerificationLink(userId) {
+      // Implementasi untuk mengirim link verifikasi
+      axios
+        .post(
+          `/email/verification-notification`,
+          { user_id: userId },
+          {
+            headers: {
+              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            },
+          }
+        )
+        .then((response) => {
+          console.log(response);
+          console.log(`Verification link sent to user ${userId} successfully`);
+          // Optionally, refresh the account list or update the state
+          this.fetchDataFromApi();
+        })
+        .catch((error) => {
+          console.error(
+            `Error sending verification link to user ${userId}:`,
+            error
+          );
+        });
     },
     toggleAdminStatus(userId) {
       // API call to toggle admin status
@@ -459,6 +508,11 @@ export default {
 </script>
 
 <style>
+.error-messages {
+  color: red;
+  margin-top: 10px;
+}
+
 .verification-card {
   width: 850px;
   height: 500px;

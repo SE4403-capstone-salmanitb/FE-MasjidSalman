@@ -33,10 +33,24 @@
             </div>
           </div>
           <button class="logout-button" @click="logout">Logout</button>
+          <button class="edit-button" @click="toggleActions(0)">Edit</button>
+          <div
+            v-if="activeRow === 0"
+            class="actions-dropdowns"
+            style="width: max-content"
+          >
+            <button style="color: black" @click="showEditEmailsPopup">
+              Edit email
+            </button>
+            <button style="color: black" @click="showEditPasswordPopup">
+              Edit password
+            </button>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Pop-up Edit -->
+
+    <!-- Pop-up Edit Profile -->
     <div v-if="showPopup" class="popup-overlay">
       <div class="kartu-edit">
         <b-icon-x
@@ -65,40 +79,127 @@
         </div>
       </div>
     </div>
-    <b-icon-check-circle
-      v-if="notificationType === 'success'"
-      style="
-        margin-right: 12px;
-        margin-left: 15px;
-        margin-top: 14px;
-        width: 30px;
-        height: 30px;
-      "
-    ></b-icon-check-circle>
-    <b-icon-exclamation-circle
-      v-if="notificationType === 'error'"
-      style="
-        margin-right: 12px;
-        margin-left: 15px;
-        margin-top: 14px;
-        width: 30px;
-        height: 30px;
-      "
-    ></b-icon-exclamation-circle>
-    <div class="notification-header">
-      <p class="notification-title">{{ notificationMessage }}</p>
-      <p class="notification-content">{{ notificationDetail }}</p>
+
+    <!-- Pop-up Edit Password -->
+    <div v-if="showPasswordPopup" class="popup-overlay">
+      <div class="kartu-edit">
+        <b-icon-x
+          style="width: 30px; height: 30px; margin-left: 550px"
+          @click="closePasswordPopup"
+        ></b-icon-x>
+        <p class="regist">Edit Password</p>
+        <div class="inputan">
+          <input
+            v-model="userPassword.new_password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="new password"
+            autocomplete="new-password"
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div class="inputan">
+          <input
+            v-model="userPassword.old_password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="old_password"
+            autocomplete="old_password"
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div class="inputan">
+          <input
+            v-model="userPassword.new_password_confirmation"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="new_password_confirmation"
+            autocomplete="new_password_confirmation"
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div
+          class="tombol-submit"
+          type="submit"
+          style="margin-bottom: 80px"
+          @click="submitPasswordForm"
+        >
+          Simpan
+        </div>
+      </div>
     </div>
-    <b-icon-x
-      @click="closeNotification"
-      style="
-        margin-left: 47px;
-        margin-right: 12px;
-        margin-top: 14px;
-        width: 30px;
-        height: 30px;
-      "
-    ></b-icon-x>
+    <!-- Pop-up Edit Email -->
+    <div v-if="showEmailsPopup" class="popup-overlay">
+      <div class="kartu-edit">
+        <b-icon-x
+          style="width: 30px; height: 30px; margin-left: 550px"
+          @click="closeEmailsPopup"
+        ></b-icon-x>
+        <p class="regist">Edit Email</p>
+        <div class="inputan">
+          <input
+            v-model="userEmails.new_email"
+            type="email"
+            placeholder="Email baru"
+            autocomplete="new-email"
+          />
+        </div>
+        <div class="inputan">
+          <input
+            v-model="userEmails.password"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="password"
+            autocomplete="password"
+          />
+          <b-icon-eye-fill
+            style="
+              width: 24px;
+              height: 14px;
+              margin-right: 23px;
+              cursor: pointer;
+              margin-top: 15px;
+              padding-left: 32px;
+            "
+            @click="togglePasswordVisibility"
+          ></b-icon-eye-fill>
+        </div>
+        <div
+          class="tombol-submit"
+          type="submit"
+          style="margin-bottom: 80px"
+          @click="submitEmailsForm"
+        >
+          Simpan
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -123,6 +224,7 @@ export default {
     return {
       notificationMessage: "",
       notificationDetail: "",
+
       notificationType: "", // error, success
       isNotificationVisible: false,
       profilePicture: null,
@@ -130,17 +232,37 @@ export default {
       userEmail: "",
       userId: null, // Set userId sesuai dengan pengguna yang diinginkan
       showPopup: false, // Untuk menampilkan pop-up register
+      showPasswordPopup: false, // Untuk menampilkan pop-up edit password
+      showEmailsPopup: false, // Untuk menampilkan pop-up edit password
       user: {
         name: "",
+        password: "",
         profile_picture_raw: null,
       },
+      userPassword: {
+        new_password: "",
+        old_password: "",
+        new_password_confirmation: "",
+      },
+      userEmails: {
+        new_email: "",
+        password: "",
+      },
       showPassword: false, // Untuk toggle visibilitas password
+      activeRow: null, // Track the currently active row
     };
   },
   created() {
     this.fetchProfileData();
   },
   methods: {
+    toggleActions(index) {
+      if (this.activeRow === index) {
+        this.activeRow = null; // Tutup dropdown jika sudah terbuka
+      } else {
+        this.activeRow = index; // Buka dropdown untuk baris yang diklik
+      }
+    },
     fetchProfileData() {
       const user = JSON.parse(sessionStorage.getItem("user"));
       if (user) {
@@ -151,7 +273,9 @@ export default {
         console.error("User data is not available in session storage");
       }
     },
-
+    togglePasswordVisibility() {
+      this.showPassword = !this.showPassword;
+    },
     submitForm() {
       const formData = new FormData();
       formData.append("name", this.user.name);
@@ -204,6 +328,7 @@ export default {
           this.isNotificationVisible = true;
         });
     },
+
     closeNotification() {
       this.isNotificationVisible = false;
     },
@@ -231,7 +356,18 @@ export default {
     closePopup() {
       this.showPopup = false;
     },
-
+    showEditPasswordPopup() {
+      this.showPasswordPopup = true;
+    },
+    closePasswordPopup() {
+      this.showPasswordPopup = false;
+    },
+    showEditEmailsPopup() {
+      this.showEmailsPopup = true;
+    },
+    closeEmailsPopup() {
+      this.showEmailsPopup = false;
+    },
     async logout() {
       try {
         await axios.post("/logout");
@@ -242,11 +378,128 @@ export default {
         console.error("Error during logout:", error);
       }
     },
+    submitPasswordForm() {
+      axios
+        .put(
+          "/user/password",
+          {
+            old_password: this.userPassword.old_password,
+            new_password: this.userPassword.new_password,
+            new_password_confirmation:
+              this.userPassword.new_password_confirmation,
+          },
+          {
+            headers: {
+              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Response:", response.data);
+          // Handle successful password change
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Password berhasil diubah";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000);
+          this.closePasswordPopup();
+          try {
+            axios.post("/logout");
+            sessionStorage.removeItem("user");
+            sessionStorage.removeItem("bearer");
+            window.location.href = "/";
+          } catch (error) {
+            console.error("Error during logout:", error);
+          } // Logout the user after password change
+        })
+        .catch((error) => {
+          // Handle error in password change
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal mengubah password: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+        });
+    },
+    submitEmailsForm() {
+      axios
+        .put(
+          "/user/email",
+          {
+            new_email: this.userEmails.new_email,
+            password: this.userEmails.password,
+          },
+          {
+            headers: {
+              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+            },
+          }
+        )
+        .then((response) => {
+          console.log("Response:", response.data);
+          // Handle successful password change
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Password berhasil diubah";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000);
+          this.closePasswordPopup();
+          try {
+            axios.post("/logout");
+            sessionStorage.removeItem("user");
+            sessionStorage.removeItem("bearer");
+            window.location.href = "/";
+          } catch (error) {
+            console.error("Error during logout:", error);
+          } // Logout the user after password change
+        })
+        .catch((error) => {
+          // Handle error in password change
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal mengubah email: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+        });
+    },
   },
 };
 </script>
 
 <style>
+.actions-dropdowns {
+  position: absolute;
+
+  background-color: #fff;
+  box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  padding: 10px;
+  top: 108px;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+}
+.actions-dropdowns button {
+  width: 100%;
+  text-align: left;
+  padding: 8px 16px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+.actions-dropdowns button:hover {
+  background-color: #f9f9f9;
+}
 .profile-content {
   display: flex;
   position: relative;
@@ -254,6 +507,7 @@ export default {
 
 .kartu-edit {
   background-color: white;
+  border-radius: 23px;
   padding: 20px;
   width: 630px;
   height: fit-content;
@@ -269,6 +523,15 @@ export default {
   right: 0;
   margin-top: 28px; /* Adjust as needed */
   margin-right: 17px;
+}
+
+.edit-button {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin-top: 68px; /* Adjust as needed */
+  margin-right: 17px;
+  background-color: gray;
 }
 
 .profile-picture {
