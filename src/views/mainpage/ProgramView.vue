@@ -27,26 +27,20 @@
               </div>
             </div>
             <div class="teks">Program</div>
-            <div class="dropdown1">
-              <b-dropdown
-                id="dropdown-1"
-                class="m-md-2"
-                variant="outline"
-                :text="selectedOption"
+            <div class="dropdown1" style="width: fit-content; height: 38px">
+              <select
                 v-model="selectedOptionIndex"
-                dropup
+                class="m-md-2"
+                style="width: fit-content; height: 38px"
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
+                <option
                   v-for="(option, index) in filteredProgramOptions"
                   :key="index"
+                  :value="index"
                 >
                   {{ option.nama }}
-                </b-dropdown-item>
-                <b-dropdown-item @click="navigateToInputProgram">
-                  Tambahkan Program
-                </b-dropdown-item>
-              </b-dropdown>
+                </option>
+              </select>
             </div>
             <div class="teks">Bulan</div>
             <div class="bulan1">
@@ -92,12 +86,10 @@
               ></b-icon-plus>
             </div>
           </div>
-
           <div class="kotak-deskripsi">
             <div class="kotak-teks">
               <p class="teks-kegiatan">Deskripsi Pelaksanaan Kegiatan</p>
             </div>
-
             <div class="tombol-tambah" @click="goToInputDeskripsi">
               <b-icon-plus
                 style="margin-bottom: 3px"
@@ -105,10 +97,9 @@
               ></b-icon-plus>
             </div>
           </div>
-
-          <div v-for="program in filteredProgramKegiatan" :key="program.id">
+          <div v-for="kegiatan in uniqueProgramKegiatan" :key="kegiatan.id">
             <div class="teks-pelaksanaan">
-              <p>{{ program.nama }}</p>
+              <p>{{ kegiatan.program_kegiatan.nama }}</p>
             </div>
             <div class="table-container1">
               <table class="table">
@@ -129,18 +120,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="filteredExecutionData(program.id).length === 0">
-                    <td colspan="4">Tidak ada data</td>
-                  </tr>
                   <tr
-                    v-for="item in filteredExecutionData(program.id)"
-                    :key="item.id"
+                    v-for="detail in kegiatanDetails(kegiatan)"
+                    :key="detail.id"
                     style="text-align: left"
                   >
-                    <td>{{ item.penjelasan }}</td>
-                    <td>{{ item.waktu }}</td>
-                    <td>{{ item.tempat }}</td>
-                    <td>{{ item.penyaluran }}</td>
+                    <td>{{ detail.penjelasan }}</td>
+                    <td>{{ detail.waktu }}</td>
+                    <td>{{ detail.tempat }}</td>
+                    <td>{{ detail.penyaluran }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -160,9 +148,9 @@
           <div class="box-evaluasi">
             <p class="text-evaluasi">{{ selectedOption }}</p>
           </div>
-          <div v-for="program in filteredProgramKegiatan" :key="program.id">
-            <div class="teks-pelaksanaan" style="margin-top: 13px">
-              <p>{{ program.nama }}</p>
+          <div v-for="kpi in uniqueKPIBulanan" :key="kpi.id">
+            <div class="teks-pelaksanaan">
+              <p>{{ kpi.k_p_i.program_kegiatan.nama }}</p>
             </div>
             <div class="table-container1">
               <table class="table">
@@ -177,18 +165,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="filteredKPIData(program.id).length === 0">
-                    <td colspan="4">Tidak ada data</td>
-                  </tr>
-                  <tr
-                    v-for="kpi in filteredKPIData(program.id)"
-                    :key="kpi.id"
-                    style="text-align: left"
-                  >
-                    <td>{{ kpi.target }}</td>
-                    <td>{{ kpi.indikator }}</td>
-                    <td>{{ getKPIDescription(kpi.id) }}</td>
-                    <td>{{ getKPICapaian(kpi.id) }}</td>
+                  <tr v-for="detail in kpiDetails(kpi)" :key="detail.id">
+                    <td>{{ detail.k_p_i.indikator }}</td>
+                    <td>{{ detail.k_p_i.target }}</td>
+                    <td>{{ detail.deskripsi }}</td>
+                    <td>{{ detail.capaian }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -208,11 +189,8 @@
           <div class="box-evaluasi">
             <p class="text-evaluasi">{{ selectedOption }}</p>
           </div>
-          <div
-            v-if="filteredPenerimaManfaat.length > 0"
-            class="table-container1"
-          >
-            <table class="tabel">
+          <div class="table-container1">
+            <table class="table">
               <thead>
                 <tr style="text-align: left">
                   <th style="font-weight: bold; width: 40px">No</th>
@@ -235,19 +213,19 @@
               </thead>
               <tbody>
                 <tr v-if="filteredPenerimaManfaat.length === 0">
-                  <td colspan="6">Tidak ada data</td>
+                  <td colspan="6" style="text-align: center">Tidak ada data</td>
                 </tr>
                 <tr
-                  v-for="(item, index) in filteredPenerimaManfaat"
-                  :key="item.id"
+                  v-for="(penerima, index) in filteredPenerimaManfaat"
+                  :key="penerima.id"
                   style="text-align: left"
                 >
                   <td>{{ index + 1 }}</td>
-                  <td>{{ item.kategori }}</td>
-                  <td>{{ item.tipe_rutinitas }}</td>
-                  <td>{{ item.tipe_penyaluran }}</td>
-                  <td>{{ item.rencana }}</td>
-                  <td>{{ item.realisasi || "" }}</td>
+                  <td>{{ penerima.kategori }}</td>
+                  <td>{{ penerima.tipe_rutinitas }}</td>
+                  <td>{{ penerima.tipe_penyaluran }}</td>
+                  <td>{{ penerima.rencana }}</td>
+                  <td>{{ penerima.realisasi }}</td>
                 </tr>
               </tbody>
             </table>
@@ -265,17 +243,18 @@
           </div>
           <div class="kotak-dana">
             <p class="dana" style="padding-top: 5px">
-              Dana yang direncanakan : {{ formatCurrency(totalRencana) }}
+              Dana yang direncanakan: {{ formatCurrency(totalJumlahRencana) }}
             </p>
             <p class="dana">
-              Dana yang digunakan : {{ formatCurrency(totalRealisasi) }}
+              Dana yang digunakan : {{ formatCurrency(totalDanaDigunakan) }}
             </p>
             <p class="dana">
-              Saldo : {{ formatCurrency(totalRencana - totalRealisasi) }}
+              Saldo :
+              {{ formatCurrency(totalJumlahRencana - totalDanaDigunakan) }}
             </p>
           </div>
           <div class="table-container1">
-            <table class="tabel">
+            <table class="table">
               <thead>
                 <tr style="text-align: left">
                   <th style="font-weight: bold; width: 40px">No</th>
@@ -286,19 +265,23 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="itemKegiatanRKA.length === 0">
-                  <td colspan="5">Tidak ada data</td>
+                <tr v-if="filteredAlokasiDana.length === 0">
+                  <td colspan="5" style="text-align: center">Tidak ada data</td>
                 </tr>
                 <tr
-                  v-for="item in itemKegiatanRKA"
-                  :key="item.id"
+                  v-for="(alokasi, index) in filteredAlokasiDana"
+                  :key="alokasi.id"
                   style="text-align: left"
                 >
-                  <td>{{ item.id }}</td>
-                  <td>{{ item.uraian }}</td>
-                  <td>{{ formatCurrency(getRealisasi(item.id)) }}</td>
-                  <td>{{ formatCurrency(item.nilai_satuan) }}</td>
-                  <td>{{ item.sumber_dana }}</td>
+                  <td>{{ index + 1 }}</td>
+                  <td>{{ alokasi.item_kegiatan_r_k_a.uraian }}</td>
+                  <td>{{ formatCurrency(alokasi.jumlah_realisasi) }}</td>
+                  <td>
+                    {{
+                      formatCurrency(alokasi.item_kegiatan_r_k_a.nilai_satuan)
+                    }}
+                  </td>
+                  <td>{{ alokasi.item_kegiatan_r_k_a.sumber_dana }}</td>
                 </tr>
               </tbody>
             </table>
@@ -317,15 +300,12 @@ export default {
   data() {
     return {
       programOptions: [],
-      executionData: [],
-      programKegiatan: [],
-      kpiData: [],
-      kpiDescriptions: {},
-      kpiCapaian: {},
-      penerimaManfaat: [],
-      itemKegiatanRKA: [],
-      alokasiDana: [],
       bidangOptions: [],
+      programKegiatan: [],
+      laporanBulanan: [],
+      kpiBulanan: [],
+      penerimaManfaat: [],
+      alokasiDana: [],
       selectedBidang: "",
       selectedOptionIndex: null,
       selectedYear: new Date().getFullYear(),
@@ -349,15 +329,12 @@ export default {
   },
   mounted() {
     this.fetchProgramOptions();
-    this.fetchExecutionData();
     this.fetchProgramKegiatan();
-    this.fetchKPIData();
-    this.fetchKPIDescriptions();
-    this.fetchKPICapaian();
-    this.fetchPenerimaManfaat();
-    this.fetchItemKegiatanRKA();
-    this.fetchAlokasiDana();
     this.fetchBidangOptions();
+    this.fetchLaporanBulanan();
+    this.fetchKPIBulanan();
+    this.fetchPenerimaManfaat();
+    this.fetchAlokasiDana();
   },
   computed: {
     selectedOption() {
@@ -378,47 +355,87 @@ export default {
       return selectedBidang ? selectedBidang.id : null;
     },
     filteredProgramKegiatan() {
-      if (this.selectedOptionIndex === null) return [];
+      if (
+        this.selectedOptionIndex === null ||
+        !this.programOptions[this.selectedOptionIndex]
+      )
+        return [];
       const selectedProgramId =
         this.programOptions[this.selectedOptionIndex].id;
-      return this.programKegiatan.filter((program) => {
-        const programYear = new Date(program.updated_at).getFullYear();
-        const programMonth = new Date(program.updated_at).getMonth() + 1;
-        return (
-          program.id_program === selectedProgramId &&
-          programYear === this.selectedYear &&
-          programMonth === this.selectedMonth
-        );
-      });
+      return this.programKegiatan.filter(
+        (kegiatan) =>
+          kegiatan.program_kegiatan.id_program === selectedProgramId &&
+          kegiatan.program_kegiatan.tahun === this.selectedYear &&
+          this.isMatchingLaporanBulanan(kegiatan.id_laporan_bulanan)
+      );
+    },
+    filteredKPIBulanan() {
+      if (
+        this.selectedOptionIndex === null ||
+        !this.programOptions[this.selectedOptionIndex]
+      )
+        return [];
+      const selectedProgramId =
+        this.programOptions[this.selectedOptionIndex].id;
+      return this.kpiBulanan.filter(
+        (kpi) =>
+          kpi.k_p_i.program_kegiatan.id_program === selectedProgramId &&
+          kpi.k_p_i.program_kegiatan.tahun === this.selectedYear &&
+          this.isMatchingLaporanBulanan(kpi.id_laporan_bulanan)
+      );
     },
     filteredPenerimaManfaat() {
-      if (this.selectedOptionIndex === null) return [];
-      const selectedProgramId =
-        this.programOptions[this.selectedOptionIndex].id;
-      return this.penerimaManfaat.filter((item) => {
-        const itemYear = new Date(item.updated_at).getFullYear();
-        const itemMonth = new Date(item.updated_at).getMonth() + 1;
-        return (
-          item.id_laporan_bulanan === selectedProgramId &&
-          itemYear === this.selectedYear &&
-          itemMonth === this.selectedMonth
-        );
+      return this.penerimaManfaat.filter(
+        (penerima) =>
+          this.isMatchingLaporanBulanan(penerima.id_laporan_bulanan) &&
+          new Date(penerima.created_at).getFullYear() === this.selectedYear
+      );
+    },
+    filteredAlokasiDana() {
+      return this.alokasiDana.filter(
+        (alokasi) =>
+          this.isMatchingLaporanBulanan(alokasi.id_laporan_bulanan) &&
+          new Date(alokasi.created_at).getFullYear() === this.selectedYear
+      );
+    },
+    uniqueProgramKegiatan() {
+      const seenNames = new Set();
+      return this.filteredProgramKegiatan.filter((kegiatan) => {
+        const name = kegiatan.program_kegiatan.nama;
+        if (seenNames.has(name)) {
+          return false;
+        } else {
+          seenNames.add(name);
+          return true;
+        }
       });
     },
-    totalRealisasi() {
-      return this.alokasiDana.reduce((total, alokasi) => {
-        return total + alokasi.jumlah_realisasi;
+    uniqueKPIBulanan() {
+      const seenNames = new Set();
+      return this.filteredKPIBulanan.filter((kpi) => {
+        const name = kpi.k_p_i.program_kegiatan.nama;
+        if (seenNames.has(name)) {
+          return false;
+        } else {
+          seenNames.add(name);
+          return true;
+        }
+      });
+    },
+    totalJumlahRencana() {
+      return this.filteredAlokasiDana.reduce((total, alokasi) => {
+        return total + alokasi.item_kegiatan_r_k_a.nilai_satuan;
       }, 0);
     },
-    totalRencana() {
-      return this.itemKegiatanRKA.reduce((total, item) => {
-        return total + item.nilai_satuan;
+    totalDanaDigunakan() {
+      return this.filteredAlokasiDana.reduce((total, alokasi) => {
+        return total + alokasi.jumlah_realisasi;
       }, 0);
     },
   },
   watch: {
     selectedBidang() {
-      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
+      this.selectedOptionIndex = this.getDefaultProgramIndex(); // Reset the selected option when bidang changes
     },
   },
   methods: {
@@ -432,7 +449,6 @@ export default {
       }
     },
     async fetchBidangOptions() {
-      // New method to fetch bidang options
       try {
         const response = await axios.get("/api/bidang");
         this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
@@ -441,64 +457,28 @@ export default {
         console.error("Error fetching bidang options:", error);
       }
     },
-    setDefaultSelectedBidang() {
-      const defaultBidang = this.bidangOptions.find(
-        (option) => option.id === 1
-      );
-      if (defaultBidang) {
-        this.selectedBidang = defaultBidang.nama;
-      }
-    },
-    navigateToInputProgram() {
-      this.$router.push({ path: "/inputprogram" });
-    },
-    async fetchExecutionData() {
+    async fetchLaporanBulanan() {
       try {
-        const response = await axios.get("/api/pelaksanaan");
-        this.executionData = response.data;
+        const response = await axios.get("/api/laporanBulanan");
+        this.laporanBulanan = response.data;
       } catch (error) {
-        console.error("Error fetching execution data:", error);
+        console.error("Error fetching laporan bulanan data:", error);
       }
     },
     async fetchProgramKegiatan() {
       try {
-        const response = await axios.get("/api/programKegiatanKPI");
+        const response = await axios.get("/api/pelaksanaan");
         this.programKegiatan = response.data;
-        this.sortProgramKegiatan();
       } catch (error) {
-        console.error("Error fetching program activity name:", error);
+        console.error("Error fetching program activity data:", error);
       }
     },
-    async fetchKPIData() {
-      try {
-        const response = await axios.get("/api/keyPerformanceIndicator");
-        this.kpiData = response.data;
-      } catch (error) {
-        console.error("Error fetching KPI data:", error);
-      }
-    },
-    async fetchKPIDescriptions() {
+    async fetchKPIBulanan() {
       try {
         const response = await axios.get("/api/laporanKPIBulanan");
-        const data = response.data;
-        this.kpiDescriptions = data.reduce((acc, item) => {
-          acc[item.id_kpi] = item.deskripsi;
-          return acc;
-        }, {});
+        this.kpiBulanan = response.data;
       } catch (error) {
-        console.error("Error fetching KPI descriptions:", error);
-      }
-    },
-    async fetchKPICapaian() {
-      try {
-        const response = await axios.get("/api/laporanKPIBulanan");
-        const data = response.data;
-        this.kpiCapaian = data.reduce((acc, item) => {
-          acc[item.id_kpi] = item.capaian;
-          return acc;
-        }, {});
-      } catch (error) {
-        console.error("Error fetching KPI capaian:", error);
+        console.error("Error fetching KPI Bulanan data:", error);
       }
     },
     async fetchPenerimaManfaat() {
@@ -509,15 +489,6 @@ export default {
         console.error("Error fetching penerima manfaat data:", error);
       }
     },
-    async fetchItemKegiatanRKA() {
-      try {
-        const response = await axios.get("/api/itemKegiatanRKA");
-        this.itemKegiatanRKA = response.data;
-        this.sortItemKegiatanRKA();
-      } catch (error) {
-        console.error("Error fetching item kegiatan RKA data:", error);
-      }
-    },
     async fetchAlokasiDana() {
       try {
         const response = await axios.get("/api/alokasiDana");
@@ -526,22 +497,19 @@ export default {
         console.error("Error fetching alokasi dana data:", error);
       }
     },
-    sortProgramKegiatan() {
-      this.programKegiatan.sort((a, b) => a.id - b.id);
-    },
-    sortItemKegiatanRKA() {
-      this.itemKegiatanRKA.sort((a, b) => a.id - b.id);
-    },
-    setInitialProgram() {
-      const programIndex = this.programOptions.findIndex(
-        (program) => program.id === 1
+    setDefaultSelectedBidang() {
+      const defaultBidang = this.bidangOptions.find(
+        (option) => option.id === 1
       );
-      if (programIndex !== -1) {
-        this.selectedOptionIndex = programIndex;
+      if (defaultBidang) {
+        this.selectedBidang = defaultBidang.nama;
       }
     },
-    selectOption(index) {
-      this.selectedOptionIndex = index;
+    setInitialProgram() {
+      this.selectedOptionIndex = this.getDefaultProgramIndex();
+    },
+    getDefaultProgramIndex() {
+      return this.programOptions.findIndex((program) => program.id === 1);
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -551,36 +519,11 @@ export default {
       }
       return years;
     },
-    filteredExecutionData(programId) {
-      return this.executionData.filter(
-        (item) => item.id_program_kegiatan_kpi === programId
-      );
-    },
-    filteredKPIData(programId) {
-      return this.kpiData.filter(
-        (kpi) => kpi.id_program_kegiatan_kpi === programId
-      );
-    },
-    getKPIDescription(kpiId) {
-      return this.kpiDescriptions[kpiId] || "";
-    },
-    getKPICapaian(kpiId) {
-      return this.kpiCapaian[kpiId] || "";
-    },
-    getRealisasi(itemId) {
-      const alokasi = this.alokasiDana.find(
-        (alokasi) => alokasi.id_item_rka === itemId
-      );
-      return alokasi ? alokasi.jumlah_realisasi : "";
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(value);
-    },
     goToInputDeskripsi() {
       this.$router.push({ path: "/inputdeskripsi" });
+    },
+    goToInputLaporan() {
+      this.$router.push({ path: "/inputlaporan" });
     },
     goToInputEvaluasi() {
       this.$router.push({ path: "/inputevaluasi" });
@@ -591,8 +534,30 @@ export default {
     goToInputPengguna() {
       this.$router.push({ path: "/inputpengguna" });
     },
-    goToInputLaporan() {
-      this.$router.push({ path: "/inputlaporan" });
+    kegiatanDetails(kegiatan) {
+      return this.programKegiatan.filter(
+        (detail) =>
+          detail.program_kegiatan.id === kegiatan.program_kegiatan.id &&
+          detail.id_program_kegiatan_kpi === kegiatan.id_program_kegiatan_kpi
+      );
+    },
+    kpiDetails(kpi) {
+      return this.kpiBulanan.filter((detail) => detail.id === kpi.id);
+    },
+    isMatchingLaporanBulanan(idLaporanBulanan) {
+      const laporanBulanan = this.laporanBulanan.find(
+        (laporan) => laporan.id === idLaporanBulanan
+      );
+      if (!laporanBulanan) return false;
+      const bulanLaporan =
+        new Date(laporanBulanan.bulan_laporan).getMonth() + 1;
+      return bulanLaporan === this.selectedMonth;
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
     },
   },
   components: {
