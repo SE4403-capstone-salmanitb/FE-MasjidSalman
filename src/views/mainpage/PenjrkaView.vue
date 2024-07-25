@@ -15,7 +15,7 @@
                   v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
-                  @change="combineData"
+                  @change="checkAndNavigate"
                 >
                   <option
                     v-for="bidang in bidangOptions"
@@ -24,6 +24,7 @@
                   >
                     {{ bidang.nama }}
                   </option>
+                  <option value="Tambah Bidang">Tambah Bidang</option>
                 </select>
               </div>
             </div>
@@ -333,6 +334,14 @@ export default {
     },
   },
   methods: {
+    checkAndNavigate(event) {
+      if (event.target.value === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      }
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
+    },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");

@@ -15,6 +15,7 @@
                   v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
+                  @change="checkAndNavigate"
                 >
                   <option
                     v-for="bidang in bidangOptions"
@@ -23,24 +24,31 @@
                   >
                     {{ bidang.nama }}
                   </option>
+                  <option value="Tambah Bidang">Tambah Bidang</option>
                 </select>
               </div>
             </div>
             <div class="teks">Program</div>
-            <div class="dropdown1" style="width: fit-content; height: 38px">
-              <select
-                v-model="selectedOptionIndex"
+            <div class="dropdown1">
+              <b-dropdown
+                id="dropdown-1"
                 class="m-md-2"
-                style="width: fit-content; height: 38px"
+                variant="outline"
+                :text="selectedOption"
+                v-model="selectedOptionIndex"
+                dropup
               >
-                <option
+                <b-dropdown-item
+                  @click="selectOption(index)"
                   v-for="(option, index) in filteredProgramOptions"
                   :key="index"
-                  :value="index"
                 >
                   {{ option.nama }}
-                </option>
-              </select>
+                </b-dropdown-item>
+                <b-dropdown-item @click="navigateToInputProgram">
+                  Tambahkan Program
+                </b-dropdown-item>
+              </b-dropdown>
             </div>
             <div class="teks">Bulan</div>
             <div class="bulan1">
@@ -74,6 +82,14 @@
                 </select>
               </div>
             </div>
+          </div>
+          <div
+            class="print-tombol"
+            style="text-align: start; margin-left: 15px"
+          >
+            <button type="button" class="acc" @click="showAccModal">
+              ACC Data
+            </button>
           </div>
           <div class="kotak-deskripsi">
             <div class="kotak-teks">
@@ -289,6 +305,36 @@
         </div>
       </div>
     </div>
+    <b-modal
+      id="acc-modal"
+      ref="accModal"
+      hide-footer
+      title="Konfirmasi ACC Data"
+    >
+      <!-- <div class="icon-konfirmasi">
+        <b-icon-exclamation-circle-fill
+          font-scale="5"
+          style="color: #967c55; margin-bottom: 25px"
+        ></b-icon-exclamation-circle-fill>
+      </div> -->
+
+      <p class="teks-konfirmasi" style="margin-bottom: 15px">
+        Apakah anda ingin melakukan acc pada data?
+      </p>
+      <p class="info" style="margin-bottom: 30px">
+        Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
+      </p>
+      <div class="tombol-konfirmasi">
+        <b-button variant="secondary" @click="hideAccModal" style="width: 200px"
+          >Tidak</b-button
+        >
+        <b-button
+          style="background-color: #967c55; margin-left: 15px; width: 200px"
+          @click="confirmAccData"
+          >Ya</b-button
+        >
+      </div>
+    </b-modal>
   </div>
 </template>
 
@@ -308,6 +354,7 @@ export default {
       alokasiDana: [],
       selectedBidang: "",
       selectedOptionIndex: null,
+      selectedProgramId: null,
       selectedYear: new Date().getFullYear(),
       selectedMonth: new Date().getMonth() + 1,
       years: this.generateYears(),
@@ -338,9 +385,10 @@ export default {
   },
   computed: {
     selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].nama
-        : "PROGRAM KEPUSTAKAAN";
+      if (this.selectedOptionIndex !== null && this.programOptions.length > 0) {
+        return this.programOptions[this.selectedOptionIndex].nama;
+      }
+      return "PROGRAM KEPUSTAKAAN";
     },
     filteredProgramOptions() {
       if (!this.selectedBidang) return [];
@@ -439,6 +487,29 @@ export default {
     },
   },
   methods: {
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+    showAccModal() {
+      this.$refs.accModal.show();
+    },
+    hideAccModal() {
+      this.$refs.accModal.hide();
+    },
+    confirmAccData() {
+      // Handle the ACC Data confirmation logic here
+      this.hideAccModal();
+      // Add your logic to handle the ACC Data confirmation here
+      console.log("ACC Data confirmed");
+    },
+    checkAndNavigate(event) {
+      if (event.target.value === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      }
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
+    },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
@@ -506,7 +577,9 @@ export default {
       }
     },
     setInitialProgram() {
-      this.selectedOptionIndex = this.getDefaultProgramIndex();
+      if (this.programOptions.length > 0) {
+        this.selectedOptionIndex = this.getDefaultProgramIndex();
+      }
     },
     getDefaultProgramIndex() {
       return this.programOptions.findIndex((program) => program.id === 1);

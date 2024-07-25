@@ -15,6 +15,7 @@
                   v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
+                  @change="checkAndNavigate"
                 >
                   <option
                     v-for="bidang in bidangOptions"
@@ -23,6 +24,7 @@
                   >
                     {{ bidang.nama }}
                   </option>
+                  <option value="Tambah Bidang">Tambah Bidang</option>
                 </select>
               </div>
             </div>
@@ -69,6 +71,11 @@
                   </option>
                 </select>
               </div>
+            </div>
+            <div class="print-tombol">
+              <button type="button" class="acc" @click="showAccModal">
+                ACC Data
+              </button>
             </div>
             <div class="pilihan">
               <button
@@ -730,6 +737,40 @@
           </div>
         </div>
       </div>
+      <!-- Confirmation Modal -->
+      <b-modal
+        id="acc-modal"
+        ref="accModal"
+        hide-footer
+        title="Konfirmasi ACC Data"
+      >
+        <!-- <div class="icon-konfirmasi">
+        <b-icon-exclamation-circle-fill
+          font-scale="5"
+          style="color: #967c55; margin-bottom: 25px"
+        ></b-icon-exclamation-circle-fill>
+      </div> -->
+
+        <p class="teks-konfirmasi" style="margin-bottom: 15px">
+          Apakah anda ingin melakukan acc pada data?
+        </p>
+        <p class="info" style="margin-bottom: 30px">
+          Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
+        </p>
+        <div class="tombol-konfirmasi">
+          <b-button
+            variant="secondary"
+            @click="hideAccModal"
+            style="width: 200px"
+            >Tidak</b-button
+          >
+          <b-button
+            style="background-color: #967c55; margin-left: 15px; width: 200px"
+            @click="confirmAccData"
+            >Ya</b-button
+          >
+        </div>
+      </b-modal>
     </div>
   </div>
 </template>
@@ -820,6 +861,23 @@ export default {
   },
 
   methods: {
+    showAccModal() {
+      this.$refs.accModal.show();
+    },
+    hideAccModal() {
+      this.$refs.accModal.hide();
+    },
+    confirmAccData() {
+      // Handle the ACC Data confirmation logic here
+      this.hideAccModal();
+      // Add your logic to handle the ACC Data confirmation here
+      console.log("ACC Data confirmed");
+    },
+    checkAndNavigate(event) {
+      if (event.target.value === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      }
+    },
     async fetchBidangOptions() {
       try {
         const response = await axios.get("/api/bidang");
@@ -948,6 +1006,9 @@ export default {
     },
     navigateToInputProgram() {
       this.$router.push({ path: "/inputprogram" });
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
     },
     formatCurrency(value) {
       return new Intl.NumberFormat("id-ID", {
