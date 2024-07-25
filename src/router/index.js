@@ -9,6 +9,7 @@ import LupaView from "../views/subpage/LupaView.vue";
 import InputView from "../views/subpage/InputView.vue";
 import InputresetView from "../views/subpage/InputresetView.vue";
 import InputprogramView from "../views/subpage/InputprogramView.vue";
+import InputbidangView from "../views/subpage/InputbidangView.vue";
 import InputlaporanView from "../views/subpage/InputlaporanView.vue";
 import InputrkaView from "../views/subpage/InputrkaView.vue";
 import InputanggaranView from "../views/subpage/InputanggaranView.vue";
@@ -70,6 +71,11 @@ const routes = [
     path: "/inputprogram",
     name: "inputprogram",
     component: InputprogramView,
+  },
+  {
+    path: "/inputbidang",
+    name: "inputbidang",
+    component: InputbidangView,
   },
   {
     path: "/inputlaporan",
