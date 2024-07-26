@@ -98,7 +98,7 @@
                       <button
                         v-if="account.verification === 'Tidak Terverifikasi'"
                         style="color: black"
-                        @click="sendVerificationLink(account.id)"
+                        @click="showLinksPopup"
                       >
                         Link Verification
                       </button>
@@ -261,6 +261,48 @@
         </div>
       </div>
     </div>
+    <!-- Pop-up Resend Link verification -->
+    <div v-if="showLinkPopup" class="popup-overlay">
+      <div class="kartu-login">
+        <b-icon-x
+          style="width: 30px; height: 30px; margin-left: 550px"
+          @click="closePopup"
+        ></b-icon-x>
+        <p class="regist">Re-Send Link Verification</p>
+
+        <div class="inputan">
+          <input
+            v-model="link.user_email"
+            type="email"
+            placeholder="Email"
+            autocomplete="user_email"
+            required
+          />
+        </div>
+
+        <div
+          class="tombol-submit"
+          type="submit"
+          @click="resendVerificationLink"
+          style="margin-bottom: 80px"
+        >
+          Kirim Link
+        </div>
+        <!-- Error messages -->
+        <div
+          v-if="Object.keys(registerErrors).length > 0"
+          class="error-messages"
+        >
+          <p
+            v-for="(error, key) in registerErrors"
+            :key="key"
+            style="color: red; margin-top: 5px"
+          >
+            {{ error }}
+          </p>
+        </div>
+      </div>
+    </div>
     <!-- Pop-up Verification Link Sent -->
     <div v-if="showVerificationPopup" class="popup-overlay">
       <div class="verification-card">
@@ -324,6 +366,7 @@ export default {
       activeRow: null, // To track which row's actions dropdown is open
       confirmDelete: null, // Untuk melacak pengguna yang akan dihapus
       showPopup: false, // Untuk menampilkan pop-up register
+      showLinkPopup: false, // Untuk menampilkan pop-up register
       showVerificationPopup: false, // Untuk menampilkan pop-up verifikasi
       form: {
         name: "",
@@ -331,6 +374,9 @@ export default {
         password_confirmation: "",
         email: "",
         profile_picture: "https://i.ibb.co.com/2qXwjX3/default-blue1.png",
+      },
+      link: {
+        user_email: "",
       },
       showPassword: false, // Untuk toggle visibilitas password
       registerErrors: {}, // Untuk menyimpan pesan error
@@ -411,11 +457,15 @@ export default {
     showRegisterPopup() {
       this.showPopup = true;
     },
+    showLinksPopup() {
+      this.showLinkPopup = true;
+    },
     togglePasswordVisibility() {
       this.showPassword = !this.showPassword;
     },
     closePopup() {
       this.showPopup = false;
+      this.showLinkPopup = false;
       this.showVerificationPopup = false;
     },
     store() {
@@ -445,34 +495,30 @@ export default {
     },
     resendVerificationLink() {
       // Implementasi untuk mengirim ulang link verifikasi
-      console.log("Resending verification link to:", this.form.email);
-      // Implementasikan logika kirim ulang link di sini, misalnya memanggil API
-    },
-    sendVerificationLink(userId) {
-      // Implementasi untuk mengirim link verifikasi
       axios
-        .post(
-          `/email/verification-notification`,
-          { user_id: userId },
-          {
-            headers: {
-              Authorization: "Bearer " + sessionStorage.getItem("bearer"),
-            },
-          }
-        )
+        .post("/email/verification-notification", this.link, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
         .then((response) => {
-          console.log(response);
-          console.log(`Verification link sent to user ${userId} successfully`);
+          console.log("link send successfully:", response.data);
+          this.showPopup = false; // Tutup pop-up setelah submit
+          this.registerErrors = {}; // Clear previous errors
           // Optionally, refresh the account list or update the state
           this.fetchDataFromApi();
         })
         .catch((error) => {
-          console.error(
-            `Error sending verification link to user ${userId}:`,
-            error
-          );
+          if (error.response) {
+            this.registerErrors = error.response.data.errors; // Assign error messages
+            console.log("Error send link user:", error.response.data);
+          } else {
+            console.log("Error  send link user:", error.message);
+          }
         });
+      // Implementasikan logika kirim ulang link di sini, misalnya memanggil API
     },
+
     toggleAdminStatus(userId) {
       // API call to toggle admin status
       axios
