@@ -47,20 +47,29 @@ const onSubmit = async () => {
   successMessage.value = "";
 
   try {
-    const result = await axios.post("/forgot-password", { email: email.value });
-    if (result.status === 200) {
-      successMessage.value = "Link reset password telah dikirim ke email Anda.";
-    } else {
-      throw new Error(result.data.message);
+    await axios.get("sanctum/csrf-cookie");
+    try {
+      const result = await axios.post("/forgot-password", {
+        email: email.value,
+      });
+      if (result.status === 200) {
+        successMessage.value =
+          "Link reset password telah dikirim ke email Anda.";
+      } else {
+        throw new Error(result.data.message);
+      }
+    } catch (error) {
+      console.error(
+        "Error saat mengirim permintaan:",
+        error.response?.data || error.message
+      );
+      errorMessage.value =
+        error.response?.data.message ||
+        "Gagal mengirim link reset password. Silakan coba lagi.";
     }
   } catch (error) {
-    console.error(
-      "Error saat mengirim permintaan:",
-      error.response?.data || error.message
-    );
-    errorMessage.value =
-      error.response?.data.message ||
-      "Gagal mengirim link reset password. Silakan coba lagi.";
+    console.error("Error dengan CSRF atau jaringan:", error);
+    errorMessage.value = "Kesalahan jaringan. Silakan coba lagi nanti.";
   } finally {
     isLoading.value = false;
   }

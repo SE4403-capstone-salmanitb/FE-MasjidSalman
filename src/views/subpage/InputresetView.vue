@@ -63,7 +63,8 @@
 </template>
 
 <script>
-import axios from "axios"; // Pastikan impor axios yang benar
+//import axios from "axios"; // Pastikan impor axios yang benar
+import axios from "@/lib/axios";
 
 export default {
   data() {
@@ -87,14 +88,16 @@ export default {
       this.isLoading = true;
       this.errorMessage = "";
       try {
+        await axios.get("/sanctum/csrf-cookie");
         const response = await axios.post("/reset-password", {
-          email: this.form.email,
-          token: this.form.token,
+          email: this.$route.query.email,
+          token: this.$route.params.token,
           password: this.form.password,
           password_confirmation: this.form.password_confirmation,
         });
         // Handle successful response here
         console.log(response.data);
+        window.location.href = "/";
       } catch (error) {
         this.errorMessage = error.response
           ? error.response.data.message
