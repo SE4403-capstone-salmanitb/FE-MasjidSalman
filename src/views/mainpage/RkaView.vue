@@ -273,11 +273,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_jan
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_jan === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -291,11 +291,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_feb
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_feb === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -309,11 +309,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_mar
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_mar === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -327,11 +327,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_apr
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_apr === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -345,11 +345,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_mei
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_mei === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -363,11 +363,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_jun
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_jun === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -381,11 +381,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_jul
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_jul === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -399,11 +399,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_aug
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_aug === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -417,11 +417,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_sep
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_sep === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -435,11 +435,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_oct
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_oct === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -453,11 +453,11 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_nov
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_nov === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
@@ -471,16 +471,16 @@
                               </div>
                               <div v-else>
                                 {{
-                                  formatCurrency(
-                                    item.dana_dec
-                                      ? item.nilai_satuan * item.quantity
-                                      : 0
-                                  )
+                                  item.dana_dec === "1"
+                                    ? formatCurrency(
+                                        item.nilai_satuan * item.quantity
+                                      )
+                                    : 0
                                 }}
                               </div>
                             </td>
                             <td>
-                              {{ calculateTotal(item) }}
+                              {{ formatCurrency(calculateTotal(item)) }}
                             </td>
                             <td style="text-align: center">
                               <button
@@ -1033,29 +1033,20 @@ export default {
       }
     },
     calculateTotal(item) {
-      return item.dana_jan
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_feb
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_mar
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_apr
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_mei
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_jun
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_jul
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_aug
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_sep
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_oct
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_nov
-        ? item.nilai_satuan * item.quantity
-        : 0 + item.dana_dec;
+      return (
+        (item.dana_jan === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_feb === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_mar === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_apr === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_mei === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_jun === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_jul === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_aug === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_sep === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_oct === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_nov === "1" ? item.nilai_satuan * item.quantity : 0) +
+        (item.dana_dec === "1" ? item.nilai_satuan * item.quantity : 0)
+      );
     },
     downloadExcel() {
       const penjelasanData = [];
