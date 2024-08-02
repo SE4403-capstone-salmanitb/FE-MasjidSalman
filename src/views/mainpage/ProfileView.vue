@@ -65,6 +65,10 @@
             placeholder="name"
             autocomplete="name"
           />
+          <!-- Error message for name -->
+          <p v-if="formErrors.name" class="error-message">
+            {{ formErrors.name }}
+          </p>
         </div>
         <div class="inputan">
           <input type="file" @change="handleEditFileChange" />
@@ -106,13 +110,17 @@
             "
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
+          <!-- Error message for new password -->
+          <p v-if="formErrors.new_password" class="error-message">
+            {{ formErrors.new_password }}
+          </p>
         </div>
         <div class="inputan">
           <input
             v-model="userPassword.old_password"
             :type="showPassword ? 'text' : 'password'"
-            placeholder="old_password"
-            autocomplete="old_password"
+            placeholder="old password"
+            autocomplete="old-password"
           />
           <b-icon-eye-fill
             style="
@@ -125,13 +133,17 @@
             "
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
+          <!-- Error message for old password -->
+          <p v-if="formErrors.old_password" class="error-message">
+            {{ formErrors.old_password }}
+          </p>
         </div>
         <div class="inputan">
           <input
             v-model="userPassword.new_password_confirmation"
             :type="showPassword ? 'text' : 'password'"
-            placeholder="new_password_confirmation"
-            autocomplete="new_password_confirmation"
+            placeholder="new password confirmation"
+            autocomplete="new-password-confirmation"
           />
           <b-icon-eye-fill
             style="
@@ -144,6 +156,10 @@
             "
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
+          <!-- Error message for new password confirmation -->
+          <p v-if="formErrors.new_password_confirmation" class="error-message">
+            {{ formErrors.new_password_confirmation }}
+          </p>
         </div>
         <div
           class="tombol-submit"
@@ -155,6 +171,7 @@
         </div>
       </div>
     </div>
+
     <!-- Pop-up Edit Email -->
     <div v-if="showEmailsPopup" class="popup-overlay">
       <div class="kartu-edit">
@@ -170,6 +187,10 @@
             placeholder="Email baru"
             autocomplete="new-email"
           />
+          <!-- Error message for new email -->
+          <p v-if="formErrors.new_email" class="error-message">
+            {{ formErrors.new_email }}
+          </p>
         </div>
         <div class="inputan">
           <input
@@ -189,6 +210,10 @@
             "
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
+          <!-- Error message for password -->
+          <p v-if="formErrors.email_password" class="error-message">
+            {{ formErrors.email_password }}
+          </p>
         </div>
         <div
           class="tombol-submit"
@@ -233,7 +258,7 @@ export default {
       userId: null, // Set userId sesuai dengan pengguna yang diinginkan
       showPopup: false, // Untuk menampilkan pop-up register
       showPasswordPopup: false, // Untuk menampilkan pop-up edit password
-      showEmailsPopup: false, // Untuk menampilkan pop-up edit password
+      showEmailsPopup: false, // Untuk menampilkan pop-up edit email
       user: {
         name: "",
         password: "",
@@ -250,6 +275,15 @@ export default {
       },
       showPassword: false, // Untuk toggle visibilitas password
       activeRow: null, // Track the currently active row
+      formErrors: {
+        // Object to hold form-specific errors
+        name: "",
+        new_email: "",
+        email_password: "",
+        old_password: "",
+        new_password: "",
+        new_password_confirmation: "",
+      },
     };
   },
   created() {
@@ -320,12 +354,8 @@ export default {
         .catch((error) => {
           console.error("Error:", error.response.data);
 
-          // Handle error, e.g., show error message
-          this.notificationMessage = "Gagal";
-          this.notificationDetail =
-            "Gagal menginput data: " + error.response.data.message;
-          this.notificationType = "error";
-          this.isNotificationVisible = true;
+          // Handle error, e.g., show error message below the input
+          this.formErrors.name = error.response.data.errors.name || "";
         });
     },
 
@@ -419,11 +449,11 @@ export default {
         })
         .catch((error) => {
           // Handle error in password change
-          this.notificationMessage = "Gagal";
-          this.notificationDetail =
-            "Gagal mengubah password: " + error.response.data.message;
-          this.notificationType = "error";
-          this.isNotificationVisible = true;
+          const errors = error.response.data.errors || {};
+          this.formErrors.old_password = errors.old_password || "";
+          this.formErrors.new_password = errors.new_password || "";
+          this.formErrors.new_password_confirmation =
+            errors.new_password_confirmation || "";
         });
     },
     submitEmailsForm() {
@@ -442,9 +472,9 @@ export default {
         )
         .then((response) => {
           console.log("Response:", response.data);
-          // Handle successful password change
+          // Handle successful email change
           this.notificationMessage = "Berhasil";
-          this.notificationDetail = "Password berhasil diubah";
+          this.notificationDetail = "Email berhasil diubah";
           this.notificationType = "success";
           this.isNotificationVisible = true;
           setTimeout(() => {
@@ -453,7 +483,7 @@ export default {
             this.notificationType = "";
             this.isNotificationVisible = false;
           }, 10000);
-          this.closePasswordPopup();
+          this.closeEmailsPopup();
           try {
             axios.post("/logout");
             sessionStorage.removeItem("user");
@@ -461,15 +491,13 @@ export default {
             window.location.href = "/";
           } catch (error) {
             console.error("Error during logout:", error);
-          } // Logout the user after password change
+          } // Logout the user after email change
         })
         .catch((error) => {
-          // Handle error in password change
-          this.notificationMessage = "Gagal";
-          this.notificationDetail =
-            "Gagal mengubah email: " + error.response.data.message;
-          this.notificationType = "error";
-          this.isNotificationVisible = true;
+          // Handle error in email change
+          const errors = error.response.data.errors || {};
+          this.formErrors.new_email = errors.new_email || "";
+          this.formErrors.email_password = errors.password || "";
         });
     },
   },
