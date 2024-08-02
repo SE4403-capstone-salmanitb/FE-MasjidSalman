@@ -3,6 +3,9 @@ import VueRouter from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/subpage/LoginView.vue";
 
+// Error404
+import ErrorNotFound from "../views/ErrorNotFound.vue";
+
 // subpage
 import RegisterView from "../views/subpage/RegisterView.vue";
 import LupaView from "../views/subpage/LupaView.vue";
@@ -37,6 +40,7 @@ const routes = [
     name: "login",
     component: LoginView,
   },
+  { path: "/:pathMatch(.)", name: "NotFound", component: ErrorNotFound },
   {
     path: "/test",
     name: "testView",
@@ -63,7 +67,7 @@ const routes = [
     component: InputView,
   },
   {
-    path: "/reset",
+    path: "/password-reset/:token",
     name: "inputreset",
     component: InputresetView,
   },
