@@ -85,11 +85,11 @@
                     />
                   </div>
                   <div class="mb-3">
-                    <label for="target" class="form-label">Tahun</label>
+                    <label for="tahun" class="form-label">Tahun</label>
                     <input
                       type="string"
                       class="form-control"
-                      id="target1"
+                      id="tahun1"
                       v-model="form.tahun"
                       style="width: 100%"
                       required
