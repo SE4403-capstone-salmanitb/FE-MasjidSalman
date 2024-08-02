@@ -72,13 +72,11 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="indikator" class="form-label"
-                      >Nama Kegiatan</label
-                    >
+                    <label for="nama" class="form-label">Nama Kegiatan</label>
                     <input
                       type="string"
                       class="form-control"
-                      id="indikator1"
+                      id="nama1"
                       style="width: 100%"
                       v-model="form.nama"
                       required
