@@ -97,19 +97,8 @@
                   >
                     <button
                       type="button"
-                      class="btn hapus-btn"
-                      style="
-                        display: none;
-                        background-color: #ff0000;
-                        margin-right: 14px;
-                      "
-                    >
-                      Hapus
-                    </button>
-                    <button
-                      type="button"
                       class="btn tambah-btn"
-                      style="align-content: right; align-content: right"
+                      @click="submitForms"
                     >
                       Tambah
                     </button>
@@ -117,7 +106,7 @@
                 </div>
               </div>
             </div>
-            <div class="tombol1" style="margin-bottom: 272px">
+            <div class="tombol1">
               <button type="button" class="btn" @click="submitForm">
                 Simpan
               </button>
@@ -192,10 +181,6 @@ export default {
     };
   },
   mounted() {
-    // Attach event listener to the parent element for both Tambah and Hapus buttons
-    const cardContainer = document.querySelector(".card-container1");
-    cardContainer.addEventListener("click", this.handleButtonClick);
-
     // Fetch program options from the API
     this.fetchProgramOptions();
   },
@@ -283,6 +268,40 @@ export default {
           }, 10000); // Reset notification after 10 seconds
           // Redirect to RKA page after successful submission
           window.location.href = "/penjrka";
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    submitForms() {
+      console.log("Form Data:", this.formrka);
+
+      axios
+        .post("/api/programKegiatanRKA", this.formrka, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          window.location.href = "/inputrka";
         })
         .catch((error) => {
           // Handle error, e.g., show error message

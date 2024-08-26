@@ -84,7 +84,7 @@
                     required
                   >
                     <option
-                      v-for="program in KegiatanKPI"
+                      v-for="program in filteredKegiatanKPI"
                       :key="program.id"
                       :value="program.nama"
                     >
@@ -256,7 +256,7 @@ export default {
           this.KegiatanKPI = response.data;
         })
         .catch((error) => {
-          console.error("Error fetching Laporan Bulanan:", error);
+          console.error("Error fetching Kegiatan KPI:", error);
         });
     },
     updateIdLaporanBulanan() {
@@ -349,9 +349,6 @@ export default {
       this.isNotificationVisible = false;
     },
   },
-  components: {
-    Sidebar,
-  },
   computed: {
     notificationClass() {
       return {
@@ -360,6 +357,22 @@ export default {
         "notification-success": this.notificationType === "success",
       };
     },
+    filteredKegiatanKPI() {
+      const selectedProgram = this.LaporanBulanan.find(
+        (program) => program.kode === this.form.kode
+      );
+
+      if (!selectedProgram) {
+        return [];
+      }
+
+      return this.KegiatanKPI.filter(
+        (program) => program.id_program === selectedProgram.program_id
+      );
+    },
+  },
+  components: {
+    Sidebar,
   },
 };
 </script>

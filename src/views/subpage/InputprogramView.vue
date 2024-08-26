@@ -180,40 +180,6 @@ export default {
         this.formjudul.id_bidang = "";
       }
     },
-    submitForm() {
-      console.log("Form Data:", this.formjudul);
-
-      axios
-        .post("/api/program", this.formjudul, {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
-          },
-        })
-        .then(() => {
-          // Handle successful response, e.g., show success message
-          this.notificationMessage = "Berhasil";
-          this.notificationDetail = "Data berhasil di upload";
-          this.notificationType = "success";
-          this.isNotificationVisible = true;
-          setTimeout(() => {
-            this.notificationMessage = "";
-            this.notificationDetail = "";
-            this.notificationType = "";
-            this.isNotificationVisible = false;
-          }, 10000); // Reset notification after 10 seconds
-          // Redirect to RKA page after successful submission
-          window.location.go(-1);
-        })
-        .catch((error) => {
-          // Handle error, e.g., show error message
-          this.notificationMessage = "Gagal";
-          this.notificationDetail =
-            "Gagal menginput data: " + error.response.data.message;
-          this.notificationType = "error";
-          this.isNotificationVisible = true;
-          console.error("Error:", error.response.data);
-        });
-    },
     SubmitForm() {
       console.log("Form Data:", this.formjudul);
 
@@ -236,6 +202,40 @@ export default {
             this.isNotificationVisible = false;
           }, 10000); // Reset notification after 10 seconds
           // Redirect to RKA page after successful submission
+        })
+        .catch((error) => {
+          // Handle error, e.g., show error message
+          this.notificationMessage = "Gagal";
+          this.notificationDetail =
+            "Gagal menginput data: " + error.response.data.message;
+          this.notificationType = "error";
+          this.isNotificationVisible = true;
+          console.error("Error:", error.response.data);
+        });
+    },
+    submitForm() {
+      console.log("Form Data:", this.formjudul);
+
+      axios
+        .post("/api/program", this.formjudul, {
+          headers: {
+            Authorization: "Bearer " + sessionStorage.getItem("bearer"),
+          },
+        })
+        .then(() => {
+          // Handle successful response, e.g., show success message
+          this.notificationMessage = "Berhasil";
+          this.notificationDetail = "Data berhasil di upload";
+          this.notificationType = "success";
+          this.isNotificationVisible = true;
+          setTimeout(() => {
+            this.notificationMessage = "";
+            this.notificationDetail = "";
+            this.notificationType = "";
+            this.isNotificationVisible = false;
+          }, 10000); // Reset notification after 10 seconds
+          // Redirect to RKA page after successful submission
+          this.$router.go(-1); // Menggunakan Vue Router untuk navigasi kembali
         })
         .catch((error) => {
           // Handle error, e.g., show error message
