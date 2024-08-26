@@ -1,82 +1,131 @@
 <template>
   <div class="profile">
-    <div class="card1">
-      <div class="card mb-3" style="max-width: 1381px; max-height: fit-content">
-        <div class="kepala" style="width: 1381px">
-          <p @click="goBack">
-            <b-icon-arrow-left-circle-fill
-              style="margin-right: 26px"
-            ></b-icon-arrow-left-circle-fill>
-            Laporan / Laporan Rekap
-          </p>
+    <Sidebar />
+    <div class="card-container">
+      <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
+        <div class="kepala">
+          <p>Laporan / Laporan Rekap</p>
         </div>
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th style="font-weight: bold">No</th>
-                <th style="font-weight: bold">Program Kegiatan</th>
-                <th style="font-weight: bold">Target</th>
+        <div class="container text-center">
+          <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                  v-model="selectedBidang"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.id"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                  <option value="Tambah Bidang">Tambah Bidang</option>
+                </select>
+              </div>
+            </div>
+            <div class="teks">Program</div>
+            <div class="dropdown1">
+              <select
+                v-model="selectedProgram"
+                id="dropdown-1"
+                class="m-md-2"
+                variant="outline"
+              >
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
+                >
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
+            </div>
 
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Jan
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Feb
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Mar
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Apr
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Mei
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Jun
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Jul
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Agust
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Sep
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Okt
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Nov
-                </th>
-                <th style="width: calc((100% - 40px) / 13); font-weight: bold">
-                  Des
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in combinedData" :key="index">
-                <td>{{ item.no }}</td>
-                <td>{{ item.program.displayName }}</td>
-                <td>{{ item.target }}</td>
+            <div class="print-tombol">
+              <button type="button" class="print-icon" @click="exportToExcel">
+                <b-icon-file-earmark-spreadsheet-fill
+                  style="width: 20px; height: 20px"
+                ></b-icon-file-earmark-spreadsheet-fill>
+              </button>
+            </div>
 
-                <td>{{ item.jan }}</td>
-                <td>{{ item.feb }}</td>
-                <td>{{ item.mar }}</td>
-                <td>{{ item.apr }}</td>
-                <td>{{ item.mei }}</td>
-                <td>{{ item.jun }}</td>
-                <td>{{ item.jul }}</td>
-                <td>{{ item.aug }}</td>
-                <td>{{ item.sep }}</td>
-                <td>{{ item.oct }}</td>
-                <td>{{ item.nov }}</td>
-                <td>{{ item.dec }}</td>
-              </tr>
-            </tbody>
-          </table>
+            <div class="tahun">Tahun</div>
+            <div class="tahun1">
+              <div class="dropdown1">
+                <select
+                  v-model="selectedYear"
+                  class="m-md-2"
+                  style="width: 90px; height: 38px"
+                >
+                  <option v-for="year in years" :key="year" :value="year">
+                    {{ year }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div class="box-text-kpi">
+              <p class="text-area">{{ selectedProgramName }}</p>
+              <div class="additional-text">
+                <div class="container-box"></div>
+              </div>
+            </div>
+            <div class="table-kpi">
+              <table class="table table-fixed-width">
+                <thead>
+                  <tr>
+                    <th>No</th>
+                    <th>Nama Kegiatan</th>
+                    <th>Indikator</th>
+                    <th>Target</th>
+                    <th>Jan</th>
+                    <th>Feb</th>
+                    <th>Mar</th>
+                    <th>Apr</th>
+                    <th>Mei</th>
+                    <th>Jun</th>
+                    <th>Jul</th>
+                    <th>Agust</th>
+                    <th>Sep</th>
+                    <th>Okt</th>
+                    <th>Nov</th>
+                    <th>Des</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="filteredData.length === 0">
+                    <td colspan="17" style="text-align: center">
+                      Tidak ada data
+                    </td>
+                  </tr>
+                  <tr v-for="(kpi, index) in filteredData" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ kpi.nama }}</td>
+                    <td>{{ kpi.indikator }}</td>
+                    <td>{{ kpi.target }}</td>
+                    <td>{{ kpi.capaianBulanan[1] }}</td>
+                    <td>{{ kpi.capaianBulanan[2] }}</td>
+                    <td>{{ kpi.capaianBulanan[3] }}</td>
+                    <td>{{ kpi.capaianBulanan[4] }}</td>
+                    <td>{{ kpi.capaianBulanan[5] }}</td>
+                    <td>{{ kpi.capaianBulanan[6] }}</td>
+                    <td>{{ kpi.capaianBulanan[7] }}</td>
+                    <td>{{ kpi.capaianBulanan[8] }}</td>
+                    <td>{{ kpi.capaianBulanan[9] }}</td>
+                    <td>{{ kpi.capaianBulanan[10] }}</td>
+                    <td>{{ kpi.capaianBulanan[11] }}</td>
+                    <td>{{ kpi.capaianBulanan[12] }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -84,207 +133,321 @@
 </template>
 
 <script>
+import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
+import * as XLSX from "xlsx";
 
 export default {
+  components: {
+    Sidebar,
+  },
   data() {
     return {
-      combinedData: [], // Array to store combined program and KPI data
+      bidangOptions: [],
+      programOptions: [],
+      filteredPrograms: [],
+      programKegiatanOptions: [],
+      keyPerformanceIndicators: [],
+      laporanBulanan: [],
+
+      selectedBidang: "",
+      selectedProgram: "",
+      selectedYear: new Date().getFullYear(),
+      years: this.generateYears(),
+
+      combinedData: [],
+      isEditing: null, // Track which row is being edited
+      activeRow: null,
+      selectedKPI: null, // Properti untuk menyimpan KPI yang dipilih
     };
   },
+  mounted() {
+    this.fetchBidangOptions();
+    this.fetchProgramOptions();
+    this.fetchLaporanBulanan();
+    this.fetchAndCombineData();
+  },
   methods: {
-    goBack() {
-      // Fungsi ini akan mengarahkan pengguna kembali ke halaman sebelumnya
-      this.$router.go(-1); // Menggunakan Vue Router untuk navigasi kembali
+    toggleDropdown(index) {
+      this.activeRow = this.activeRow === index ? null : index;
     },
-    fetchPrograms() {
-      // Fetch all required data and combine them
-      axios
-        .get("/api/programKegiatanKPI")
-        .then((responseProgram) => {
-          const programData = responseProgram.data;
 
-          axios
-            .get("/api/keyPerformanceIndicator")
-            .then((responseKPI) => {
-              const kpiData = responseKPI.data;
+    async fetchBidangOptions() {
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data;
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
+      } catch (error) {
+        console.error("Failed to fetch bidang options:", error);
+      }
+    },
 
-              axios
-                .get("/api/laporanKPIBulanan")
-                .then((responseLaporan) => {
-                  const laporanData = responseLaporan.data;
+    async fetchProgramOptions() {
+      try {
+        const response = await axios.get("/api/program");
+        this.programOptions = response.data;
+        this.filterPrograms();
+      } catch (error) {
+        console.error("Failed to fetch program options:", error);
+      }
+    },
 
-                  axios
-                    .get("/api/itemKegiatanRKA")
-                    .then((responseItemKegiatan) => {
-                      const itemKegiatanData = responseItemKegiatan.data;
+    async fetchProgramKegiatanKPI() {
+      try {
+        const response = await axios.get("/api/programKegiatanKPI");
+        this.programKegiatanOptions = response.data.filter(
+          (kegiatan) => kegiatan.tahun === this.selectedYear // Filter berdasarkan tahun yang dipilih
+        );
+      } catch (error) {
+        console.error("Failed to fetch program kegiatan KPI:", error);
+      }
+    },
 
-                      let combinedData = [];
-                      let displayedPrograms = new Set();
-                      let noCounter = 1; // Initialize counter for "No" column
+    async fetchLaporanBulanan() {
+      try {
+        const response = await axios.get("/api/laporanBulanan");
+        this.laporanBulanan = response.data;
+      } catch (error) {
+        console.error("Failed to fetch laporan bulanan:", error);
+      }
+    },
 
-                      programData.forEach((program) => {
-                        const relatedKPIs = kpiData.filter(
-                          (kpi) => kpi.id_program_kegiatan_kpi === program.id
-                        );
+    async fetchAndCombineData() {
+      try {
+        const [
+          keyPerformanceIndicatorResponse,
+          laporanKPIBulananResponse,
+          laporanBulananResponse,
+        ] = await Promise.all([
+          axios.get("/api/keyPerformanceIndicator"),
+          axios.get("/api/laporanKPIBulanan"),
+          axios.get("/api/laporanBulanan"),
+        ]);
 
-                        if (relatedKPIs.length) {
-                          relatedKPIs.forEach((kpi) => {
-                            const relatedLaporan = laporanData.find(
-                              (laporan) => laporan.id_kpi === kpi.id
-                            );
+        const keyPerformanceIndicators = keyPerformanceIndicatorResponse.data;
+        const laporanKPIBulanan = laporanKPIBulananResponse.data;
+        const laporanBulanan = laporanBulananResponse.data;
 
-                            const relatedItemKegiatan = itemKegiatanData.find(
-                              (item) => item.id === kpi.id
-                            );
+        // Gabungkan data
+        this.combinedData = this.programKegiatanOptions
+          .map((kegiatan) => {
+            const relatedKPIs = keyPerformanceIndicators
+              .filter((kpi) => kpi.id_program_kegiatan_kpi === kegiatan.id)
+              .map((kpi) => {
+                const laporanBulananKPI = laporanKPIBulanan.filter(
+                  (laporan) => laporan.id_kpi === kpi.id
+                );
 
-                            const isDuplicate = displayedPrograms.has(
-                              program.id
-                            );
+                // Ambil capaian sesuai bulan
+                let capaianBulanan = {
+                  1: "0",
+                  2: "0",
+                  3: "0",
+                  4: "0",
+                  5: "0",
+                  6: "0",
+                  7: "0",
+                  8: "0",
+                  9: "0",
+                  10: "0",
+                  11: "0",
+                  12: "0",
+                };
 
-                            const capaianValue = relatedLaporan
-                              ? relatedLaporan.capaian
-                              : "0";
+                laporanBulananKPI.forEach((laporanKPI) => {
+                  const laporanBulananItem = laporanBulanan.find(
+                    (laporan) => laporan.id === laporanKPI.id_laporan_bulanan
+                  );
 
-                            combinedData.push({
-                              no: isDuplicate ? "" : noCounter,
-                              program: {
-                                ...program,
-                                displayName: isDuplicate ? "" : program.nama,
-                              },
-                              target: kpi.target,
-                              capaian: capaianValue,
-                              jan: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_jan === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              feb: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_feb === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              mar: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_mar === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              apr: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_apr === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              mei: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_mei === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              jun: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_jun === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              jul: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_jul === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              aug: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_aug === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              sep: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_sep === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              oct: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_oct === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              nov: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_nov === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                              dec: relatedItemKegiatan
-                                ? relatedItemKegiatan.dana_dec === 1
-                                  ? capaianValue
-                                  : "0"
-                                : "0",
-                            });
-                            if (!isDuplicate) {
-                              displayedPrograms.add(program.id);
-                              noCounter++; // Increment the counter for the first occurrence
-                            }
-                          });
-                        } else {
-                          const isDuplicate = displayedPrograms.has(program.id);
-                          combinedData.push({
-                            no: isDuplicate ? "" : noCounter,
-                            program: {
-                              ...program,
-                              displayName: isDuplicate ? "" : program.nama,
-                            },
-                            target: "Tidak ada data",
-                            capaian: "0",
-                            jan: "0",
-                            feb: "0",
-                            mar: "0",
-                            apr: "0",
-                            mei: "0",
-                            jun: "0",
-                            jul: "0",
-                            aug: "0",
-                            sep: "0",
-                            oct: "0",
-                            nov: "0",
-                            dec: "0",
-                          });
-                          if (!isDuplicate) {
-                            displayedPrograms.add(program.id);
-                            noCounter++; // Increment the counter for the first occurrence
-                          }
-                        }
-                      });
-
-                      // Sort combinedData by program.id
-                      combinedData.sort((a, b) => a.program.id - b.program.id);
-
-                      // Update numbering to start from 1 at the top
-                      let currentNo = 1;
-                      combinedData.forEach((item) => {
-                        if (item.no !== "") {
-                          item.no = currentNo++;
-                        }
-                      });
-
-                      this.combinedData = combinedData;
-                    })
-                    .catch((error) => {
-                      console.error(
-                        "Error fetching Item Kegiatan RKA data:",
-                        error
-                      );
-                    });
-                })
-                .catch((error) => {
-                  console.error("Error fetching Laporan KPI data:", error);
+                  if (laporanBulananItem) {
+                    const bulan =
+                      new Date(laporanBulananItem.bulan_laporan).getMonth() + 1;
+                    capaianBulanan[bulan] = laporanKPI.capaian;
+                  }
                 });
-            })
-            .catch((error) => {
-              console.error("Error fetching KPI data:", error);
-            });
-        })
-        .catch((error) => {
-          console.error("Error fetching program data:", error);
-        });
+
+                return {
+                  ...kpi,
+                  capaianBulanan,
+                };
+              });
+
+            if (relatedKPIs.length > 0) {
+              return relatedKPIs.map((kpi) => ({
+                ...kegiatan,
+                indikator: kpi.indikator,
+                target: kpi.target,
+                capaianBulanan: kpi.capaianBulanan,
+              }));
+            } else {
+              return {
+                ...kegiatan,
+                indikator: "",
+                target: "",
+                capaianBulanan: {},
+              };
+            }
+          })
+          .flat();
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
+    },
+    goToInputPage() {
+      this.$router.push({ path: "/input" });
+    },
+    showConfirmDeletePopup(kpi) {
+      this.selectedKPI = kpi; // Simpan KPI yang akan dihapus
+      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
+    },
+    closePopup() {
+      this.confirmDelete = false;
+    },
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
+      );
+    },
+
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
+    },
+
+    generateYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = currentYear; i >= currentYear - 3; i--) {
+        years.push(i);
+      }
+      return years;
+    },
+
+    toggleEdit(item) {
+      if (this.isEditing === item.id) {
+        this.saveData(item);
+      } else {
+        this.isEditing = item.id;
+      }
+    },
+
+    async deleteRow(kpi) {
+      try {
+        if (kpi.nama && kpi.indikator && kpi.target) {
+          // Hapus data indikator dan target menggunakan API
+          await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
+          await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
+        } else {
+          if (kpi.nama) {
+            await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
+          }
+          if (kpi.indikator || kpi.target) {
+            await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
+          }
+        }
+
+        // Perbarui data setelah penghapusan
+        this.fetchAndCombineData();
+
+        // Tutup pop-up konfirmasi setelah penghapusan berhasil
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+        alert(
+          `Failed to delete the row: ${error.response?.status} - ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
+    },
+    exportToExcel() {
+      // Ambil data dari tabel yang sudah difilter
+      const dataToExport = this.filteredData.map((item, index) => ({
+        No: index + 1,
+        "Nama Kegiatan": item.nama,
+        Indikator: item.indikator,
+        Target: item.target,
+        Jan: item.capaianBulanan[1],
+        Feb: item.capaianBulanan[2],
+        Mar: item.capaianBulanan[3],
+        Apr: item.capaianBulanan[4],
+        Mei: item.capaianBulanan[5],
+        Jun: item.capaianBulanan[6],
+        Jul: item.capaianBulanan[7],
+        Agust: item.capaianBulanan[8],
+        Sep: item.capaianBulanan[9],
+        Okt: item.capaianBulanan[10],
+        Nov: item.capaianBulanan[11],
+        Des: item.capaianBulanan[12],
+      }));
+
+      // Buat worksheet dari data
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+      // Buat workbook dan tambahkan worksheet
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekap");
+
+      // Simpan file Excel
+      XLSX.writeFile(wb, "Laporan_Rekap.xlsx");
+    },
+    getIndicatorAndTarget(idKpi) {
+      const kpi = this.keyPerformanceIndicators.find(
+        (indicator) => indicator.id === idKpi
+      );
+      return kpi
+        ? { indikator: kpi.indikator, target: kpi.target }
+        : { indikator: "", target: "" };
     },
   },
-  mounted() {
-    this.fetchPrograms(); // Fetch programs and KPI data when component is mounted
+
+  computed: {
+    selectedProgramName() {
+      const program = this.programOptions.find(
+        (program) => program.id === this.selectedProgram
+      );
+      return program ? program.nama : "";
+    },
+
+    filteredKPI() {
+      // Filter KPI berdasarkan selectedProgram dan urutkan berdasarkan ID
+      return this.programKegiatanOptions
+        .filter((kpi) => kpi.id_program === this.selectedProgram)
+        .sort((a, b) => a.id - b.id); // Mengurutkan berdasarkan ID secara ascending
+    },
+    filteredData() {
+      // Filter combinedData berdasarkan id_program
+      return this.combinedData.filter(
+        (item) => item.id_program === this.selectedProgram
+      );
+    },
+  },
+
+  watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      }
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
+    selectedYear() {
+      this.fetchProgramKegiatanKPI(); // Refresh data saat tahun berubah
+      this.fetchAndCombineData(); // Kombinasi data lagi
+    },
   },
 };
 </script>

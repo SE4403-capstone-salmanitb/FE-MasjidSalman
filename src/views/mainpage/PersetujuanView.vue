@@ -84,14 +84,14 @@
                       <button
                         v-if="account.tipe_user === 'Pengguna'"
                         style="color: black"
-                        @click="toggleAdminStatus(account.id)"
+                        @click="showConfirmPopup"
                       >
                         Jadikan Admin
                       </button>
                       <button
                         v-else
                         style="color: black"
-                        @click="toggleAdminStatus(account.id)"
+                        @click="showConfirmPopup"
                       >
                         Jadikan Pengguna
                       </button>
@@ -161,6 +161,91 @@
         </div>
       </div>
     </div>
+    <!-- Pop-up Konfirmasi Ganti tipe akun -->
+    <div>
+      <div v-if="confirmChange" class="confirmation-popup">
+        <div class="confirmation-card">
+          <b-icon-exclamation-circle-fill
+            style="color: #f24e1e; width: 126px; height: 126px"
+          ></b-icon-exclamation-circle-fill>
+          <p style="font-size: 32px; font-weight: bold">
+            Anda yakin mengganti tipe akun?
+          </p>
+          <div class="confirmation-buttons">
+            <button
+              @click="showDoubleConfirmPopup"
+              style="
+                width: 259px;
+                height: 47px;
+                background-color: #967c55;
+                color: white;
+                margin-right: 14px;
+                font-size: 16px;
+                font-weight: bolder;
+              "
+            >
+              Ganti
+            </button>
+            <button
+              @click="closePopup"
+              style="
+                width: 259px;
+                height: 47px;
+                background-color: #a4a4a3;
+                color: black;
+                font-size: 16px;
+                font-weight: bolder;
+              "
+            >
+              BATAL
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Pop-up Double Konfirmasi Ganti tipe akun -->
+    <div v-for="(account, index) in paginatedDataAkun" :key="index">
+      <div v-if="DoubleconfirmChange" class="confirmation-popup">
+        <div class="confirmation-card">
+          <b-icon-exclamation-circle-fill
+            style="color: #f24e1e; width: 126px; height: 126px"
+          ></b-icon-exclamation-circle-fill>
+          <p style="font-size: 32px; font-weight: bold">
+            Anda yakin akun berikut sudah benar?
+          </p>
+          <div class="confirmation-buttons">
+            <button
+              @click="toggleAdminStatus(account.id)"
+              style="
+                width: 259px;
+                height: 47px;
+                background-color: #967c55;
+                color: white;
+                margin-right: 14px;
+                font-size: 16px;
+                font-weight: bolder;
+              "
+            >
+              Benar
+            </button>
+            <button
+              @click="closePopup"
+              style="
+                width: 259px;
+                height: 47px;
+                background-color: #a4a4a3;
+                color: black;
+                font-size: 16px;
+                font-weight: bolder;
+              "
+            >
+              Tidak
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Pop-up Register -->
     <div v-if="showPopup" class="popup-overlay">
       <div class="kartu-login">
@@ -365,6 +450,8 @@ export default {
       itemsPerPage: 5, // Default jumlah item per halaman
       activeRow: null, // To track which row's actions dropdown is open
       confirmDelete: null, // Untuk melacak pengguna yang akan dihapus
+      confirmChange: false,
+      DoubleconfirmChange: false,
       showPopup: false, // Untuk menampilkan pop-up register
       showLinkPopup: false, // Untuk menampilkan pop-up register
       showVerificationPopup: false, // Untuk menampilkan pop-up verifikasi
@@ -454,8 +541,14 @@ export default {
           console.error("Error fetching data:", error);
         });
     },
+    showConfirmPopup() {
+      this.confirmChange = true;
+    },
     showRegisterPopup() {
       this.showPopup = true;
+    },
+    showDoubleConfirmPopup() {
+      this.DoubleconfirmChange = true;
     },
     showLinksPopup() {
       this.showLinkPopup = true;
@@ -467,6 +560,8 @@ export default {
       this.showPopup = false;
       this.showLinkPopup = false;
       this.showVerificationPopup = false;
+      this.confirmChange = false;
+      this.DoubleconfirmChange = false;
     },
     store() {
       // Implementasi untuk menyimpan data register baru
@@ -536,6 +631,7 @@ export default {
           // Optionally, refresh the account list or update the state
           this.fetchDataFromApi();
           console.log(response);
+          window.location.href = "/persetujuan";
         })
         .catch((error) => {
           console.error(

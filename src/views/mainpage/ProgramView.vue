@@ -4,7 +4,7 @@
     <div class="card-container">
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
-          <p>Laporan / Laporan Program</p>
+          <p>Laporan / Program</p>
         </div>
         <div class="container text-center">
           <div class="row">
@@ -12,15 +12,14 @@
             <div class="tahun1">
               <div class="dropdown1" style="width: fit-content; height: 38px">
                 <select
-                  v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
-                  @change="checkAndNavigate"
+                  v-model="selectedBidang"
                 >
                   <option
                     v-for="bidang in bidangOptions"
                     :key="bidang.id"
-                    :value="bidang.nama"
+                    :value="bidang.id"
                   >
                     {{ bidang.nama }}
                   </option>
@@ -30,25 +29,22 @@
             </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
-              <b-dropdown
+              <select
+                v-model="selectedProgram"
                 id="dropdown-1"
                 class="m-md-2"
                 variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-                dropup
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in filteredProgramOptions"
-                  :key="index"
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
                 >
-                  {{ option.nama }}
-                </b-dropdown-item>
-                <b-dropdown-item @click="navigateToInputProgram">
-                  Tambahkan Program
-                </b-dropdown-item>
-              </b-dropdown>
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
             </div>
             <div class="teks">Bulan</div>
             <div class="bulan1">
@@ -83,23 +79,80 @@
               </div>
             </div>
           </div>
-          <div
-            class="print-tombol"
-            style="text-align: start; margin-left: 15px"
-          >
-            <button type="button" class="acc" @click="showAccModal">
+          <div class="print-tombol" style="text-align: start">
+            <button
+              type="button"
+              class="acc"
+              style="margin-right: 10px"
+              @click="goToInputLaporan"
+            >
+              Data Program +
+            </button>
+
+            <button
+              type="button"
+              class="acc"
+              @click="showAccModal"
+              v-if="isAdmin"
+            >
               ACC Data
             </button>
+
+            <button type="button" class="print-icon" style="margin-left: 10px">
+              <b-icon-file-earmark-spreadsheet-fill
+                @click="downloadExcel"
+                style="width: 20px; height: 20px"
+              ></b-icon-file-earmark-spreadsheet-fill>
+            </button>
           </div>
-          <div class="kotak-deskripsi">
-            <div class="kotak-teks">
-              <p class="teks-kegiatan">Data Program</p>
+          <div class="penyusun">
+            <div class="profile-susun">
+              <img
+                :src="profilePicture"
+                alt="Profile Picture"
+                v-if="profilePicture"
+              />
             </div>
-            <div class="tombol-tambah" @click="goToInputLaporan">
-              <b-icon-plus
-                style="margin-bottom: 3px"
-                @click="goToInputLaporan"
-              ></b-icon-plus>
+
+            <div class="nama-penyusun">
+              <p
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  color: gray;
+                  margin-top: 15px;
+                  margin-bottom: 0%;
+                  text-align: left;
+                "
+              >
+                Disusun oleh :
+              </p>
+              <p style="text-align: left; margin-top: 0%">{{ penyusun }}</p>
+            </div>
+            <div class="profile-disetujui">
+              <img
+                :src="approvedProfilePicture"
+                alt="Approved Profile Picture"
+                v-if="approvedProfilePicture"
+              />
+            </div>
+
+            <div class="nama-penyusun">
+              <p
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  color: gray;
+                  margin-top: 15px;
+                  margin-bottom: 0%;
+                  text-align: left;
+                "
+              >
+                Disetujui oleh :
+              </p>
+              <p style="text-align: left; margin-top: 0%">
+                {{ diperiksaOleh }}
+              </p>
             </div>
           </div>
           <div class="kotak-deskripsi">
@@ -113,9 +166,9 @@
               ></b-icon-plus>
             </div>
           </div>
-          <div v-for="kegiatan in uniqueProgramKegiatan" :key="kegiatan.id">
+          <div v-for="(nama, index) in programKegiatanNames" :key="index">
             <div class="teks-pelaksanaan">
-              <p>{{ kegiatan.program_kegiatan.nama }}</p>
+              <p>{{ nama }}</p>
             </div>
             <div class="table-container1">
               <table class="table">
@@ -133,18 +186,92 @@
                     <th style="font-weight: bold; width: calc((100%) / 4)">
                       Penyaluran
                     </th>
+                    <th style="width: 50px; text-align: center"></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr
-                    v-for="detail in kegiatanDetails(kegiatan)"
-                    :key="detail.id"
+                    v-for="(
+                      pelaksanaan, pelIndex
+                    ) in filteredPelaksanaanDataByProgram(nama)"
+                    :key="pelIndex"
                     style="text-align: left"
                   >
-                    <td>{{ detail.penjelasan }}</td>
-                    <td>{{ detail.waktu }}</td>
-                    <td>{{ detail.tempat }}</td>
-                    <td>{{ detail.penyaluran }}</td>
+                    <td>
+                      <input
+                        v-if="isEditing === pelaksanaan.id"
+                        v-model="pelaksanaan.penjelasan"
+                        type="text"
+                      />
+                      <span v-else>{{ pelaksanaan.penjelasan }}</span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="isEditing === pelaksanaan.id"
+                        v-model="pelaksanaan.waktu"
+                        type="text"
+                      />
+                      <span v-else>{{ pelaksanaan.waktu }}</span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="isEditing === pelaksanaan.id"
+                        v-model="pelaksanaan.tempat"
+                        type="text"
+                      />
+                      <span v-else>{{ pelaksanaan.tempat }}</span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="isEditing === pelaksanaan.id"
+                        v-model="pelaksanaan.penyaluran"
+                        type="text"
+                      />
+                      <span v-else>{{ pelaksanaan.penyaluran }}</span>
+                    </td>
+                    <td style="text-align: center; position: relative">
+                      <b-icon-three-dots-vertical
+                        style="color: black; cursor: pointer"
+                        @click="toggleDropdown(pelIndex)"
+                      ></b-icon-three-dots-vertical>
+
+                      <!-- Dropdown for actions -->
+                      <div
+                        v-if="activeRow === pelIndex"
+                        class="actions-dropdown"
+                        style="
+                          position: absolute;
+                          background-color: white;
+                          border: 1px solid #ccc;
+                          padding: 5px;
+                          border-radius: 3px;
+                          z-index: 1000;
+                        "
+                      >
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="showConfirmPopup(pelaksanaan)"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="toggleEdit(pelaksanaan)"
+                        >
+                          {{ isEditing === pelaksanaan.id ? "Save" : "Edit" }}
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -162,33 +289,94 @@
             </div>
           </div>
           <div class="box-evaluasi">
-            <p class="text-evaluasi">{{ selectedOption }}</p>
+            <p class="text-evaluasi">{{ selectedProgramName }}</p>
           </div>
-          <div v-for="kpi in uniqueKPIBulanan" :key="kpi.id">
+          <div v-for="(kpi, kpiIndex) in filteredLaporanKPIData" :key="kpi.id">
             <div class="teks-pelaksanaan">
               <p>{{ kpi.k_p_i.program_kegiatan.nama }}</p>
-            </div>
-            <div class="table-container1">
-              <table class="table">
-                <thead>
-                  <tr style="text-align: left">
-                    <th style="font-weight: bold; width: 188px">Indikator</th>
-                    <th style="font-weight: bold; width: 229px">
-                      Target Indikator
-                    </th>
-                    <th style="font-weight: bold; width: 444px">Deskripsi</th>
-                    <th style="font-weight: bold; width: 77px">Capaian</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="detail in kpiDetails(kpi)" :key="detail.id">
-                    <td>{{ detail.k_p_i.indikator }}</td>
-                    <td>{{ detail.k_p_i.target }}</td>
-                    <td>{{ detail.deskripsi }}</td>
-                    <td>{{ detail.capaian }}</td>
-                  </tr>
-                </tbody>
-              </table>
+              <div class="table-container1" style="margin-left: 0%">
+                <table class="table">
+                  <thead>
+                    <tr style="text-align: left">
+                      <th style="font-weight: bold; width: 188px">Indikator</th>
+                      <th style="font-weight: bold; width: 229px">
+                        Target Indikator
+                      </th>
+                      <th style="font-weight: bold; width: 444px">Deskripsi</th>
+                      <th style="font-weight: bold; width: 77px">Capaian</th>
+                      <th style="width: 50px; text-align: center"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="item in filteredLaporanKPIDataByKPI(kpi.k_p_i.id)"
+                      :key="item.id"
+                    >
+                      <td>{{ item.k_p_i.indikator }}</td>
+                      <td>{{ item.k_p_i.target }}</td>
+                      <td>
+                        <input
+                          v-if="isEditing === item.id"
+                          v-model="item.deskripsi"
+                          type="text"
+                        />
+                        <span v-else>{{ item.deskripsi }}</span>
+                      </td>
+                      <td>
+                        <input
+                          v-if="isEditing === item.id"
+                          v-model="item.capaian"
+                          type="text"
+                        />
+                        <span v-else>{{ item.capaian }}</span>
+                      </td>
+                      <td style="text-align: center; position: relative">
+                        <b-icon-three-dots-vertical
+                          style="color: black; cursor: pointer"
+                          @click="toggleDropdown(kpiIndex)"
+                        ></b-icon-three-dots-vertical>
+
+                        <!-- Dropdown for actions -->
+                        <div
+                          v-if="activeRow === kpiIndex"
+                          class="actions-dropdown"
+                          style="
+                            position: absolute;
+                            background-color: white;
+                            border: 1px solid #ccc;
+                            padding: 5px;
+                            border-radius: 3px;
+                            z-index: 1000;
+                          "
+                        >
+                          <button
+                            style="
+                              color: black;
+                              background: none;
+                              border: none;
+                              cursor: pointer;
+                            "
+                            @click="showConfirmEvaluasiPopup(kpi)"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            style="
+                              color: black;
+                              background: none;
+                              border: none;
+                              cursor: pointer;
+                            "
+                            @click="toggleEdits(item)"
+                          >
+                            {{ isEditing === item.id ? "Save" : "Edit" }}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
           <div class="kotak-deskripsi" style="margin-top: 24px">
@@ -203,15 +391,15 @@
             </div>
           </div>
           <div class="box-evaluasi">
-            <p class="text-evaluasi">{{ selectedOption }}</p>
+            <p class="text-evaluasi">{{ selectedProgramName }}</p>
           </div>
-          <div class="table-container1">
+          <div class="table-container1" style="margin-left: 0%">
             <table class="table">
               <thead>
                 <tr style="text-align: left">
                   <th style="font-weight: bold; width: 40px">No</th>
                   <th style="font-weight: bold; width: calc((100%) / 5)">
-                    kategori
+                    Kategori
                   </th>
                   <th style="font-weight: bold; width: calc((100%) / 5)">
                     Rutinitas
@@ -225,23 +413,102 @@
                   <th style="font-weight: bold; width: calc((100%) / 5)">
                     Realisasi
                   </th>
+                  <th style="width: 50px; text-align: center"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredPenerimaManfaat.length === 0">
-                  <td colspan="6" style="text-align: center">Tidak ada data</td>
+                <tr v-if="filteredPenerimaManfaatData.length === 0">
+                  <td colspan="7" style="text-align: center">Tidak ada data</td>
                 </tr>
                 <tr
-                  v-for="(penerima, index) in filteredPenerimaManfaat"
-                  :key="penerima.id"
+                  v-for="(item, index) in filteredPenerimaManfaatData"
+                  :key="item.id"
                   style="text-align: left"
                 >
                   <td>{{ index + 1 }}</td>
-                  <td>{{ penerima.kategori }}</td>
-                  <td>{{ penerima.tipe_rutinitas }}</td>
-                  <td>{{ penerima.tipe_penyaluran }}</td>
-                  <td>{{ penerima.rencana }}</td>
-                  <td>{{ penerima.realisasi }}</td>
+                  <td>
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.kategori"
+                      type="text"
+                    />
+                    <span v-else>{{ item.kategori }}</span>
+                  </td>
+                  <td>
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.tipe_rutinitas"
+                      type="text"
+                    />
+                    <span v-else>{{ item.tipe_rutinitas }}</span>
+                  </td>
+                  <td>
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.tipe_penyaluran"
+                      type="text"
+                    />
+                    <span v-else>{{ item.tipe_penyaluran }}</span>
+                  </td>
+                  <td>
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.rencana"
+                      type="text"
+                    />
+                    <span v-else>{{ item.rencana }}</span>
+                  </td>
+                  <td>
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.realisasi"
+                      type="text"
+                    />
+                    <span v-else>{{ item.realisasi }}</span>
+                  </td>
+                  <td style="text-align: center; position: relative">
+                    <b-icon-three-dots-vertical
+                      style="color: black; cursor: pointer"
+                      @click="toggleDropdownManfaat(index)"
+                    ></b-icon-three-dots-vertical>
+
+                    <!-- Dropdown for actions -->
+                    <div
+                      v-if="activeRow === index"
+                      class="actions-dropdown"
+                      style="
+                        position: absolute;
+                        background-color: white;
+                        border: 1px solid #ccc;
+                        padding: 5px;
+                        border-radius: 3px;
+                        z-index: 1000;
+                      "
+                    >
+                      <button
+                        style="
+                          color: black;
+                          background: none;
+                          border: none;
+                          cursor: pointer;
+                        "
+                        @click="showConfirmManfaatPopup(item)"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        style="
+                          color: black;
+                          background: none;
+                          border: none;
+                          cursor: pointer;
+                        "
+                        @click="toggleEditManfaat(item)"
+                      >
+                        {{ isEditing === item.id ? "Save" : "Edit" }}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -262,102 +529,314 @@
               Dana yang direncanakan: {{ formatCurrency(totalJumlahRencana) }}
             </p>
             <p class="dana">
-              Dana yang digunakan : {{ formatCurrency(totalDanaDigunakan) }}
+              Dana yang digunakan : {{ formatCurrency(totalJumlahRealisasi) }}
             </p>
-            <p class="dana">
-              Saldo :
-              {{ formatCurrency(totalJumlahRencana - totalDanaDigunakan) }}
-            </p>
+            <p class="dana">Saldo : {{ formatCurrency(saldo) }}</p>
           </div>
-          <div class="table-container1">
+          <div class="table-container1" style="margin-left: 0%">
             <table class="table">
               <thead>
                 <tr style="text-align: left">
                   <th style="font-weight: bold; width: 40px">No</th>
-                  <th style="font-weight: bold">kategori Pengeluaran</th>
+                  <th style="font-weight: bold">Kategori Pengeluaran</th>
                   <th style="font-weight: bold">Jumlah Realisasi</th>
                   <th style="font-weight: bold">Jumlah Rencana</th>
                   <th style="font-weight: bold">Sumber Dana</th>
+                  <th style="width: 50px; text-align: center"></th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredAlokasiDana.length === 0">
-                  <td colspan="5" style="text-align: center">Tidak ada data</td>
+                <tr v-if="filteredAlokasiDanaData.length === 0">
+                  <td colspan="6" style="text-align: center">Tidak ada data</td>
                 </tr>
                 <tr
-                  v-for="(alokasi, index) in filteredAlokasiDana"
-                  :key="alokasi.id"
+                  v-for="(item, index) in filteredAlokasiDanaData"
+                  :key="item.id"
                   style="text-align: left"
                 >
                   <td>{{ index + 1 }}</td>
-                  <td>{{ alokasi.item_kegiatan_r_k_a.uraian }}</td>
-                  <td>{{ formatCurrency(alokasi.jumlah_realisasi) }}</td>
+                  <td>{{ item.item_kegiatan_r_k_a.uraian }}</td>
                   <td>
-                    {{
-                      formatCurrency(alokasi.item_kegiatan_r_k_a.nilai_satuan)
-                    }}
+                    <input
+                      v-if="isEditing === item.id"
+                      v-model="item.jumlah_realisasi"
+                      type="number"
+                    />
+                    <span v-else>{{
+                      formatCurrency(item.jumlah_realisasi)
+                    }}</span>
                   </td>
-                  <td>{{ alokasi.item_kegiatan_r_k_a.sumber_dana }}</td>
+                  <td>
+                    {{ formatCurrency(item.item_kegiatan_r_k_a.nilai_satuan) }}
+                  </td>
+                  <td>{{ item.item_kegiatan_r_k_a.sumber_dana }}</td>
+                  <td style="text-align: center; position: relative">
+                    <b-icon-three-dots-vertical
+                      style="color: black; cursor: pointer"
+                      @click="toggleDropdownDana(index)"
+                    ></b-icon-three-dots-vertical>
+
+                    <!-- Dropdown for actions -->
+                    <div
+                      v-if="activeRow === index"
+                      class="actions-dropdown"
+                      style="
+                        position: absolute;
+                        background-color: white;
+                        border: 1px solid #ccc;
+                        padding: 5px;
+                        border-radius: 3px;
+                        z-index: 1000;
+                      "
+                    >
+                      <button
+                        style="
+                          color: black;
+                          background: none;
+                          border: none;
+                          cursor: pointer;
+                        "
+                        @click="showConfirmDanaPopup(item)"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        style="
+                          color: black;
+                          background: none;
+                          border: none;
+                          cursor: pointer;
+                        "
+                        @click="toggleEditDana(item)"
+                      >
+                        {{ isEditing === item.id ? "Save" : "Edit" }}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
+
+        <!-- Pop-up Konfirmasi ACC Data-->
+        <b-modal
+          id="acc-modal"
+          ref="accModal"
+          hide-footer
+          title="Konfirmasi ACC Data"
+        >
+          <p class="teks-konfirmasi" style="margin-bottom: 15px">
+            Apakah anda ingin melakukan acc pada data?
+          </p>
+          <p class="info" style="margin-bottom: 30px">
+            Saat anda memilih ya, maka seluruh data tidak akan dapat diubah
+            lagi!
+          </p>
+          <div class="tombol-konfirmasi">
+            <b-button
+              variant="secondary"
+              @click="hideAccModal"
+              style="width: 200px"
+              >Tidak</b-button
+            >
+            <b-button
+              style="background-color: #967c55; margin-left: 15px; width: 200px"
+              @click="confirmAccData"
+              >Ya</b-button
+            >
+          </div>
+        </b-modal>
+        <!-- Pop-up Konfirmasi Delete Data Kegiatan-->
+        <div v-if="confirmDelete" class="confirmation-popup">
+          <div class="confirmation-card">
+            <b-icon-exclamation-circle-fill
+              style="color: #f24e1e; width: 126px; height: 126px"
+            ></b-icon-exclamation-circle-fill>
+            <p style="font-size: 32px; font-weight: bold">
+              Anda yakin ingin menghapus data?
+            </p>
+            <div class="confirmation-buttons">
+              <button
+                @click="deleteRow(selectedItem)"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #967c55;
+                  color: white;
+                  margin-right: 14px;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                HAPUS
+              </button>
+              <button
+                @click="closePopup"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #a4a4a3;
+                  color: black;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                BATAL
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Pop-up Konfirmasi Delete Data Evaluasi-->
+        <div v-if="confirmDeleteEvaluasi" class="confirmation-popup">
+          <div class="confirmation-card">
+            <b-icon-exclamation-circle-fill
+              style="color: #f24e1e; width: 126px; height: 126px"
+            ></b-icon-exclamation-circle-fill>
+            <p style="font-size: 32px; font-weight: bold">
+              Anda yakin ingin menghapus data?
+            </p>
+            <div class="confirmation-buttons">
+              <button
+                @click="deleteRowEvaluasi(selectedItem)"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #967c55;
+                  color: white;
+                  margin-right: 14px;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                HAPUS
+              </button>
+              <button
+                @click="closePopup"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #a4a4a3;
+                  color: black;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                BATAL
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Pop-up Konfirmasi Delete Data Manfaat-->
+        <div v-if="confirmDeleteManfaat" class="confirmation-popup">
+          <div class="confirmation-card">
+            <b-icon-exclamation-circle-fill
+              style="color: #f24e1e; width: 126px; height: 126px"
+            ></b-icon-exclamation-circle-fill>
+            <p style="font-size: 32px; font-weight: bold">
+              Anda yakin ingin menghapus data?
+            </p>
+            <div class="confirmation-buttons">
+              <button
+                @click="deleteRowManfaat(selectedItem)"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #967c55;
+                  color: white;
+                  margin-right: 14px;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                HAPUS
+              </button>
+              <button
+                @click="closePopup"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #a4a4a3;
+                  color: black;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                BATAL
+              </button>
+            </div>
+          </div>
+        </div>
+        <!-- Pop-up Konfirmasi Delete Data Dana-->
+        <div v-if="confirmDeleteDana" class="confirmation-popup">
+          <div class="confirmation-card">
+            <b-icon-exclamation-circle-fill
+              style="color: #f24e1e; width: 126px; height: 126px"
+            ></b-icon-exclamation-circle-fill>
+            <p style="font-size: 32px; font-weight: bold">
+              Anda yakin ingin menghapus data?
+            </p>
+            <div class="confirmation-buttons">
+              <button
+                @click="deleteRowDana(selectedItem)"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #967c55;
+                  color: white;
+                  margin-right: 14px;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                HAPUS
+              </button>
+              <button
+                @click="closePopup"
+                style="
+                  width: 259px;
+                  height: 47px;
+                  background-color: #a4a4a3;
+                  color: black;
+                  font-size: 16px;
+                  font-weight: bolder;
+                "
+              >
+                BATAL
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <b-modal
-      id="acc-modal"
-      ref="accModal"
-      hide-footer
-      title="Konfirmasi ACC Data"
-    >
-      <!-- <div class="icon-konfirmasi">
-        <b-icon-exclamation-circle-fill
-          font-scale="5"
-          style="color: #967c55; margin-bottom: 25px"
-        ></b-icon-exclamation-circle-fill>
-      </div> -->
-
-      <p class="teks-konfirmasi" style="margin-bottom: 15px">
-        Apakah anda ingin melakukan acc pada data?
-      </p>
-      <p class="info" style="margin-bottom: 30px">
-        Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
-      </p>
-      <div class="tombol-konfirmasi">
-        <b-button variant="secondary" @click="hideAccModal" style="width: 200px"
-          >Tidak</b-button
-        >
-        <b-button
-          style="background-color: #967c55; margin-left: 15px; width: 200px"
-          @click="confirmAccData"
-          >Ya</b-button
-        >
-      </div>
-    </b-modal>
   </div>
 </template>
 
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
+import * as XLSX from "xlsx";
 
 export default {
+  components: {
+    Sidebar,
+  },
   data() {
     return {
-      programOptions: [],
       bidangOptions: [],
-      programKegiatan: [],
-      laporanBulanan: [],
-      kpiBulanan: [],
-      penerimaManfaat: [],
-      alokasiDana: [],
+      programOptions: [],
+      filteredPrograms: [],
+      pelaksanaanData: [],
+      laporanKPIData: [],
+      penerimaManfaatData: [],
+      alokasiDanaData: [],
+      isAdmin: false,
+      filteredPelaksanaanData: [], // Data pelaksanaan yang sudah difilter
       selectedBidang: "",
-      selectedOptionIndex: null,
-      selectedProgramId: null,
+      selectedProgram: "",
       selectedYear: new Date().getFullYear(),
-      selectedMonth: new Date().getMonth() + 1,
       years: this.generateYears(),
+      selectedMonth: new Date().getMonth() + 1,
       months: [
         "Januari",
         "Februari",
@@ -372,123 +851,118 @@ export default {
         "November",
         "Desember",
       ],
+      userData: [], // Data pengguna
+      laporanData: [], // Data laporan bulanan
+      penyusun: "", // Nama penyusun yang akan ditampilkan
+      diperiksaOleh: "", // Nama yang diperiksa yang akan ditampilkan
+      profilePicture: "", // URL gambar profil penyusun yang akan ditampilkan
+      approvedProfilePicture: "", // URL gambar profil dari diperiksa_oleh
+      programKegiatanNames: [], // Array untuk menyimpan nama program_kegiatan yang sesuai
+      activeRow: null, // To track the currently open dropdown
+      isEditing: null, // Track which row is being edited
+      confirmDelete: false, // To handle delete confirmation popup
+      confirmDeleteEvaluasi: false,
+      confirmDeleteManfaat: false,
+      confirmDeleteDana: false,
+      selectedItem: null, // To store the item being edited or deleted
     };
   },
-  mounted() {
-    this.fetchProgramOptions();
-    this.fetchProgramKegiatan();
-    this.fetchBidangOptions();
-    this.fetchLaporanBulanan();
-    this.fetchKPIBulanan();
-    this.fetchPenerimaManfaat();
-    this.fetchAlokasiDana();
-  },
   computed: {
-    selectedOption() {
-      if (this.selectedOptionIndex !== null && this.programOptions.length > 0) {
-        return this.programOptions[this.selectedOptionIndex].nama;
-      }
-      return "PROGRAM KEPUSTAKAAN";
-    },
-    filteredProgramOptions() {
-      if (!this.selectedBidang) return [];
-      return this.programOptions.filter(
-        (option) => option.id_bidang === this.selectedBidangId
-      );
-    },
-    selectedBidangId() {
-      const selectedBidang = this.bidangOptions.find(
-        (bidang) => bidang.nama === this.selectedBidang
-      );
-      return selectedBidang ? selectedBidang.id : null;
-    },
-    filteredProgramKegiatan() {
-      if (
-        this.selectedOptionIndex === null ||
-        !this.programOptions[this.selectedOptionIndex]
-      )
-        return [];
-      const selectedProgramId =
-        this.programOptions[this.selectedOptionIndex].id;
-      return this.programKegiatan.filter(
-        (kegiatan) =>
-          kegiatan.program_kegiatan.id_program === selectedProgramId &&
-          kegiatan.program_kegiatan.tahun === this.selectedYear &&
-          this.isMatchingLaporanBulanan(kegiatan.id_laporan_bulanan)
-      );
-    },
-    filteredKPIBulanan() {
-      if (
-        this.selectedOptionIndex === null ||
-        !this.programOptions[this.selectedOptionIndex]
-      )
-        return [];
-      const selectedProgramId =
-        this.programOptions[this.selectedOptionIndex].id;
-      return this.kpiBulanan.filter(
-        (kpi) =>
-          kpi.k_p_i.program_kegiatan.id_program === selectedProgramId &&
-          kpi.k_p_i.program_kegiatan.tahun === this.selectedYear &&
-          this.isMatchingLaporanBulanan(kpi.id_laporan_bulanan)
-      );
-    },
-    filteredPenerimaManfaat() {
-      return this.penerimaManfaat.filter(
-        (penerima) =>
-          this.isMatchingLaporanBulanan(penerima.id_laporan_bulanan) &&
-          new Date(penerima.created_at).getFullYear() === this.selectedYear
-      );
-    },
-    filteredAlokasiDana() {
-      return this.alokasiDana.filter(
-        (alokasi) =>
-          this.isMatchingLaporanBulanan(alokasi.id_laporan_bulanan) &&
-          new Date(alokasi.created_at).getFullYear() === this.selectedYear
-      );
-    },
-    uniqueProgramKegiatan() {
-      const seenNames = new Set();
-      return this.filteredProgramKegiatan.filter((kegiatan) => {
-        const name = kegiatan.program_kegiatan.nama;
-        if (seenNames.has(name)) {
-          return false;
-        } else {
-          seenNames.add(name);
-          return true;
-        }
-      });
-    },
-    uniqueKPIBulanan() {
-      const seenNames = new Set();
-      return this.filteredKPIBulanan.filter((kpi) => {
-        const name = kpi.k_p_i.program_kegiatan.nama;
-        if (seenNames.has(name)) {
-          return false;
-        } else {
-          seenNames.add(name);
-          return true;
-        }
+    filteredAlokasiDanaData() {
+      return this.alokasiDanaData.filter((item) => {
+        // Temukan laporan bulanan yang sesuai dengan program, bulan, dan tahun yang dipilih
+        const laporan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.id === item.id_laporan_bulanan &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        // Kembalikan item jika laporan bulanan cocok
+        return laporan !== undefined;
       });
     },
     totalJumlahRencana() {
-      return this.filteredAlokasiDana.reduce((total, alokasi) => {
-        return total + alokasi.item_kegiatan_r_k_a.nilai_satuan;
+      return this.filteredAlokasiDanaData.reduce((total, item) => {
+        return total + item.item_kegiatan_r_k_a.nilai_satuan;
       }, 0);
     },
-    totalDanaDigunakan() {
-      return this.filteredAlokasiDana.reduce((total, alokasi) => {
-        return total + alokasi.jumlah_realisasi;
+    // Properti untuk menghitung total jumlah realisasi
+    totalJumlahRealisasi() {
+      return this.filteredAlokasiDanaData.reduce((total, item) => {
+        return total + item.jumlah_realisasi;
       }, 0);
+    },
+    // Properti untuk menghitung sisa saldo
+    saldo() {
+      return this.totalJumlahRencana - this.totalJumlahRealisasi;
+    },
+    filteredLaporanKPIData() {
+      return this.laporanKPIData.filter((kpi) => {
+        const laporanBulanan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.id === kpi.id_laporan_bulanan &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        return (
+          kpi.k_p_i &&
+          kpi.k_p_i.program_kegiatan &&
+          kpi.k_p_i.program_kegiatan.id_program === this.selectedProgram &&
+          laporanBulanan // Pastikan laporan bulanan sesuai dengan bulan dan tahun yang dipilih
+        );
+      });
+    },
+    selectedProgramName() {
+      const program = this.programOptions.find(
+        (program) => program.id === this.selectedProgram
+      );
+      return program ? program.nama : "";
+    },
+    filteredPenerimaManfaatData() {
+      return this.penerimaManfaatData.filter((item) => {
+        // Temukan laporan bulanan yang sesuai dengan program, bulan, dan tahun yang dipilih
+        const laporan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.program_id === this.selectedProgram &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        // Kembalikan item jika id_laporan_bulanan cocok
+        return laporan && item.id_laporan_bulanan === laporan.id;
+      });
     },
   },
-  watch: {
-    selectedBidang() {
-      this.selectedOptionIndex = this.getDefaultProgramIndex(); // Reset the selected option when bidang changes
-    },
+  mounted() {
+    this.fetchUserAdmin();
+    this.fetchLaporanKPIData();
+    this.fetchBidangOptions();
+    this.fetchProgramOptions();
+    this.fetchPelaksanaanData();
+    this.fetchAlokasiDanaData();
+    this.fetchUserData(); // Panggil fetchUserData pada saat komponen dipasang
+    this.fetchLaporanData(); // Panggil fetchLaporanData pada saat komponen dipasang
+    this.fetchPenerimaManfaatData();
   },
   methods: {
-    navigateToInputProgram() {
-      this.$router.push({ path: "/inputprogram" });
+    fetchUserAdmin() {
+      const user = JSON.parse(sessionStorage.getItem("user"));
+      if (user) {
+        this.isAdmin = user.is_admin === 1; // Set status admin
+      } else {
+        console.error("User data is not available in session storage");
+      }
     },
     showAccModal() {
       this.$refs.accModal.show();
@@ -496,101 +970,392 @@ export default {
     hideAccModal() {
       this.$refs.accModal.hide();
     },
-    confirmAccData() {
-      // Handle the ACC Data confirmation logic here
-      this.hideAccModal();
-      // Add your logic to handle the ACC Data confirmation here
-      console.log("ACC Data confirmed");
-    },
-    checkAndNavigate(event) {
-      if (event.target.value === "Tambah Bidang") {
-        this.navigateToInputBidang();
+    async confirmAccData() {
+      try {
+        // Temukan laporan bulanan yang sedang aktif
+        const laporan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.program_id === this.selectedProgram &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        // Jika laporan ditemukan, lakukan verifikasi
+        if (laporan && laporan.id) {
+          const response = await axios.patch(
+            `/api/laporanBulanan/verify/${laporan.id}`
+          );
+          console.log("ACC Data confirmed:", response.data);
+        } else {
+          console.error("Laporan tidak ditemukan atau ID tidak valid.");
+        }
+
+        this.hideAccModal(); // Sembunyikan modal setelah melakukan ACC
+      } catch (error) {
+        console.error("Gagal melakukan ACC data:", error);
       }
     },
-    navigateToInputBidang() {
-      this.$router.push({ path: "/inputbidang" });
+    filteredLaporanKPIDataByKPI(kpiId) {
+      // Mengambil hanya data KPI yang sesuai dengan id_kpi
+      return this.laporanKPIData.filter(
+        (item) => item.k_p_i && item.k_p_i.id === kpiId
+      );
+    },
+    showConfirmPopup(item) {
+      // Show confirmation popup for the selected item
+      this.selectedItem = item; // Store the selected item for deletion
+      this.confirmDelete = true; // Open the confirmation popup
+    },
+    showConfirmEvaluasiPopup(item) {
+      // Show confirmation popup for the selected item
+      this.selectedItem = item; // Store the selected item for deletion
+      this.confirmDeleteEvaluasi = true; // Open the confirmation popup
+    },
+    showConfirmManfaatPopup(item) {
+      // Show confirmation popup for the selected item
+      this.selectedItem = item; // Store the selected item for deletion
+      this.confirmDeleteManfaat = true; // Open the confirmation popup
+    },
+    showConfirmDanaPopup(item) {
+      // Show confirmation popup for the selected item
+      this.selectedItem = item; // Store the selected item for deletion
+      this.confirmDeleteDana = true; // Open the confirmation popup
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
+    },
+    closePopup() {
+      this.confirmDelete = false;
+      this.confirmDeleteManfaat = false;
+      this.confirmDeleteManfaat = false;
+      this.confirmDeleteDana = false;
+      this.activeRow = null;
+    },
+    toggleDropdown(index) {
+      this.activeRow = this.activeRow === index ? null : index;
+    },
+    toggleDropdownManfaat(index) {
+      this.activeRow = this.activeRow === index ? null : index;
+    },
+    toggleDropdownDana(index) {
+      this.activeRow = this.activeRow === index ? null : index;
+    },
+    toggleEdit(item) {
+      if (this.isEditing === item.id) {
+        // If we are in editing mode, save the data
+        this.saveData(item);
+      } else {
+        // If we are not in editing mode, enable it
+        this.isEditing = item.id;
+      }
+    },
+    toggleEdits(item) {
+      if (this.isEditing === item.id) {
+        // If we are in editing mode, save the data
+        this.saveDatas(item);
+      } else {
+        // If we are not in editing mode, enable it
+        this.isEditing = item.id;
+      }
+    },
+    toggleEditManfaat(item) {
+      if (this.isEditing === item.id) {
+        // If we are in editing mode, save the data
+        this.saveDataManfaat(item);
+      } else {
+        // If we are not in editing mode, enable it
+        this.isEditing = item.id;
+      }
+    },
+    toggleEditDana(item) {
+      if (this.isEditing === item.id) {
+        // If we are in editing mode, save the data
+        this.saveDataDana(item);
+      } else {
+        // If we are not in editing mode, enable it
+        this.isEditing = item.id;
+      }
+    },
+    async fetchAlokasiDanaData() {
+      try {
+        const response = await axios.get("/api/alokasiDana");
+        this.alokasiDanaData = response.data; // Simpan data dari API ke alokasiDanaData
+      } catch (error) {
+        console.error("Failed to fetch alokasi dana data:", error);
+      }
+    },
+    async fetchPenerimaManfaatData() {
+      try {
+        const response = await axios.get("/api/penerimaManfaat");
+        this.penerimaManfaatData = response.data; // Simpan data penerima manfaat dari API
+      } catch (error) {
+        console.error("Failed to fetch penerima manfaat data:", error);
+      }
+    },
+    async fetchLaporanKPIData() {
+      try {
+        const response = await axios.get("/api/laporanKPIBulanan");
+        this.laporanKPIData = response.data; // Simpan data KPI yang didapat dari API
+      } catch (error) {
+        console.error("Failed to fetch laporan KPI data:", error);
+      }
+    },
+    async saveData(item) {
+      try {
+        // Simulate saving the data (make an API call here if needed)
+        await axios.put(`/api/pelaksanaan/${item.id}`, {
+          penjelasan: item.penjelasan,
+          waktu: item.waktu,
+          tempat: item.tempat,
+          penyaluran: item.penyaluran,
+        });
+        this.isEditing = null; // Stop editing after saving
+        this.fetchPelaksanaanData(); // Refresh data after saving
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    async saveDatas(item) {
+      try {
+        // Simulate saving the data (make an API call here if needed)
+        await axios.put(`/api/laporanKPIBulanan/${item.id}`, {
+          capaian: item.capaian,
+          deskripsi: item.deskripsi,
+        });
+        this.isEditing = null; // Stop editing after saving
+        this.fetchLaporanKPIData(); // Refresh data after saving
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    async saveDataManfaat(item) {
+      try {
+        // Simulate saving the data (make an API call here if needed)
+        await axios.put(`/api/penerimaManfaat/${item.id}`, {
+          kategori: item.kategori,
+          tipe_rutinitas: item.tipe_rutinitas,
+          tipe_penyaluran: item.tipe_penyaluran,
+          rencana: item.rencana,
+          realisasi: item.realisasi,
+        });
+        this.isEditing = null; // Stop editing after saving
+        this.fetchPenerimaManfaatData(); // Refresh data after saving
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    async saveDataDana(item) {
+      try {
+        // Simulate saving the data (make an API call here if needed)
+        await axios.put(`/api/alokasiDana/${item.id}`, {
+          jumlah_realisasi: item.jumlah_realisasi,
+        });
+        this.isEditing = null; // Stop editing after saving
+        this.fetchAlokasiDanaData(); // Refresh data after saving
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    async deleteRow(item) {
+      try {
+        // Call the API to delete the data
+        await axios.delete(`/api/pelaksanaan/${item.id}`);
+
+        // Remove the deleted item from the local data array (without refresh)
+        this.filteredPelaksanaanData = this.filteredPelaksanaanData.filter(
+          (pelaksanaan) => pelaksanaan.id !== item.id
+        );
+
+        // Close the confirmation popup after deletion
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+      }
+    },
+    async deleteRowEvaluasi(item) {
+      try {
+        // Call the API to delete the data
+        await axios.delete(`/api/laporanKPIBulanan/${item.id}`);
+
+        // Remove the deleted item from the local data array (without refresh)
+        this.laporanKPIData = this.laporanKPIData.filter(
+          (kpi) => kpi.id !== item.id
+        );
+        // Close the confirmation popup after deletion
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+      }
+    },
+    async deleteRowManfaat(item) {
+      try {
+        // Call the API to delete the data
+        await axios.delete(`/api/penerimaManfaat/${item.id}`);
+
+        // Remove the deleted item from the local data array (without refresh)
+        this.penerimaManfaatData = this.penerimaManfaatData.filter(
+          (manfaat) => manfaat.id !== item.id
+        );
+        // Close the confirmation popup after deletion
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+      }
+    },
+    async deleteRowDana(item) {
+      try {
+        // Call the API to delete the data
+        await axios.delete(`/api/alokasiDana/${item.id}`);
+
+        // Remove the deleted item from the local data array (without refresh)
+        this.alokasiDanaData = this.alokasiDanaData.filter(
+          (dana) => dana.id !== item.id
+        );
+        // Close the confirmation popup after deletion
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+      }
+    },
+
+    async fetchBidangOptions() {
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data;
+
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
+      } catch (error) {
+        console.error("Failed to fetch bidang options:", error);
+      }
     },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
         this.programOptions = response.data;
-        this.setInitialProgram();
+        this.filterPrograms();
       } catch (error) {
-        console.error("Error fetching program options:", error);
+        console.error("Failed to fetch program options:", error);
       }
     },
-    async fetchBidangOptions() {
-      try {
-        const response = await axios.get("/api/bidang");
-        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
-        this.setDefaultSelectedBidang();
-      } catch (error) {
-        console.error("Error fetching bidang options:", error);
-      }
-    },
-    async fetchLaporanBulanan() {
-      try {
-        const response = await axios.get("/api/laporanBulanan");
-        this.laporanBulanan = response.data;
-      } catch (error) {
-        console.error("Error fetching laporan bulanan data:", error);
-      }
-    },
-    async fetchProgramKegiatan() {
+    async fetchPelaksanaanData() {
       try {
         const response = await axios.get("/api/pelaksanaan");
-        this.programKegiatan = response.data;
+        this.pelaksanaanData = response.data; // Simpan data pelaksanaan
+        this.filterPelaksanaanData(); // Panggil filterPelaksanaanData untuk memfilter berdasarkan selectedProgram dan id_laporan_bulanan
       } catch (error) {
-        console.error("Error fetching program activity data:", error);
+        console.error("Failed to fetch pelaksanaan data:", error);
       }
     },
-    async fetchKPIBulanan() {
+    async fetchUserData() {
       try {
-        const response = await axios.get("/api/laporanKPIBulanan");
-        this.kpiBulanan = response.data;
+        const response = await axios.get("/user");
+        this.userData = response.data;
+        this.matchPenyusun(); // Panggil matchPenyusun setelah mendapatkan data pengguna
       } catch (error) {
-        console.error("Error fetching KPI Bulanan data:", error);
+        console.error("Failed to fetch user data:", error);
       }
     },
-    async fetchPenerimaManfaat() {
+    async fetchLaporanData() {
       try {
-        const response = await axios.get("/api/penerimaManfaat");
-        this.penerimaManfaat = response.data;
+        const response = await axios.get("/api/laporanBulanan");
+        this.laporanData = response.data;
+        this.matchPenyusun(); // Panggil matchPenyusun setelah mendapatkan data laporan
+        this.filterPelaksanaanData(); // Panggil filterPelaksanaanData setelah mendapatkan laporan
       } catch (error) {
-        console.error("Error fetching penerima manfaat data:", error);
+        console.error("Failed to fetch laporan bulanan data:", error);
       }
     },
-    async fetchAlokasiDana() {
-      try {
-        const response = await axios.get("/api/alokasiDana");
-        this.alokasiDana = response.data;
-      } catch (error) {
-        console.error("Error fetching alokasi dana data:", error);
-      }
-    },
-    setDefaultSelectedBidang() {
-      const defaultBidang = this.bidangOptions.find(
-        (option) => option.id === 1
+    downloadExcel() {
+      // Membuat workbook baru
+      const wb = XLSX.utils.book_new();
+
+      // Menambahkan Sheet untuk Pelaksanaan Data
+      const pelaksanaanSheet = XLSX.utils.json_to_sheet(
+        this.filteredPelaksanaanData
       );
-      if (defaultBidang) {
-        this.selectedBidang = defaultBidang.nama;
-      }
+      XLSX.utils.book_append_sheet(wb, pelaksanaanSheet, "Pelaksanaan");
+
+      // Menambahkan Sheet untuk Laporan KPI Data
+      const kpiSheet = XLSX.utils.json_to_sheet(this.filteredLaporanKPIData);
+      XLSX.utils.book_append_sheet(wb, kpiSheet, "Laporan KPI");
+
+      // Menambahkan Sheet untuk Penerima Manfaat Data
+      const penerimaSheet = XLSX.utils.json_to_sheet(
+        this.filteredPenerimaManfaatData
+      );
+      XLSX.utils.book_append_sheet(wb, penerimaSheet, "Penerima Manfaat");
+
+      // Menambahkan Sheet untuk Alokasi Dana Data
+      const danaSheet = XLSX.utils.json_to_sheet(this.filteredAlokasiDanaData);
+      XLSX.utils.book_append_sheet(wb, danaSheet, "Alokasi Dana");
+
+      // Menyimpan workbook sebagai file Excel
+      XLSX.writeFile(
+        wb,
+        `Data_${this.selectedMonth}_${this.selectedYear}.xlsx`
+      );
     },
-    setInitialProgram() {
-      if (this.programOptions.length > 0) {
-        this.selectedOptionIndex = this.getDefaultProgramIndex();
+    matchPenyusun() {
+      if (this.userData.length > 0 && this.laporanData.length > 0) {
+        const laporan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.program_id === this.selectedProgram &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        if (laporan) {
+          const penyusun = this.userData.find(
+            (user) => user.id === laporan.disusun_oleh
+          );
+          const diperiksaOleh = this.userData.find(
+            (user) => user.id === laporan.diperiksa_oleh
+          );
+
+          if (penyusun) {
+            this.penyusun = penyusun.name; // Simpan nama penyusun
+            this.profilePicture = penyusun.profile_picture; // Simpan URL gambar profil penyusun
+          } else {
+            this.penyusun = "Tidak ditemukan"; // Atur pesan jika penyusun tidak ditemukan
+            this.profilePicture = ""; // Kosongkan gambar profil jika tidak ditemukan
+          }
+
+          if (diperiksaOleh) {
+            this.diperiksaOleh = diperiksaOleh.name; // Simpan nama yang diperiksa
+            this.approvedProfilePicture = diperiksaOleh.profile_picture; // Simpan URL gambar profil dari diperiksa_oleh
+          } else {
+            this.diperiksaOleh = "Belum Disetujui"; // Atur pesan jika nama yang diperiksa tidak ditemukan
+            this.approvedProfilePicture = ""; // Kosongkan gambar profil jika tidak ditemukan
+          }
+
+          // Filter data pelaksanaan berdasarkan id_laporan_bulanan
+          this.filteredPelaksanaanData = this.pelaksanaanData.filter(
+            (pelaksanaan) => pelaksanaan.id_laporan_bulanan === laporan.id
+          );
+        } else {
+          this.penyusun = "Tidak ada laporan untuk bulan ini"; // Atur pesan jika tidak ada laporan untuk bulan yang dipilih
+          this.diperiksaOleh = "Tidak ada laporan untuk bulan ini"; // Atur pesan jika tidak ada laporan untuk bulan yang dipilih
+          this.profilePicture = ""; // Kosongkan gambar profil jika tidak ada laporan
+          this.approvedProfilePicture = ""; // Kosongkan gambar profil jika tidak ada laporan
+
+          // Kosongkan data pelaksanaan jika tidak ada laporan
+          this.filteredPelaksanaanData = [];
+        }
       }
-    },
-    getDefaultProgramIndex() {
-      return this.programOptions.findIndex((program) => program.id === 1);
-    },
-    generateYears() {
-      const currentYear = new Date().getFullYear();
-      const years = [];
-      for (let i = currentYear; i >= currentYear - 3; i--) {
-        years.push(i);
-      }
-      return years;
     },
     goToInputDeskripsi() {
       this.$router.push({ path: "/inputdeskripsi" });
@@ -607,50 +1372,139 @@ export default {
     goToInputPengguna() {
       this.$router.push({ path: "/inputpengguna" });
     },
-    kegiatanDetails(kegiatan) {
-      return this.programKegiatan.filter(
-        (detail) =>
-          detail.program_kegiatan.id === kegiatan.program_kegiatan.id &&
-          detail.id_program_kegiatan_kpi === kegiatan.id_program_kegiatan_kpi
+    filteredPelaksanaanDataByProgram(namaProgram) {
+      return this.filteredPelaksanaanData.filter(
+        (pelaksanaan) =>
+          pelaksanaan.program_kegiatan &&
+          pelaksanaan.program_kegiatan.nama === namaProgram
       );
     },
-    kpiDetails(kpi) {
-      return this.kpiBulanan.filter((detail) => detail.id === kpi.id);
-    },
-    isMatchingLaporanBulanan(idLaporanBulanan) {
-      const laporanBulanan = this.laporanBulanan.find(
-        (laporan) => laporan.id === idLaporanBulanan
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
       );
-      if (!laporanBulanan) return false;
-      const bulanLaporan =
-        new Date(laporanBulanan.bulan_laporan).getMonth() + 1;
-      return bulanLaporan === this.selectedMonth;
     },
-    formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(value);
+    filterPelaksanaanData() {
+      if (this.laporanData.length > 0 && this.pelaksanaanData.length > 0) {
+        // Temukan laporan yang sesuai dengan program, bulan, dan tahun yang dipilih
+        const laporan = this.laporanData.find((laporan) => {
+          const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
+          const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
+          return (
+            laporan.program_id === this.selectedProgram &&
+            laporanMonth === this.selectedMonth &&
+            laporanYear === this.selectedYear
+          );
+        });
+
+        if (laporan) {
+          // Filter data pelaksanaan berdasarkan id_laporan_bulanan yang cocok
+          const programKegiatanNamesWithDuplicates = this.pelaksanaanData
+            .filter(
+              (pelaksanaan) =>
+                pelaksanaan.id_laporan_bulanan === laporan.id &&
+                pelaksanaan.program_kegiatan // Hanya tampilkan pelaksanaan yang memiliki program_kegiatan
+            )
+            .map((pelaksanaan) => pelaksanaan.program_kegiatan.nama);
+
+          // Hapus duplikat dengan Set
+          this.programKegiatanNames = [
+            ...new Set(programKegiatanNamesWithDuplicates),
+          ];
+        } else {
+          this.programKegiatanNames = []; // Kosongkan jika tidak ada kecocokan
+        }
+      }
+    },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
+    },
+    generateYears() {
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let i = currentYear; i >= currentYear - 3; i--) {
+        years.push(i);
+      }
+      return years;
     },
   },
-  components: {
-    Sidebar,
+  watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      }
+      this.filterPelaksanaanData(); // Filter data pelaksanaan setiap kali program dipilih
+      this.matchPenyusun(); // Panggil matchPenyusun ketika program yang dipilih berubah
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
+    selectedMonth() {
+      this.matchPenyusun(); // Panggil matchPenyusun ketika bulan yang dipilih berubah
+      this.filterPelaksanaanData(); // Update data ketika bulan berubah
+    },
+    selectedYear() {
+      this.matchPenyusun(); // Panggil matchPenyusun ketika tahun yang dipilih berubah
+      this.filterPelaksanaanData(); // Update data ketika tahun berubah
+    },
   },
 };
 </script>
 
 <style>
+.penyusun {
+  display: flex;
+  align-content: center;
+  align-items: center;
+}
+
+.profile-susun {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background-color: gray;
+  overflow: hidden;
+  margin-right: 6px;
+}
+
+.profile-susun img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover; /* Menyesuaikan gambar sesuai ukuran elemen */
+}
+
+.profile-disetujui {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background-color: gray;
+  overflow: hidden;
+  margin-right: 6px;
+  margin-left: 15px;
+}
+
+.profile-disetujui img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover; /* Menyesuaikan gambar sesuai ukuran elemen */
+}
+
 .teks-pelaksanaan {
   text-align: left;
   font-weight: bold;
   font-size: 14;
-  margin-left: 16px;
 }
 
 .kotak-deskripsi {
   display: flex;
 
-  margin-left: 16px;
   margin-top: 15px;
   margin-bottom: 24px;
 }
@@ -687,7 +1541,6 @@ export default {
   width: 1100px;
   height: 40px;
   background-color: #d9d9d9;
-  margin-left: 14px;
 }
 
 .text-evaluasi {
@@ -700,7 +1553,6 @@ export default {
 }
 
 .kotak-dana {
-  margin-left: 14px;
   width: 1100px;
   height: 120px;
   background-color: #d9d9d9;

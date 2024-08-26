@@ -22,7 +22,8 @@
             <p v-else>Loading...</p>
           </div>
           <div class="profile-name">
-            <p>{{ userName }}</p>
+            <p style="margin-bottom: 0px">{{ userName }}</p>
+            <p style="font-size: 12px; margin-top: 0px">{{ userRole }}</p>
             <div class="info-user">
               <p style="margin-top: 71px">
                 Nama: <span style="color: #001aff">{{ userName }}</span>
@@ -244,6 +245,9 @@ export default {
         "notification-success": this.notificationType === "success",
       };
     },
+    userRole() {
+      return this.isAdmin === 1 ? "Admin" : "Pengguna";
+    },
   },
   data() {
     return {
@@ -255,6 +259,7 @@ export default {
       profilePicture: null,
       userName: "", // Menyimpan nama pengguna
       userEmail: "",
+      isAdmin: null,
       userId: null, // Set userId sesuai dengan pengguna yang diinginkan
       showPopup: false, // Untuk menampilkan pop-up register
       showPasswordPopup: false, // Untuk menampilkan pop-up edit password
@@ -303,6 +308,7 @@ export default {
         this.profilePicture = user.profile_picture;
         this.userName = user.name; // Set nama pengguna
         this.userEmail = user.email; // Set email pengguna
+        this.isAdmin = user.is_admin; // Set nilai is_admin
       } else {
         console.error("User data is not available in session storage");
       }

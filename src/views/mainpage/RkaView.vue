@@ -12,15 +12,14 @@
             <div class="tahun1">
               <div class="dropdown1" style="width: fit-content; height: 38px">
                 <select
-                  v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
-                  @change="checkAndNavigate"
+                  v-model="selectedBidang"
                 >
                   <option
                     v-for="bidang in bidangOptions"
                     :key="bidang.id"
-                    :value="bidang.nama"
+                    :value="bidang.id"
                   >
                     {{ bidang.nama }}
                   </option>
@@ -30,25 +29,22 @@
             </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
-              <b-dropdown
+              <select
+                v-model="selectedProgram"
                 id="dropdown-1"
                 class="m-md-2"
                 variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-                dropup
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in filteredProgramOptions"
-                  :key="index"
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
                 >
-                  {{ option.nama }}
-                </b-dropdown-item>
-                <b-dropdown-item @click="navigateToInputProgram">
-                  Tambahkan Program
-                </b-dropdown-item>
-              </b-dropdown>
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
             </div>
 
             <div class="print-tombol">
@@ -58,6 +54,7 @@
                 ></b-icon-file-earmark-spreadsheet-fill>
               </button>
             </div>
+
             <div class="tahun">Tahun</div>
             <div class="tahun1">
               <div class="dropdown1">
@@ -71,11 +68,6 @@
                   </option>
                 </select>
               </div>
-            </div>
-            <div class="print-tombol">
-              <button type="button" class="acc" @click="showAccModal">
-                ACC Data
-              </button>
             </div>
             <div class="pilihan">
               <button
@@ -96,14 +88,18 @@
               </button>
             </div>
             <div v-if="isBulanActive">
-              <div v-for="program in filteredProgramKegiatan" :key="program.id">
+              <div
+                v-for="(kegiatan, index) in programKegiatanList"
+                :key="index"
+              >
                 <div class="box-text" style="margin-bottom: 10px">
-                  <p class="text-area">{{ program.nama }}</p>
+                  <p class="text-area">{{ kegiatan.nama }}</p>
                   <div class="additional-text">
-                    <p class="total">Nilai Total :</p>
-                    <p class="nilai">
-                      {{ formatCurrency(totalNilaiByProgramId(program.id)) }}
+                    <p class="total" style="margin-right: 12px">
+                      Nilai Total :
+                      {{ formatCurrency(calculateTotalNilai(kegiatan.id)) }}
                     </p>
+
                     <div class="container-box">
                       <button type="button" class="btn" @click="goToInputPage">
                         <b-icon-plus></b-icon-plus>
@@ -113,7 +109,7 @@
                 </div>
                 <div>
                   <div
-                    v-for="judul in filteredJudulKegiatan(program.id)"
+                    v-for="judul in filteredJudulKegiatan(kegiatan.id)"
                     :key="judul.id"
                   >
                     <p class="text-kebutuhan">
@@ -125,7 +121,14 @@
                       ></b-icon>
                     </p>
                     <div class="table-container1">
-                      <table class="tabel">
+                      <table
+                        class="tabel"
+                        style="
+                          word-wrap: break-word;
+                          width: 75;
+                          table-layout: fixed;
+                        "
+                      >
                         <thead>
                           <tr>
                             <th style="width: 40px; font-weight: bold">No</th>
@@ -236,27 +239,32 @@
                             >
                               Total
                             </th>
+
                             <th style="width: 50px; text-align: center"></th>
                             <!-- Tambahkan kolom lain sesuai dengan data yang ada -->
                           </tr>
                         </thead>
                         <tbody>
-                          <tr v-if="filteredItems(judul.id).length === 0">
-                            <td colspan="16" class="text-center">
+                          <tr
+                            v-if="filteredItemKegiatan(judul.id).length === 0"
+                          >
+                            <td colspan="16" style="text-align: center">
                               Tidak ada data
                             </td>
                           </tr>
                           <tr
-                            v-for="(item, index) in filteredItems(judul.id)"
+                            v-for="(item, index) in filteredItemKegiatan(
+                              judul.id
+                            )"
                             :key="item.id"
                           >
                             <td>{{ index + 1 }}</td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.uraian"
-                                  class="form-control"
+                                  type="text"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -264,238 +272,263 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_jan"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jan === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jan === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_jan
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_feb"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_feb === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_feb === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_feb
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_mar"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_mar === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_mar === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_mar
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_apr"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_apr === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_apr === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_apr
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_mei"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_mei === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_mei === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_mei
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_jun"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jun === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jun === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_jun
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_jul"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_jul === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_jul === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_jul
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_aug"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_aug === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_aug === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_aug
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_sep"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_sep === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_sep === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_sep
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_oct"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_oct === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_oct === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_oct
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_nov"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_nov === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_nov === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_nov
+                                  )
                                 }}
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.dana_dec"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{
-                                  item.dana_dec === "1"
-                                    ? formatCurrency(
-                                        item.nilai_satuan * item.quantity
-                                      )
-                                    : 0
+                                  formatCurrency(
+                                    item.dana_dec === "1"
+                                      ? item.nilai_satuan * item.quantity
+                                      : item.dana_dec
+                                  )
                                 }}
                               </div>
                             </td>
-                            <td>
-                              {{ formatCurrency(calculateTotal(item)) }}
-                            </td>
-                            <td style="text-align: center">
-                              <button
-                                type="button"
-                                class="edit-btn"
-                                @click="toggleEdit(item)"
+                            <td>{{ formatCurrency(calculateTotal(item)) }}</td>
+                            <td style="text-align: center; position: relative">
+                              <b-icon-three-dots-vertical
+                                style="color: black; cursor: pointer"
+                                @click="toggleDropdown(index)"
+                              ></b-icon-three-dots-vertical>
+                              <!-- Dropdown for actions -->
+                              <div
+                                v-if="activeRow === index"
+                                class="actions-dropdown"
+                                style="
+                                  position: absolute;
+                                  background-color: white;
+                                  border: 1px solid #ccc;
+                                  padding: 5px;
+                                  border-radius: 3px;
+                                  z-index: 1000;
+                                "
                               >
-                                <b-icon
-                                  :icon="
-                                    item.isEditing
-                                      ? 'save-fill'
-                                      : 'pencil-square'
+                                <button
+                                  style="
+                                    color: black;
+                                    background: none;
+                                    border: none;
+                                    cursor: pointer;
                                   "
-                                ></b-icon>
-                              </button>
+                                  @click="showConfirmPopup(item)"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  style="
+                                    color: black;
+                                    background: none;
+                                    border: none;
+                                    cursor: pointer;
+                                  "
+                                  @click="toggleEdit(item)"
+                                >
+                                  {{ isEditing === item.id ? "Save" : "Edit" }}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -506,13 +539,16 @@
               </div>
             </div>
             <div v-else>
-              <div v-for="program in filteredProgramKegiatan" :key="program.id">
+              <div
+                v-for="(kegiatan, index) in programKegiatanList"
+                :key="index"
+              >
                 <div class="box-text" style="margin-bottom: 10px">
-                  <p class="text-area">{{ program.nama }}</p>
+                  <p class="text-area">{{ kegiatan.nama }}</p>
                   <div class="additional-text">
-                    <p class="total">Nilai Total :</p>
-                    <p class="nilai">
-                      {{ formatCurrency(totalNilaiByProgramId(program.id)) }}
+                    <p class="total" style="margin-right: 12px">
+                      Nilai Total :
+                      {{ formatCurrency(calculateTotalNilai(kegiatan.id)) }}
                     </p>
                     <div class="container-box">
                       <button type="button" class="btn" @click="goToInputPage">
@@ -523,7 +559,7 @@
                 </div>
                 <div>
                   <div
-                    v-for="judul in filteredJudulKegiatan(program.id)"
+                    v-for="judul in filteredJudulKegiatan(kegiatan.id)"
                     :key="judul.id"
                   >
                     <p class="text-kebutuhan">
@@ -601,26 +637,30 @@
                             >
                               Sumber Dana
                             </th>
+                            <th style="width: 50px; text-align: center"></th>
                           </tr>
                         </thead>
-
                         <tbody>
-                          <tr v-if="filteredItems(judul.id).length === 0">
-                            <td colspan="15" class="text-center">
+                          <tr
+                            v-if="filteredItemKegiatan(judul.id).length === 0"
+                          >
+                            <td colspan="11" style="text-align: center">
                               Tidak ada data
                             </td>
                           </tr>
                           <tr
-                            v-for="(item, index) in filteredItems(judul.id)"
+                            v-for="(item, index) in filteredItemKegiatan(
+                              judul.id
+                            )"
                             :key="item.id"
                           >
                             <td>{{ index + 1 }}</td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.uraian"
-                                  class="form-control"
+                                  type="text"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -628,11 +668,11 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.nilai_satuan"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -640,11 +680,11 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.quantity"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -652,11 +692,11 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.quantity_unit"
-                                  class="form-control"
+                                  type="text"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -664,11 +704,11 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.frequency"
-                                  class="form-control"
+                                  type="number"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
@@ -676,20 +716,18 @@
                               </div>
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.frequency_unit"
-                                  class="form-control"
+                                  type="text"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{ item.frequency_unit }}
                               </div>
                             </td>
-                            <td>
-                              {{ item.quantity * item.frequency }}
-                            </td>
+                            <td>{{ item.quantity * item.frequency }}</td>
                             <td>
                               {{
                                 formatCurrency(
@@ -700,31 +738,58 @@
                               }}
                             </td>
                             <td>
-                              <div v-if="item.isEditing">
+                              <div v-if="isEditing === item.id">
                                 <input
-                                  type="text"
                                   v-model="item.sumber_dana"
-                                  class="form-control"
+                                  type="text"
+                                  style="width: 100%"
                                 />
                               </div>
                               <div v-else>
                                 {{ item.sumber_dana }}
                               </div>
                             </td>
-                            <td style="text-align: center">
-                              <button
-                                type="button"
-                                class="edit-btn"
-                                @click="toggleEdit(item)"
+                            <td style="text-align: center; position: relative">
+                              <b-icon-three-dots-vertical
+                                style="color: black; cursor: pointer"
+                                @click="toggleDropdown(index)"
+                              ></b-icon-three-dots-vertical>
+                              <!-- Dropdown for actions -->
+                              <div
+                                v-if="activeRow === index"
+                                class="actions-dropdown"
+                                style="
+                                  position: absolute;
+                                  background-color: white;
+                                  border: 1px solid #ccc;
+                                  padding: 5px;
+                                  border-radius: 3px;
+                                  z-index: 1000;
+                                "
                               >
-                                <b-icon
-                                  :icon="
-                                    item.isEditing
-                                      ? 'save-fill'
-                                      : 'pencil-square'
+                                <button
+                                  style="
+                                    color: black;
+                                    background: none;
+                                    border: none;
+                                    cursor: pointer;
                                   "
-                                ></b-icon>
-                              </button>
+                                  @click="showConfirmPopup(item)"
+                                >
+                                  Delete
+                                </button>
+                                <button
+                                  style="
+                                    color: black;
+                                    background: none;
+                                    border: none;
+                                    cursor: pointer;
+                                  "
+                                  @click="toggleEdit(item)"
+                                >
+                                  {{ isEditing === item.id ? "Save" : "Edit" }}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -734,43 +799,49 @@
                 </div>
               </div>
             </div>
+            <!-- Pop-up Konfirmasi Delete Data -->
+            <div v-if="confirmDelete" class="confirmation-popup">
+              <div class="confirmation-card">
+                <b-icon-exclamation-circle-fill
+                  style="color: #f24e1e; width: 126px; height: 126px"
+                ></b-icon-exclamation-circle-fill>
+                <p style="font-size: 32px; font-weight: bold">
+                  Anda yakin ingin menghapus data?
+                </p>
+                <div class="confirmation-buttons">
+                  <button
+                    @click="deleteRow(selectedItem)"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #967c55;
+                      color: white;
+                      margin-right: 14px;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closePopup"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #a4a4a3;
+                      color: black;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    BATAL
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <!-- Confirmation Modal -->
-      <b-modal
-        id="acc-modal"
-        ref="accModal"
-        hide-footer
-        title="Konfirmasi ACC Data"
-      >
-        <!-- <div class="icon-konfirmasi">
-        <b-icon-exclamation-circle-fill
-          font-scale="5"
-          style="color: #967c55; margin-bottom: 25px"
-        ></b-icon-exclamation-circle-fill>
-      </div> -->
-
-        <p class="teks-konfirmasi" style="margin-bottom: 15px">
-          Apakah anda ingin melakukan acc pada data?
-        </p>
-        <p class="info" style="margin-bottom: 30px">
-          Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
-        </p>
-        <div class="tombol-konfirmasi">
-          <b-button
-            variant="secondary"
-            @click="hideAccModal"
-            style="width: 200px"
-            >Tidak</b-button
-          >
-          <b-button
-            style="background-color: #967c55; margin-left: 15px; width: 200px"
-            @click="confirmAccData"
-            >Ya</b-button
-          >
-        </div>
-      </b-modal>
     </div>
   </div>
 </template>
@@ -786,125 +857,243 @@ export default {
   },
   data() {
     return {
-      programOptions: [],
       bidangOptions: [],
-      selectedBidang: "",
-      selectedOptionIndex: null,
-      selectedProgramId: null,
-      selectedYear: new Date().getFullYear(),
-      years: this.generateYears(),
-      itemKegiatan: [],
-      judulKegiatan: [],
-      programKegiatan: [],
+      programOptions: [],
       isBulanActive: true,
       isAnggaranActive: false,
+      filteredPrograms: [],
+      selectedBidang: "",
+      selectedProgram: "",
+      selectedYear: new Date().getFullYear(),
+      years: this.generateYears(),
+      programKegiatanList: [],
+      judulKegiatanList: [],
+      itemKegiatanList: [],
+      confirmDelete: false,
+      activeRow: null,
+      isEditing: null, // Tambahkan state untuk melacak baris yang sedang diedit
     };
   },
-  computed: {
-    selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].nama
-        : "PROGRAM KEPUSTAKAAN";
-    },
-    filteredProgramOptions() {
-      return this.programOptions.filter(
-        (option) => option.id_bidang === this.selectedBidangId
-      );
-    },
-    selectedBidangId() {
-      const selectedBidang = this.bidangOptions.find(
-        (bidang) => bidang.nama === this.selectedBidang
-      );
-      return selectedBidang ? selectedBidang.id : null;
-    },
-    filteredProgramKegiatan() {
-      if (this.selectedOptionIndex !== null) {
-        const selectedProgram = this.programOptions[this.selectedOptionIndex];
-        return this.programKegiatan.filter(
-          (program) =>
-            program.id_program === selectedProgram.id &&
-            program.tahun === this.selectedYear
-        );
-      }
-      return [];
-    },
-    programBulanByOption() {
-      return this.programBulan[this.selectedOption];
-    },
-    programAnggaranByOption() {
-      return this.programAnggaran[this.selectedOption];
-    },
-    filteredJudulKegiatan() {
-      return (programId) => {
-        return this.judulKegiatan.filter(
-          (judul) => judul.id_program_kegiatan_rka === programId
-        );
-      };
-    },
-    totalNilaiByProgramId() {
-      return (programId) => {
-        return this.judulKegiatan
-          .filter((judul) => judul.id_program_kegiatan_rka === programId)
-          .reduce((total, judul) => {
-            const items = this.itemKegiatan.filter(
-              (item) => item.id_judul_kegiatan === judul.id
-            );
-            const totalNilai = items.reduce(
-              (sum, item) =>
-                sum + item.quantity * item.frequency * item.nilai_satuan,
-              0
-            );
-            return total + totalNilai;
-          }, 0);
-      };
-    },
-  },
 
+  mounted() {
+    this.fetchBidangOptions();
+    this.fetchProgramOptions();
+    this.fetchJudulKegiatanRKA();
+  },
   methods: {
-    showAccModal() {
-      this.$refs.accModal.show();
+    showConfirmPopup(item) {
+      this.selectedItem = item; // Menyimpan item yang dipilih untuk dihapus
+      this.confirmDelete = true; // Menampilkan popup konfirmasi
     },
-    hideAccModal() {
-      this.$refs.accModal.hide();
+    closePopup() {
+      this.confirmDelete = false;
     },
-    confirmAccData() {
-      // Handle the ACC Data confirmation logic here
-      this.hideAccModal();
-      // Add your logic to handle the ACC Data confirmation here
-      console.log("ACC Data confirmed");
+    toggleDropdown(index) {
+      this.activeRow = this.activeRow === index ? null : index;
     },
-    checkAndNavigate(event) {
-      if (event.target.value === "Tambah Bidang") {
-        this.navigateToInputBidang();
+    async deleteRow(item) {
+      try {
+        // Kirim permintaan DELETE ke server untuk menghapus data berdasarkan ID item
+        await axios.delete(`/api/itemKegiatanRKA/${item.id}`);
+
+        // Hapus item dari daftar itemKegiatanList di frontend
+        this.itemKegiatanList = this.itemKegiatanList.filter(
+          (i) => i.id !== item.id
+        );
+
+        // Tutup popup konfirmasi setelah penghapusan berhasil
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+        alert(`Gagal menghapus data: ${error.message}`);
       }
     },
     async fetchBidangOptions() {
       try {
         const response = await axios.get("/api/bidang");
         this.bidangOptions = response.data;
-        this.setDefaultSelectedBidang();
+
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
       } catch (error) {
-        console.error("Error fetching bidang options:", error);
-      }
-    },
-    setDefaultSelectedBidang() {
-      const defaultBidang = this.bidangOptions.find(
-        (option) => option.id === 1
-      );
-      if (defaultBidang) {
-        this.selectedBidang = defaultBidang.nama;
+        console.error("Failed to fetch bidang options:", error);
       }
     },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
         this.programOptions = response.data;
+        this.filterPrograms();
       } catch (error) {
-        console.error("Error fetching program options:", error);
+        console.error("Failed to fetch program options:", error);
       }
     },
-    selectOption(index) {
-      this.selectedOptionIndex = index;
+    async fetchProgramKegiatanRKA() {
+      try {
+        const response = await axios.get("/api/programKegiatanRKA");
+        this.programKegiatanList = response.data
+          .filter(
+            (item) =>
+              item.id_program === this.selectedProgram &&
+              item.tahun === this.selectedYear // Filter berdasarkan tahun yang dipilih
+          )
+          .sort((a, b) => a.id - b.id);
+      } catch (error) {
+        console.error("Failed to fetch programKegiatanRKA:", error);
+      }
+    },
+    async fetchJudulKegiatanRKA() {
+      try {
+        const response = await axios.get("/api/judulKegiatanRKA");
+        this.judulKegiatanList = response.data;
+      } catch (error) {
+        console.error("Failed to fetch judulKegiatanRKA:", error);
+      }
+    },
+    async fetchItemKegiatanRKA() {
+      try {
+        const response = await axios.get("/api/itemKegiatanRKA");
+        this.itemKegiatanList = response.data.map((item) => ({
+          ...item,
+          isEditing: false,
+        }));
+      } catch (error) {
+        console.error("Failed to fetch itemKegiatanRKA:", error);
+      }
+    },
+    goToInputPage() {
+      // Mengarahkan ke halaman input
+      this.$router.push({ path: "/inputanggaran" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
+    },
+    goToInputBulan() {
+      // Mengarahkan ke halaman input
+      this.$router.push({ path: "/inputbulan" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
+    },
+    async downloadExcel() {
+      try {
+        const bulanData = [];
+        const anggaranData = [];
+
+        // Kumpulkan data untuk tampilan Bulan
+        this.programKegiatanList.forEach((kegiatan) => {
+          const judulKegiatan = this.filteredJudulKegiatan(kegiatan.id);
+          judulKegiatan.forEach((judul) => {
+            const items = this.filteredItemKegiatan(judul.id);
+            items.forEach((item) => {
+              bulanData.push({
+                Program: kegiatan.nama,
+                Judul: judul.nama,
+                Uraian: item.uraian,
+                Jan: this.formatCurrency(item.dana_jan),
+                Feb: this.formatCurrency(item.dana_feb),
+                Mar: this.formatCurrency(item.dana_mar),
+                Apr: this.formatCurrency(item.dana_apr),
+                Mei: this.formatCurrency(item.dana_mei),
+                Jun: this.formatCurrency(item.dana_jun),
+                Jul: this.formatCurrency(item.dana_jul),
+                Agust: this.formatCurrency(item.dana_aug),
+                Sep: this.formatCurrency(item.dana_sep),
+                Okt: this.formatCurrency(item.dana_oct),
+                Nov: this.formatCurrency(item.dana_nov),
+                Des: this.formatCurrency(item.dana_dec),
+                Total: this.formatCurrency(this.calculateTotal(item)),
+              });
+            });
+          });
+        });
+
+        // Kumpulkan data untuk tampilan Anggaran
+        this.programKegiatanList.forEach((kegiatan) => {
+          const judulKegiatan = this.filteredJudulKegiatan(kegiatan.id);
+          judulKegiatan.forEach((judul) => {
+            const items = this.filteredItemKegiatan(judul.id);
+            items.forEach((item) => {
+              anggaranData.push({
+                Program: kegiatan.nama,
+                Judul: judul.nama,
+                Uraian: item.uraian,
+                "Nilai Satuan": this.formatCurrency(item.nilai_satuan),
+                Qty: item.quantity,
+                "Qty Unit": item.quantity_unit,
+                Frq: item.frequency,
+                "Frq Unit": item.frequency_unit,
+                "Total Volume": item.quantity * item.frequency,
+                "Nilai Total": this.formatCurrency(
+                  item.quantity * item.frequency * item.nilai_satuan
+                ),
+                "Sumber Dana": item.sumber_dana,
+              });
+            });
+          });
+        });
+
+        // Buat worksheet untuk setiap data
+        const bulanWorksheet = XLSX.utils.json_to_sheet(bulanData);
+        const anggaranWorksheet = XLSX.utils.json_to_sheet(anggaranData);
+
+        // Buat workbook dan tambahkan kedua worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, bulanWorksheet, "Data Bulan");
+        XLSX.utils.book_append_sheet(
+          workbook,
+          anggaranWorksheet,
+          "Data Anggaran"
+        );
+
+        // Konversi workbook ke file Excel dan unduh
+        const excelBuffer = XLSX.write(workbook, {
+          bookType: "xlsx",
+          type: "array",
+        });
+
+        const dataBlob = new Blob([excelBuffer], {
+          type: "application/octet-stream",
+        });
+
+        // Buat link untuk mendownload file
+        const downloadLink = document.createElement("a");
+        downloadLink.href = URL.createObjectURL(dataBlob);
+        downloadLink.download = `Data_RKA_${this.selectedYear}.xlsx`;
+
+        // Klik link untuk memulai download
+        downloadLink.click();
+        URL.revokeObjectURL(downloadLink.href);
+      } catch (error) {
+        console.error("Failed to download Excel file:", error);
+      }
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
+    },
+    filteredJudulKegiatan(id_program_kegiatan_rka) {
+      return this.judulKegiatanList
+        .filter(
+          (judul) => judul.id_program_kegiatan_rka === id_program_kegiatan_rka
+        )
+        .sort((a, b) => (a.id === 1 ? -1 : b.id === 1 ? 1 : a.id - b.id));
+    },
+    filteredItemKegiatan(id_judul_kegiatan) {
+      return this.itemKegiatanList.filter(
+        (item) => item.id_judul_kegiatan === id_judul_kegiatan
+      );
+    },
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
+      );
+    },
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -923,75 +1112,32 @@ export default {
         this.isAnggaranActive = true;
       }
     },
-    async fetchItemKegiatan() {
-      try {
-        const response = await axios.get("/api/itemKegiatanRKA");
-        this.itemKegiatan = response.data.map((item) => ({
-          ...item,
-          isEditing: false,
-        }));
-        this.sortItemKegiatan();
-        console.log("Data item kegiatan:", this.itemKegiatan);
-      } catch (error) {
-        console.error("Error fetching item kegiatan:", error);
-      }
-    },
-    async fetchJudulKegiatan() {
-      try {
-        const response = await axios.get("/api/judulKegiatanRKA");
-        this.judulKegiatan = response.data;
-        this.sortJudulKegiatan();
-        console.log("Data judul kegiatan:", this.judulKegiatan);
-      } catch (error) {
-        console.error("Error fetching judul kegiatan:", error);
-      }
-    },
-    async fetchProgramKegiatan() {
-      try {
-        const response = await axios.get("/api/programKegiatanRKA");
-        this.programKegiatan = response.data;
-        this.sortProgramKegiatan();
-        console.log("Program Kegiatan kegiatan:", this.programKegiatan);
-      } catch (error) {
-        console.error("Error fetching program kegiatan:", error);
-      }
-    },
-    sortItemKegiatan() {
-      this.itemKegiatan.sort((a, b) => {
-        if (a.id === 1) return -1;
-        if (b.id === 1) return 1;
-        return a.id - b.id;
-      });
-    },
-    sortJudulKegiatan() {
-      this.judulKegiatan.sort((a, b) => {
-        if (a.id === 1) return -1;
-        if (b.id === 1) return 1;
-        return a.id - b.id;
-      });
-    },
-    sortProgramKegiatan() {
-      this.programKegiatan.sort((a, b) => {
-        if (a.id === 1) return -1;
-        if (b.id === 1) return 1;
-        return a.id - b.id;
-      });
-    },
-    filteredItems(idJudul) {
-      return this.itemKegiatan.filter(
-        (item) => item.id_judul_kegiatan === idJudul
-      );
-    },
     toggleEdit(item) {
-      if (item.isEditing) {
-        this.saveItem(item);
+      if (this.isEditing === item.id) {
+        // Simpan perubahan
+        this.saveItemKegiatan(item);
+      } else {
+        // Masuk ke mode editing
+        this.isEditing = item.id;
       }
-      item.isEditing = !item.isEditing;
     },
-    async saveItem(item) {
+    async saveItemKegiatan(item) {
       try {
+        // Kirim data yang diperbarui ke server
         await axios.put(`/api/itemKegiatanRKA/${item.id}`, {
           uraian: item.uraian,
+          dana_jan: item.dana_jan,
+          dana_feb: item.dana_feb,
+          dana_mar: item.dana_mar,
+          dana_apr: item.dana_apr,
+          dana_mei: item.dana_mei,
+          dana_jun: item.dana_jun,
+          dana_jul: item.dana_jul,
+          dana_aug: item.dana_aug,
+          dana_sep: item.dana_sep,
+          dana_oct: item.dana_oct,
+          dana_nov: item.dana_nov,
+          dana_dec: item.dana_dec,
           nilai_satuan: item.nilai_satuan,
           quantity: item.quantity,
           quantity_unit: item.quantity_unit,
@@ -999,38 +1145,32 @@ export default {
           frequency_unit: item.frequency_unit,
           sumber_dana: item.sumber_dana,
         });
-        console.log("Item updated successfully");
+        // Keluar dari mode editing setelah penyimpanan berhasil
+        this.isEditing = null;
+        // Perbarui daftar item setelah penyimpanan
+        this.fetchItemKegiatanRKA();
       } catch (error) {
-        console.error("Error saving item:", error);
+        console.error("Failed to save data:", error);
       }
     },
-    navigateToInputProgram() {
-      this.$router.push({ path: "/inputprogram" });
-    },
-    navigateToInputBidang() {
-      this.$router.push({ path: "/inputbidang" });
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(value);
-    },
-    goToInputPage() {
-      // Mengarahkan ke halaman input
-      this.$router.push({ path: "/inputanggaran" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
-    },
-    goToInputBulan() {
-      // Mengarahkan ke halaman input
-      this.$router.push({ path: "/inputbulan" }); // Ganti '/input' dengan rute yang sesuai di aplikasi Anda
-    },
-    setInitialSelectedOption() {
-      const initialOptionIndex = this.programOptions.findIndex(
-        (option) => option.id === 1
+    calculateTotalNilai(kegiatanId) {
+      let total = 0;
+
+      // Temukan semua judul kegiatan yang sesuai dengan kegiatanId
+      const matchingJudulKegiatan = this.judulKegiatanList.filter(
+        (judul) => judul.id_program_kegiatan_rka === kegiatanId
       );
-      if (initialOptionIndex !== -1) {
-        this.selectedOptionIndex = initialOptionIndex;
-      }
+
+      // Loop melalui setiap judul kegiatan dan tambahkan nilai total dari item-item yang sesuai
+      matchingJudulKegiatan.forEach((judul) => {
+        this.itemKegiatanList.forEach((item) => {
+          if (item.id_judul_kegiatan === judul.id) {
+            total += this.calculateTotal(item);
+          }
+        });
+      });
+
+      return total;
     },
     calculateTotal(item) {
       return (
@@ -1048,108 +1188,26 @@ export default {
         (item.dana_dec === "1" ? item.nilai_satuan * item.quantity : 0)
       );
     },
-    downloadExcel() {
-      const penjelasanData = [];
-      const resumeData = [];
-
-      // Mengambil data dari tabel penjelasan
-      this.filteredProgramKegiatan.forEach((program) => {
-        this.filteredJudulKegiatan(program.id).forEach((judul) => {
-          this.filteredItems(judul.id).forEach((item, itemIndex) => {
-            penjelasanData.push({
-              No: itemIndex + 1,
-              Uraian: item.uraian,
-              Jan: item.dana_jan ? item.nilai_satuan * item.quantity : 0,
-              Feb: item.dana_feb ? item.nilai_satuan * item.quantity : 0,
-              Mar: item.dana_mar ? item.nilai_satuan * item.quantity : 0,
-              Apr: item.dana_apr ? item.nilai_satuan * item.quantity : 0,
-              Mei: item.dana_mei ? item.nilai_satuan * item.quantity : 0,
-              Jun: item.dana_jun ? item.nilai_satuan * item.quantity : 0,
-              Jul: item.dana_jul ? item.nilai_satuan * item.quantity : 0,
-              Agust: item.dana_aug ? item.nilai_satuan * item.quantity : 0,
-              Sep: item.dana_sep ? item.nilai_satuan * item.quantity : 0,
-              Okt: item.dana_oct ? item.nilai_satuan * item.quantity : 0,
-              Nov: item.dana_nov ? item.nilai_satuan * item.quantity : 0,
-              Des: item.dana_dec ? item.nilai_satuan * item.quantity : 0,
-              Total: this.calculateTotal(item),
-            });
-          });
-        });
-      });
-
-      // Mengambil data dari tabel resume
-      this.filteredProgramKegiatan.forEach((program) => {
-        this.filteredJudulKegiatan(program.id).forEach((judul) => {
-          this.filteredItems(judul.id).forEach((item, itemIndex) => {
-            resumeData.push({
-              No: itemIndex + 1,
-              Uraian: item.uraian,
-              "Nilai Satuan": this.formatCurrency(item.nilai_satuan),
-              Qty: item.quantity,
-              "Qty Unit": item.quantity_unit,
-              Frq: item.frequency,
-              "Frq Unit": item.frequency_unit,
-              Vol: item.quantity * item.frequency,
-              "Nilai Total": this.formatCurrency(
-                item.quantity * item.frequency * item.nilai_satuan
-              ),
-              "Sumber Dana": item.sumber_dana,
-            });
-          });
-        });
-      });
-
-      const wb = XLSX.utils.book_new();
-      const penjelasanSheet = XLSX.utils.json_to_sheet(penjelasanData);
-      const resumeSheet = XLSX.utils.json_to_sheet(resumeData);
-
-      // Auto-fit columns for penjelasanSheet
-      const penjelasanCols = Object.keys(penjelasanData[0] || {}).map(
-        (key) => ({
-          wch: Math.max(
-            ...penjelasanData.map((item) =>
-              item[key] ? item[key].toString().length : 0
-            )
-          ),
-        })
-      );
-      penjelasanSheet["!cols"] = penjelasanCols;
-
-      // Auto-fit columns for resumeSheet
-      const resumeCols = Object.keys(resumeData[0] || {}).map((key) => ({
-        wch: Math.max(
-          ...resumeData.map((item) =>
-            item[key] ? item[key].toString().length : 0
-          )
-        ),
-      }));
-      resumeSheet["!cols"] = resumeCols;
-
-      XLSX.utils.book_append_sheet(wb, penjelasanSheet, "Penjelasan");
-      XLSX.utils.book_append_sheet(wb, resumeSheet, "Resume");
-
-      // Use the selected year in the file name
-      const fileName = `RKA_${this.selectedYear}.xlsx`;
-
-      XLSX.writeFile(wb, fileName);
-    },
   },
   watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      } else {
+        this.fetchProgramKegiatanRKA();
+        this.fetchItemKegiatanRKA(); // Refresh item kegiatan saat program berubah
+      }
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
     selectedYear() {
-      this.fetchProgramKegiatan();
+      this.fetchProgramKegiatanRKA(); // Refresh data saat tahun berubah
     },
-    selectedBidang() {
-      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
-    },
-  },
-  mounted() {
-    this.fetchProgramOptions().then(() => {
-      this.setInitialSelectedOption();
-    });
-    this.fetchItemKegiatan();
-    this.fetchJudulKegiatan();
-    this.fetchProgramKegiatan();
-    this.fetchBidangOptions();
   },
 };
 </script>

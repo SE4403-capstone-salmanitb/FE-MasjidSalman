@@ -12,15 +12,14 @@
             <div class="tahun1">
               <div class="dropdown1" style="width: fit-content; height: 38px">
                 <select
-                  v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
-                  @change="checkAndNavigate"
+                  v-model="selectedBidang"
                 >
                   <option
                     v-for="bidang in bidangOptions"
                     :key="bidang.id"
-                    :value="bidang.nama"
+                    :value="bidang.id"
                   >
                     {{ bidang.nama }}
                   </option>
@@ -30,33 +29,32 @@
             </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
-              <b-dropdown
+              <select
+                v-model="selectedProgram"
                 id="dropdown-1"
                 class="m-md-2"
                 variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-                dropup
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in filteredProgramOptions"
-                  :key="index"
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
                 >
-                  {{ option.nama }}
-                </b-dropdown-item>
-                <b-dropdown-item @click="navigateToInputProgram">
-                  Tambahkan Program
-                </b-dropdown-item>
-              </b-dropdown>
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
             </div>
+
             <div class="print-tombol">
-              <button type="button" class="print-icon" @click="downloadExcel">
+              <button type="button" class="print-icon" @click="exportToExcel">
                 <b-icon-file-earmark-spreadsheet-fill
                   style="width: 20px; height: 20px"
                 ></b-icon-file-earmark-spreadsheet-fill>
               </button>
             </div>
+
             <div class="tahun">Tahun</div>
             <div class="tahun1">
               <div class="dropdown1">
@@ -71,13 +69,9 @@
                 </select>
               </div>
             </div>
-            <div class="print-tombol">
-              <button type="button" class="acc" @click="showAccModal">
-                ACC Data
-              </button>
-            </div>
+
             <div class="box-text-kpi">
-              <p class="text-area">{{ selectedOption }}</p>
+              <p class="text-area">{{ selectedProgramName }}</p>
               <div class="additional-text">
                 <div class="container-box">
                   <button type="button" class="btn" @click="goToInputPage">
@@ -98,104 +92,108 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="item in filteredData" :key="item.id">
-                    <td>{{ item.program.displayId || "" }}</td>
-                    <td>
-                      <div v-if="item.isEditing">
-                        <input
-                          type="text"
-                          v-model="item.program.nama"
-                          class="form-control"
-                          :disabled="
-                            item.indikator === 'tidak ada data' &&
-                            item.target === 'tidak ada data'
-                          "
-                        />
-                      </div>
-                      <div v-else>
-                        {{ item.program.displayNama || "" }}
-                      </div>
+                  <tr v-if="filteredData.length === 0">
+                    <td colspan="5" style="text-align: center">
+                      Tidak ada data
                     </td>
-                    <td>
-                      <div v-if="item.isEditing">
-                        <input
-                          type="text"
-                          v-model="item.indikator"
-                          class="form-control"
-                          :disabled="item.indikator === 'tidak ada data'"
-                        />
-                      </div>
-                      <div v-else>
-                        {{ item.indikator }}
-                      </div>
-                    </td>
-                    <td>
-                      <div v-if="item.isEditing">
-                        <input
-                          type="text"
-                          v-model="item.target"
-                          class="form-control"
-                          :disabled="item.target === 'tidak ada data'"
-                        />
-                      </div>
-                      <div v-else>
-                        {{ item.target }}
-                      </div>
-                    </td>
-                    <td style="text-align: center">
-                      <button
-                        type="button"
-                        class="edit-btn"
-                        @click="toggleEdit(item)"
-                        :disabled="
-                          item.indikator === 'tidak ada data' &&
-                          item.target === 'tidak ada data'
+                  </tr>
+                  <tr v-for="(kpi, index) in filteredData" :key="index">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ kpi.nama }}</td>
+                    <td>{{ kpi.indikator }}</td>
+                    <td>{{ kpi.target }}</td>
+                    <td style="text-align: center; position: relative">
+                      <b-icon-three-dots-vertical
+                        style="color: black; cursor: pointer"
+                        @click="toggleDropdown(index)"
+                      ></b-icon-three-dots-vertical>
+                      <!-- Dropdown for actions -->
+                      <div
+                        v-if="activeRow === index"
+                        class="actions-dropdown"
+                        style="
+                          position: absolute;
+                          background-color: white;
+                          border: 1px solid #ccc;
+                          padding: 5px;
+                          border-radius: 3px;
+                          z-index: 1000;
                         "
                       >
-                        <b-icon
-                          :icon="item.isEditing ? 'save-fill' : 'pencil-square'"
-                        ></b-icon>
-                      </button>
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="showConfirmDeletePopup(kpi)"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="toggleEdit(kpi)"
+                        >
+                          {{ isEditing === kpi.id ? "Save" : "Edit" }}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
+          <!-- Pop-up Konfirmasi Delete Data -->
+          <div>
+            <div v-if="confirmDelete" class="confirmation-popup">
+              <div class="confirmation-card">
+                <b-icon-exclamation-circle-fill
+                  style="color: #f24e1e; width: 126px; height: 126px"
+                ></b-icon-exclamation-circle-fill>
+                <p style="font-size: 32px; font-weight: bold">
+                  Anda yakin ingin menghapus data?
+                </p>
+                <div class="confirmation-buttons">
+                  <button
+                    @click="deleteRow(selectedKPI)"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #967c55;
+                      color: white;
+                      margin-right: 14px;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closePopup"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #a4a4a3;
+                      color: black;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    BATAL
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-    <!-- Confirmation Modal -->
-    <b-modal
-      id="acc-modal"
-      ref="accModal"
-      hide-footer
-      title="Konfirmasi ACC Data"
-    >
-      <!-- <div class="icon-konfirmasi">
-        <b-icon-exclamation-circle-fill
-          font-scale="5"
-          style="color: #967c55; margin-bottom: 25px"
-        ></b-icon-exclamation-circle-fill>
-      </div> -->
-
-      <p class="teks-konfirmasi" style="margin-bottom: 15px">
-        Apakah anda ingin melakukan acc pada data?
-      </p>
-      <p class="info" style="margin-bottom: 30px">
-        Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
-      </p>
-      <div class="tombol-konfirmasi">
-        <b-button variant="secondary" @click="hideAccModal" style="width: 200px"
-          >Tidak</b-button
-        >
-        <b-button
-          style="background-color: #967c55; margin-left: 15px; width: 200px"
-          @click="confirmAccData"
-          >Ya</b-button
-        >
-      </div>
-    </b-modal>
   </div>
 </template>
 
@@ -210,227 +208,150 @@ export default {
   },
   data() {
     return {
-      programOptions: [],
       bidangOptions: [],
+      programOptions: [],
+      filteredPrograms: [],
+      programKegiatanOptions: [],
+      keyPerformanceIndicators: [],
+
       selectedBidang: "",
-      selectedOptionIndex: null,
-      selectedProgramId: null,
+      selectedProgram: "",
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
-      indicators: [],
-      programs: [],
-      mergedData: [],
+
+      combinedData: [],
+      isEditing: null, // Track which row is being edited
+      activeRow: null,
+      selectedKPI: null, // Properti untuk menyimpan KPI yang dipilih
+      confirmDelete: false,
     };
   },
-  computed: {
-    selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].nama
-        : "PROGRAM KEPUSTAKAAN";
-    },
-    filteredProgramOptions() {
-      return this.programOptions.filter(
-        (option) => option.id_bidang === this.selectedBidangId
-      );
-    },
-    selectedBidangId() {
-      const selectedBidang = this.bidangOptions.find(
-        (bidang) => bidang.nama === this.selectedBidang
-      );
-      return selectedBidang ? selectedBidang.id : null;
-    },
-    filteredData() {
-      return this.mergedData.filter(
-        (item) =>
-          (this.selectedOptionIndex === null ||
-            item.program.id_program ===
-              this.programOptions[this.selectedOptionIndex].id) &&
-          item.program.tahun === this.selectedYear
-      );
-    },
-  },
-  watch: {
-    selectedBidang() {
-      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
-      this.mergeData();
-    },
+  mounted() {
+    this.fetchBidangOptions();
+    this.fetchProgramOptions();
+    this.fetchAndCombineData();
   },
   methods: {
-    showAccModal() {
-      this.$refs.accModal.show();
+    toggleDropdown(index) {
+      this.activeRow = this.activeRow === index ? null : index;
     },
-    hideAccModal() {
-      this.$refs.accModal.hide();
-    },
-    confirmAccData() {
-      // Handle the ACC Data confirmation logic here
-      this.hideAccModal();
-      // Add your logic to handle the ACC Data confirmation here
-      console.log("ACC Data confirmed");
-    },
-    checkAndNavigate(event) {
-      if (event.target.value === "Tambah Bidang") {
-        this.navigateToInputBidang();
-      }
-    },
-    navigateToInputBidang() {
-      this.$router.push({ path: "/inputbidang" });
-    },
+
     async fetchBidangOptions() {
-      // New method to fetch bidang options
       try {
         const response = await axios.get("/api/bidang");
-        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
-        this.setDefaultSelectedBidang();
+        this.bidangOptions = response.data;
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
       } catch (error) {
-        console.error("Error fetching bidang options:", error);
+        console.error("Failed to fetch bidang options:", error);
       }
     },
-    setDefaultSelectedBidang() {
-      const defaultBidang = this.bidangOptions.find(
-        (option) => option.id === 1
-      );
-      if (defaultBidang) {
-        this.selectedBidang = defaultBidang.nama;
-      }
-    },
+
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
         this.programOptions = response.data;
+        this.filterPrograms();
       } catch (error) {
-        console.error("Error fetching program options:", error);
+        console.error("Failed to fetch program options:", error);
       }
     },
-    fetchIndicators() {
-      axios
-        .get("/api/keyPerformanceIndicator")
-        .then((response) => {
-          this.indicators = response.data.map((item) => ({
-            ...item,
-            isEditing: false,
-          }));
-          console.log("KPI DATA:", this.indicators);
-          this.fetchPrograms(); // Fetch programs after indicators
-        })
-        .catch((error) => {
-          console.error("Error fetching indicators:", error);
-        });
-    },
-    fetchPrograms() {
-      axios
-        .get("/api/programKegiatanKPI")
-        .then((response) => {
-          this.programs = response.data;
-          console.log("Program DATA:", this.programs);
-          this.mergeData(); // Merge data after fetching programs
-        })
-        .catch((error) => {
-          console.error("Error fetching programs:", error);
-        });
-    },
-    mergeData() {
-      // Map indicators with corresponding programs
-      let mergedData = this.indicators.map((indicator) => {
-        const program = this.programs.find(
-          (p) => p.id === indicator.id_program_kegiatan_kpi
-        );
-        return {
-          ...indicator,
-          program: program
-            ? program
-            : {
-                id: "Unknown",
-                nama: "Unknown",
-                tahun: "Unknown",
-                id_program: "Unknown",
-              },
-        };
-      });
 
-      // Add programs that do not have corresponding indicators
-      this.programs.forEach((program) => {
-        const indicatorExists = mergedData.some(
-          (item) => item.program.id === program.id
-        );
-        if (!indicatorExists) {
-          mergedData.push({
-            id: null,
-            indikator: "tidak ada data",
-            target: "tidak ada data",
-            program: {
-              ...program,
-            },
-          });
-        }
-      });
-
-      // Move item with id 1 to the top
-      mergedData = mergedData.sort((a, b) => {
-        if (a.program.id === 1) return -1;
-        if (b.program.id === 1) return 1;
-        return a.program.id - b.program.id;
-      });
-
-      // Blank out duplicate "Nama Kegiatan" and "No"
-      let seenIds = new Set();
-      let seenNames = new Set();
-      mergedData = mergedData.map((item) => {
-        const displayId = seenIds.has(item.program.id) ? "" : item.program.id;
-        const displayNama = seenNames.has(item.program.nama)
-          ? ""
-          : item.program.nama;
-        seenIds.add(item.program.id);
-        seenNames.add(item.program.nama);
-
-        return {
-          ...item,
-          program: {
-            ...item.program,
-            displayId,
-            displayNama,
-          },
-        };
-      });
-
-      this.mergedData = mergedData;
-    },
-
-    toggleEdit(item) {
-      if (item.isEditing) {
-        this.saveIndicator(item);
-        this.saveProgram(item.program);
+    async fetchProgramKegiatanKPI() {
+      try {
+        const response = await axios.get("/api/programKegiatanKPI");
+        this.programKegiatanOptions = response.data;
+      } catch (error) {
+        console.error("Failed to fetch program kegiatan KPI:", error);
       }
-      item.isEditing = !item.isEditing;
     },
-    saveIndicator(item) {
-      axios
-        .put(`/api/keyPerformanceIndicator/${item.id}`, {
-          indikator: item.indikator,
-          target: item.target,
-        })
-        .then((response) => {
-          console.log("Indicator saved:", response.data);
-        })
-        .catch((error) => {
-          console.error("Error saving indicator:", error);
-        });
+    async fetchAndCombineData() {
+      try {
+        const [programKegiatanResponse, keyPerformanceIndicatorResponse] =
+          await Promise.all([
+            axios.get("/api/programKegiatanKPI"),
+            axios.get("/api/keyPerformanceIndicator"),
+          ]);
+
+        const programKegiatanOptions = programKegiatanResponse.data;
+        const keyPerformanceIndicators = keyPerformanceIndicatorResponse.data;
+
+        // Gabungkan data berdasarkan id_program_kegiatan_kpi
+        this.combinedData = programKegiatanOptions
+          .map((kegiatan) => {
+            const relatedKPIs = keyPerformanceIndicators.filter(
+              (kpi) => kpi.id_program_kegiatan_kpi === kegiatan.id
+            );
+
+            if (relatedKPIs.length > 0) {
+              // Jika ada data KPI yang sesuai
+              return relatedKPIs.map((kpi) => ({
+                ...kegiatan,
+                indikator: kpi.indikator,
+                target: kpi.target,
+              }));
+            } else {
+              // Jika tidak ada data KPI yang sesuai
+              return {
+                ...kegiatan,
+                indikator: "",
+                target: "",
+              };
+            }
+          })
+          .flat() // Menggunakan .flat() untuk meratakan array jika ada beberapa KPI
+          .sort((a, b) => a.id - b.id); // Mengurutkan data berdasarkan ID secara ascending
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      }
     },
-    saveProgram(program) {
-      axios
-        .put(`/api/programKegiatanKPI/${program.id}`, {
-          nama: program.nama,
-        })
-        .then((response) => {
-          console.log("Program saved:", response.data);
-        })
-        .catch((error) => {
-          console.error("Error saving program:", error);
-        });
+    exportToExcel() {
+      // Ambil data dari tabel yang difilter
+      const dataToExport = this.filteredData.map((kpi, index) => ({
+        No: index + 1,
+        "Nama Kegiatan": kpi.nama,
+        Indikator: kpi.indikator,
+        Target: kpi.target,
+      }));
+
+      // Buat worksheet dari data
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+
+      // Buat workbook baru dan tambahkan worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "KPI Data");
+
+      // Generate file Excel dan trigger download
+      XLSX.writeFile(workbook, `KPI_Data_${this.selectedYear}.xlsx`);
     },
-    selectOption(index) {
-      this.selectedOptionIndex = index;
+    goToInputPage() {
+      this.$router.push({ path: "/input" });
     },
+    showConfirmDeletePopup(kpi) {
+      this.selectedKPI = kpi; // Simpan KPI yang akan dihapus
+      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
+    },
+    closePopup() {
+      this.confirmDelete = false;
+    },
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
+      );
+    },
+
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
+    },
+
     generateYears() {
       const currentYear = new Date().getFullYear();
       const years = [];
@@ -439,43 +360,91 @@ export default {
       }
       return years;
     },
-    goToInputPage() {
-      this.$router.push({ path: "/input" });
+
+    toggleEdit(item) {
+      if (this.isEditing === item.id) {
+        this.saveData(item);
+      } else {
+        this.isEditing = item.id;
+      }
     },
-    downloadExcel() {
-      const kpiData = this.filteredData.map((item, index) => ({
-        No: index + 1,
-        "Nama Kegiatan": item.program.nama,
-        Indikator: item.indikator,
-        Target: item.target,
-      }));
 
-      const wb = XLSX.utils.book_new();
-      const kpiSheet = XLSX.utils.json_to_sheet(kpiData);
+    async deleteRow(kpi) {
+      try {
+        if (kpi.nama && kpi.indikator && kpi.target) {
+          // Hapus data indikator dan target menggunakan API
+          await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
+          await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
+        } else {
+          if (kpi.nama) {
+            await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
+          }
+          if (kpi.indikator || kpi.target) {
+            await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
+          }
+        }
 
-      // Auto-fit columns for kpiSheet
-      const kpiCols = Object.keys(kpiData[0] || {}).map((key) => ({
-        wch: Math.max(
-          ...kpiData.map((item) =>
-            item[key] ? item[key].toString().length : 0
-          )
-        ),
-      }));
-      kpiSheet["!cols"] = kpiCols;
+        // Perbarui data setelah penghapusan
+        this.fetchAndCombineData();
 
-      XLSX.utils.book_append_sheet(wb, kpiSheet, "KPI");
-
-      const fileName = `KPI_${this.selectedYear}.xlsx`;
-      XLSX.writeFile(wb, fileName);
+        // Tutup pop-up konfirmasi setelah penghapusan berhasil
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+        alert(
+          `Failed to delete the row: ${error.response?.status} - ${
+            error.response?.data?.message || error.message
+          }`
+        );
+      }
     },
-    navigateToInputProgram() {
-      this.$router.push({ path: "/inputprogram" });
+    getIndicatorAndTarget(idKpi) {
+      const kpi = this.keyPerformanceIndicators.find(
+        (indicator) => indicator.id === idKpi
+      );
+      return kpi
+        ? { indikator: kpi.indikator, target: kpi.target }
+        : { indikator: "", target: "" };
     },
   },
-  mounted() {
-    this.fetchProgramOptions();
-    this.fetchIndicators();
-    this.fetchBidangOptions();
+
+  computed: {
+    selectedProgramName() {
+      const program = this.programOptions.find(
+        (program) => program.id === this.selectedProgram
+      );
+      return program ? program.nama : "";
+    },
+
+    filteredKPI() {
+      // Filter KPI berdasarkan selectedProgram dan urutkan berdasarkan ID
+      return this.programKegiatanOptions
+        .filter((kpi) => kpi.id_program === this.selectedProgram)
+        .sort((a, b) => a.id - b.id); // Mengurutkan berdasarkan ID secara ascending
+    },
+    filteredData() {
+      // Filter combinedData berdasarkan id_program dan selectedYear
+      return this.combinedData.filter(
+        (item) =>
+          item.id_program === this.selectedProgram &&
+          item.tahun === this.selectedYear // Pastikan tahun sesuai dengan yang dipilih
+      );
+    },
+  },
+
+  watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      }
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
   },
 };
 </script>

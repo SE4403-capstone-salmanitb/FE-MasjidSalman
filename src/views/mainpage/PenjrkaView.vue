@@ -12,15 +12,14 @@
             <div class="tahun1">
               <div class="dropdown1" style="width: fit-content; height: 38px">
                 <select
-                  v-model="selectedBidang"
                   class="m-md-2"
                   style="width: fit-content; height: 38px"
-                  @change="checkAndNavigate"
+                  v-model="selectedBidang"
                 >
                   <option
                     v-for="bidang in bidangOptions"
                     :key="bidang.id"
-                    :value="bidang.nama"
+                    :value="bidang.id"
                   >
                     {{ bidang.nama }}
                   </option>
@@ -30,25 +29,22 @@
             </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
-              <b-dropdown
+              <select
+                v-model="selectedProgram"
                 id="dropdown-1"
                 class="m-md-2"
                 variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-                dropup
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in filteredProgramOptions"
-                  :key="index"
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
                 >
-                  {{ option.nama }}
-                </b-dropdown-item>
-                <b-dropdown-item @click="navigateToInputProgram">
-                  Tambahkan Program
-                </b-dropdown-item>
-              </b-dropdown>
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
             </div>
 
             <div class="print-tombol">
@@ -66,19 +62,12 @@
                   v-model="selectedYear"
                   class="m-md-2"
                   style="width: 90px; height: 38px"
-                  @change="combineData"
                 >
                   <option v-for="year in years" :key="year" :value="year">
                     {{ year }}
                   </option>
                 </select>
               </div>
-            </div>
-
-            <div class="print-tombol">
-              <button type="button" class="acc" @click="showAccModal">
-                ACC Data
-              </button>
             </div>
             <div class="pilihan">
               <button
@@ -99,10 +88,12 @@
               </button>
             </div>
             <div class="text-box">
-              <p class="text-area">{{ selectedOption }}</p>
+              <p class="text-area">{{ selectedProgramName }}</p>
               <div class="additional-text">
-                <p class="total">Nilai Total :</p>
-                <p class="nilai">{{ formatCurrency(totalAnggaranSum) }}</p>
+                <p class="total" style="margin-right: 5px">
+                  Nilai Total : {{ formatCurrency(totalNominalAnggaran) }}
+                </p>
+
                 <div class="container-box">
                   <button type="button" class="btn" @click="goToInputPage">
                     <b-icon-plus></b-icon-plus>
@@ -124,7 +115,6 @@
                     <th style="width: 250px; font-weight: bold">
                       Output/Keluaran
                     </th>
-
                     <th style="width: 180px; font-weight: bold">
                       Nominal Anggaran
                     </th>
@@ -133,52 +123,80 @@
                 </thead>
                 <tbody>
                   <tr
-                    v-for="(item, index) in filteredCombinedData"
-                    :key="index"
+                    v-for="(item, index) in filteredProgramKegiatanRKA"
+                    :key="item.id"
                   >
                     <td>{{ index + 1 }}</td>
                     <td>
-                      <div v-if="item.isEditing">
-                        <input v-model="item.namaBuku" />
-                      </div>
-                      <div v-else>
-                        {{ item.namaBuku || "Tidak ada data" }}
-                      </div>
+                      <input
+                        v-if="isEditing === item.id"
+                        v-model="item.nama"
+                        type="text"
+                      />
+                      <span v-else>{{ item.nama }}</span>
                     </td>
                     <td>
-                      <div v-if="item.isEditing">
-                        <input v-model="item.Deskripsi" />
-                      </div>
-                      <div v-else>
-                        {{ item.Deskripsi || "Tidak ada data" }}
-                      </div>
+                      <input
+                        v-if="isEditing === item.id"
+                        v-model="item.deskripsi"
+                        type="text"
+                      />
+                      <span v-else>{{ item.deskripsi }}</span>
                     </td>
                     <td>
-                      <div v-if="item.isEditing">
-                        <input v-model="item.Output" />
-                      </div>
-                      <div v-else>
-                        {{ item.Output || "Tidak ada data" }}
-                      </div>
+                      <input
+                        v-if="isEditing === item.id"
+                        v-model="item.output"
+                        type="text"
+                      />
+                      <span v-else>{{ item.output }}</span>
                     </td>
+                    <td>
+                      {{ formatCurrency(calculateNominalAnggaran(item.id)) }}
+                    </td>
+                    <td style="text-align: center; position: relative">
+                      <b-icon-three-dots-vertical
+                        style="color: black; cursor: pointer"
+                        @click="toggleDropdown(index)"
+                      ></b-icon-three-dots-vertical>
 
-                    <td>
-                      {{ formatCurrency(item.Anggaran) || "Tidak ada data" }}
-                    </td>
-                    <td style="text-align: center">
-                      <button
-                        type="button"
-                        class="edit-btn"
-                        @click="editProgram(item)"
+                      <!-- Dropdown for actions -->
+                      <div
+                        v-if="activeRow === index"
+                        class="actions-dropdown"
+                        style="
+                          position: absolute;
+                          background-color: white;
+                          border: 1px solid #ccc;
+                          padding: 5px;
+                          border-radius: 3px;
+                          z-index: 1000;
+                        "
                       >
-                        <b-icon
-                          :icon="item.isEditing ? 'save-fill' : 'pencil-square'"
-                        ></b-icon>
-                      </button>
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="showConfirmPopup(item)"
+                        >
+                          Delete
+                        </button>
+                        <button
+                          style="
+                            color: black;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                          "
+                          @click="toggleEdit(item)"
+                        >
+                          {{ isEditing === item.id ? "Save" : "Edit" }}
+                        </button>
+                      </div>
                     </td>
-                  </tr>
-                  <tr v-if="filteredCombinedData.length === 0">
-                    <td colspan="10">Tidak ada data</td>
                   </tr>
                 </tbody>
               </table>
@@ -212,68 +230,70 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="(item, index) in filteredCombinedData"
-                    :key="index"
-                  >
+                  <tr v-for="(item, index) in filteredResumeData" :key="index">
                     <td>{{ index + 1 }}</td>
-                    <td>{{ item.namaBuku || "Tidak ada data" }}</td>
-                    <td>{{ formatCurrency(item.Pusat) }}</td>
-                    <td>{{ formatCurrency(item.RAS) }}</td>
-                    <td>{{ formatCurrency(item.Kepesertaan) }}</td>
-                    <td>{{ formatCurrency(item.PihakKetiga) }}</td>
-                    <td>{{ formatCurrency(item.WakafSalman) }}</td>
-                    <td>{{ formatCurrency(item.TotalAnggaran) }}</td>
-                  </tr>
-                  <tr v-if="filteredCombinedData.length === 0">
-                    <td colspan="8">Tidak ada data</td>
+                    <td>{{ item.programNama }}</td>
+                    <td>{{ formatCurrency(item.pusat) }}</td>
+                    <td>{{ formatCurrency(item.ras) }}</td>
+                    <td>{{ formatCurrency(item.kepesertaan) }}</td>
+                    <td>{{ formatCurrency(item.pihakKetiga) }}</td>
+                    <td>{{ formatCurrency(item.wakafSalman) }}</td>
+                    <td>{{ formatCurrency(item.totalAnggaran) }}</td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+            <!-- Pop-up Konfirmasi Delete Data -->
+            <div v-if="confirmDelete" class="confirmation-popup">
+              <div class="confirmation-card">
+                <b-icon-exclamation-circle-fill
+                  style="color: #f24e1e; width: 126px; height: 126px"
+                ></b-icon-exclamation-circle-fill>
+                <p style="font-size: 32px; font-weight: bold">
+                  Anda yakin ingin menghapus data?
+                </p>
+                <div class="confirmation-buttons">
+                  <button
+                    @click="deleteRow(selectedKPI)"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #967c55;
+                      color: white;
+                      margin-right: 14px;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    Hapus
+                  </button>
+                  <button
+                    @click="closePopup"
+                    style="
+                      width: 259px;
+                      height: 47px;
+                      background-color: #a4a4a3;
+                      color: black;
+                      font-size: 16px;
+                      font-weight: bolder;
+                    "
+                  >
+                    BATAL
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Confirmation Modal -->
-    <b-modal
-      id="acc-modal"
-      ref="accModal"
-      hide-footer
-      title="Konfirmasi ACC Data"
-    >
-      <!-- <div class="icon-konfirmasi">
-        <b-icon-exclamation-circle-fill
-          font-scale="5"
-          style="color: #967c55; margin-bottom: 25px"
-        ></b-icon-exclamation-circle-fill>
-      </div> -->
-
-      <p class="teks-konfirmasi" style="margin-bottom: 15px">
-        Apakah anda ingin melakukan acc pada data?
-      </p>
-      <p class="info" style="margin-bottom: 30px">
-        Saat anda memilih ya, maka seluruh data tidak akan dapat diubah lagi!
-      </p>
-      <div class="tombol-konfirmasi">
-        <b-button variant="secondary" @click="hideAccModal" style="width: 200px"
-          >Tidak</b-button
-        >
-        <b-button
-          style="background-color: #967c55; margin-left: 15px; width: 200px"
-          @click="confirmAccData"
-          >Ya</b-button
-        >
-      </div>
-    </b-modal>
   </div>
 </template>
 
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx"; // Import the XLSX library
 
 export default {
   components: {
@@ -281,107 +301,118 @@ export default {
   },
   data() {
     return {
-      programKegiatan: [],
-      judulKegiatan: [],
-      itemKegiatan: [],
-      combinedData: [],
+      bidangOptions: [],
       programOptions: [],
-      bidangOptions: [], // New data property for bidang options
-      selectedOptionIndex: null,
+      programKegiatanRKA: [],
+      itemKegiatanRKA: [],
+      judulKegiatanRKA: [],
+      filteredPrograms: [],
+      selectedBidang: "",
+      selectedProgram: "",
       selectedYear: new Date().getFullYear(),
-      selectedBidang: "", // New data property for selected bidang
       years: this.generateYears(),
-      totalAnggaranSum: 0,
       isPenjelasanActive: true,
       isResumeActive: false,
+      isEditing: null, // Track which row is being edited
+      activeRow: null,
+      confirmDelete: false,
     };
   },
-  computed: {
-    selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].nama
-        : "PROGRAM KEPUSTAKAAN";
-    },
-    selectedProgramId() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].id
-        : null;
-    },
-    filteredCombinedData() {
-      return this.combinedData.filter(
-        (item) => item.tahun == this.selectedYear
-      );
-    },
-    filteredProgramOptions() {
-      return this.programOptions.filter(
-        (option) => option.id_bidang === this.selectedBidangId
-      );
-    },
-    selectedBidangId() {
-      const selectedBidang = this.bidangOptions.find(
-        (bidang) => bidang.nama === this.selectedBidang
-      );
-      return selectedBidang ? selectedBidang.id : null;
-    },
-  },
-  watch: {
-    selectedOptionIndex() {
-      this.combineData();
-    },
-    selectedBidang() {
-      this.selectedOptionIndex = null; // Reset the selected option when bidang changes
-      this.combineData();
-    },
+  mounted() {
+    this.fetchBidangOptions();
+    this.fetchProgramOptions();
+    this.fetchProgramKegiatanRKA();
+    this.fetchItemKegiatanRKA();
+    this.fetchJudulKegiatanRKA();
   },
   methods: {
-    checkAndNavigate(event) {
-      if (event.target.value === "Tambah Bidang") {
-        this.navigateToInputBidang();
+    showConfirmPopup(kpi) {
+      this.selectedKPI = kpi; // Menyimpan KPI yang dipilih
+      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
+    },
+    closePopup() {
+      this.confirmDelete = false;
+    },
+    toggleDropdown(index) {
+      this.activeRow = this.activeRow === index ? null : index;
+    },
+    async deleteRow(item) {
+      try {
+        // Panggil API untuk menghapus data berdasarkan ID item
+        await axios.delete(`/api/programKegiatanRKA/${item.id}`);
+
+        // Perbarui data setelah penghapusan
+        this.fetchProgramKegiatanRKA();
+
+        // Tutup popup konfirmasi setelah penghapusan berhasil
+        this.closePopup();
+      } catch (error) {
+        console.error("Failed to delete row:", error);
+        alert(
+          `Gagal menghapus data: ${error.response?.status} - ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     },
-    navigateToInputBidang() {
-      this.$router.push({ path: "/inputbidang" });
+    async fetchBidangOptions() {
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data;
+
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
+      } catch (error) {
+        console.error("Failed to fetch bidang options:", error);
+      }
     },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
-        this.programOptions = response.data; // Assuming response.data is an array of program options
-        this.setDefaultSelectedOption();
+        this.programOptions = response.data;
+        this.filterPrograms();
       } catch (error) {
-        console.error("Error fetching program options:", error);
+        console.error("Failed to fetch program options:", error);
       }
     },
-    async fetchBidangOptions() {
-      // New method to fetch bidang options
+    async fetchProgramKegiatanRKA() {
       try {
-        const response = await axios.get("/api/bidang");
-        this.bidangOptions = response.data; // Assuming response.data is an array of bidang options
-        this.setDefaultSelectedBidang();
+        const response = await axios.get("/api/programKegiatanRKA");
+        this.programKegiatanRKA = response.data;
       } catch (error) {
-        console.error("Error fetching bidang options:", error);
+        console.error("Failed to fetch program-kegiatan RKA:", error);
       }
     },
-    setDefaultSelectedOption() {
-      const defaultIndex = this.programOptions.findIndex(
-        (option) => option.id === 1
+    async fetchItemKegiatanRKA() {
+      try {
+        const response = await axios.get("/api/itemKegiatanRKA");
+        this.itemKegiatanRKA = response.data;
+      } catch (error) {
+        console.error("Failed to fetch item-kegiatan RKA:", error);
+      }
+    },
+    async fetchJudulKegiatanRKA() {
+      try {
+        const response = await axios.get("/api/judulKegiatanRKA");
+        this.judulKegiatanRKA = response.data;
+      } catch (error) {
+        console.error("Failed to fetch judul-kegiatan RKA:", error);
+      }
+    },
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
       );
-      if (defaultIndex !== -1) {
-        this.selectedOptionIndex = defaultIndex;
-      }
-    },
-    setDefaultSelectedBidang() {
-      const defaultBidang = this.bidangOptions.find(
-        (option) => option.id === 1
-      );
-      if (defaultBidang) {
-        this.selectedBidang = defaultBidang.nama;
-      }
-    },
-    selectOption(index) {
-      this.selectedOptionIndex = index;
     },
     navigateToInputProgram() {
       this.$router.push({ path: "/inputprogram" });
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -390,150 +421,6 @@ export default {
         years.push(i);
       }
       return years;
-    },
-    async fetchProgramKegiatan() {
-      try {
-        const response = await axios.get("/api/programKegiatanRKA");
-        this.programKegiatan = response.data;
-        this.combineData();
-        console.log("Data Program kegiatan:", this.programKegiatan);
-      } catch (error) {
-        console.error("Error fetching program kegiatan:", error);
-      }
-    },
-    async fetchJudulKegiatan() {
-      try {
-        const response = await axios.get("/api/judulKegiatanRKA");
-        this.judulKegiatan = response.data;
-        this.combineData();
-        console.log("Data Judul kegiatan:", this.judulKegiatan);
-      } catch (error) {
-        console.error("Error fetching judul kegiatan:", error);
-      }
-    },
-    async fetchItemKegiatan() {
-      try {
-        const response = await axios.get("/api/itemKegiatanRKA");
-        this.itemKegiatan = response.data;
-        this.combineData();
-        console.log("Data Item kegiatan:", this.itemKegiatan);
-      } catch (error) {
-        console.error("Error fetching item kegiatan:", error);
-      }
-    },
-    combineData() {
-      if (
-        this.programKegiatan.length ||
-        this.judulKegiatan.length ||
-        this.itemKegiatan.length
-      ) {
-        const combinedArray = [];
-        const anggaranMap = {};
-        const addedNamaBuku = new Set();
-
-        this.programKegiatan.forEach((program) => {
-          if (
-            !addedNamaBuku.has(program.nama) &&
-            program.id_program === this.selectedProgramId
-          ) {
-            combinedArray.push({
-              namaBuku: program.nama,
-              Deskripsi: program.deskripsi,
-              Output: program.output,
-              tahun: program.tahun,
-              Pusat: 0,
-              RAS: 0,
-              Kepesertaan: 0,
-              PihakKetiga: 0,
-              WakafSalman: 0,
-              TotalAnggaran: 0,
-              namaJudul: "Tidak ada data",
-              namaUraian: "Tidak ada data",
-              nilaiSatuan: "Tidak ada data",
-              Quantity: "Tidak ada data",
-              Frequency: "Tidak ada data",
-              Volume: "Tidak ada data",
-              SumberDana: "Tidak ada data",
-              Total: 0,
-              Anggaran: 0,
-              programId: program.id,
-              isEditing: false,
-            });
-            addedNamaBuku.add(program.nama);
-          }
-          anggaranMap[program.id] = 0;
-        });
-
-        this.itemKegiatan.forEach((item) => {
-          const matchedJudul = this.judulKegiatan.find(
-            (judul) => judul.id === item.id_judul_kegiatan
-          );
-          const matchedProgram = matchedJudul
-            ? this.programKegiatan.find(
-                (program) =>
-                  program.id === matchedJudul.id_program_kegiatan_rka &&
-                  program.id_program === this.selectedProgramId
-              )
-            : null;
-          const total = item.quantity * item.frequency * item.nilai_satuan || 0;
-
-          if (matchedProgram) {
-            anggaranMap[matchedProgram.id] += total;
-          }
-
-          if (matchedProgram) {
-            const programEntry = combinedArray.find(
-              (entry) => entry.namaBuku === matchedProgram.nama
-            );
-            if (programEntry) {
-              switch (item.sumber_dana) {
-                case "Pusat":
-                  programEntry.Pusat += total;
-                  break;
-                case "RAS":
-                  programEntry.RAS += total;
-                  break;
-                case "Kepesertaan":
-                  programEntry.Kepesertaan += total;
-                  break;
-                case "Pihak Ketiga":
-                  programEntry.PihakKetiga += total;
-                  break;
-                case "Wakaf Salman":
-                  programEntry.WakafSalman += total;
-                  break;
-              }
-              programEntry.TotalAnggaran =
-                programEntry.Pusat +
-                programEntry.RAS +
-                programEntry.Kepesertaan +
-                programEntry.PihakKetiga +
-                programEntry.WakafSalman;
-            }
-          }
-        });
-
-        combinedArray.forEach((item) => {
-          if (item.programId) {
-            item.Anggaran = anggaranMap[item.programId];
-          }
-        });
-
-        // Sort the combinedArray by programId
-        combinedArray.sort((a, b) => a.programId - b.programId);
-
-        this.combinedData = combinedArray;
-        this.totalAnggaranSum = combinedArray.reduce(
-          (sum, item) => sum + item.TotalAnggaran,
-          0
-        );
-      }
-    },
-    formatCurrency(value) {
-      return new Intl.NumberFormat("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }).format(value);
     },
     toggleActive(button) {
       if (button === "penjelasan") {
@@ -544,139 +431,184 @@ export default {
         this.isResumeActive = true;
       }
     },
-    async editProgram(item) {
-      if (item.isEditing) {
-        try {
-          // Save changes to the API
-          await axios.put(`/api/programKegiatanRKA/${item.programId}`, {
-            nama: item.namaBuku,
-            deskripsi: item.Deskripsi,
-            output: item.Output,
-          });
-          console.log("Data saved successfully");
-        } catch (error) {
-          console.error("Error saving data:", error);
-        }
+    toggleEdit(item) {
+      if (this.isEditing === item.id) {
+        this.saveData(item);
+      } else {
+        this.isEditing = item.id;
       }
-      item.isEditing = !item.isEditing;
+    },
+    async saveData(item) {
+      try {
+        await axios.put(`/api/programKegiatanRKA/${item.id}`, {
+          nama: item.nama,
+          deskripsi: item.deskripsi,
+          output: item.output,
+        });
+        this.isEditing = null; // Stop editing
+        this.fetchProgramKegiatanRKA();
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
+    calculateNominalAnggaran(id_program_kegiatan_rka) {
+      const matchingJudulKegiatan = this.judulKegiatanRKA.filter(
+        (judul) => judul.id_program_kegiatan_rka === id_program_kegiatan_rka
+      );
+
+      let total = 0;
+      matchingJudulKegiatan.forEach((judul) => {
+        const matchingItems = this.itemKegiatanRKA.filter(
+          (item) => item.id_judul_kegiatan === judul.id
+        );
+        matchingItems.forEach((item) => {
+          total += item.nilai_satuan * item.quantity * item.frequency;
+        });
+      });
+
+      return total;
+    },
+    calculateResumeData() {
+      const result = [];
+
+      this.programKegiatanRKA.forEach((program) => {
+        if (program.id_program === this.selectedProgram) {
+          const programResume = {
+            programNama: program.nama,
+            pusat: 0,
+            ras: 0,
+            kepesertaan: 0,
+            pihakKetiga: 0,
+            wakafSalman: 0,
+            totalAnggaran: 0,
+            id: program.id,
+          };
+
+          const matchingJudulKegiatan = this.judulKegiatanRKA.filter(
+            (judul) => judul.id_program_kegiatan_rka === program.id
+          );
+
+          matchingJudulKegiatan.forEach((judul) => {
+            const matchingItems = this.itemKegiatanRKA.filter(
+              (item) => item.id_judul_kegiatan === judul.id
+            );
+
+            matchingItems.forEach((item) => {
+              const total = item.nilai_satuan * item.quantity * item.frequency;
+
+              programResume.totalAnggaran += total;
+
+              if (item.sumber_dana === "Pusat") {
+                programResume.pusat += total;
+              } else if (item.sumber_dana === "RAS") {
+                programResume.ras += total;
+              } else if (item.sumber_dana === "Kepesertaan") {
+                programResume.kepesertaan += total;
+              } else if (item.sumber_dana === "Pihak Ketiga") {
+                programResume.pihakKetiga += total;
+              } else if (item.sumber_dana === "Wakaf Salman") {
+                programResume.wakafSalman += total;
+              }
+            });
+          });
+
+          result.push(programResume);
+        }
+      });
+
+      result.sort((a, b) => {
+        if (a.id === 1) return -1;
+        if (b.id === 1) return 1;
+        return 0;
+      });
+
+      return result;
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+      }).format(value);
     },
     goToInputPage() {
       this.$router.push({ path: "/inputrka" });
     },
     downloadExcel() {
-      const penjelasanData = this.filteredCombinedData.map((item, index) => ({
-        No: index + 1,
-        "Program-Kegiatan": item.namaBuku,
-        "Deskripsi Singkat": item.Deskripsi,
-        "Output/Keluaran": item.Output,
-        "Nominal Anggaran": this.formatCurrency(item.Anggaran),
-      }));
-
-      const resumeData = this.filteredCombinedData.map((item, index) => ({
-        No: index + 1,
-        "Program-Kegiatan": item.namaBuku,
-        Pusat: this.formatCurrency(item.Pusat),
-        RAS: this.formatCurrency(item.RAS),
-        Kepesertaan: this.formatCurrency(item.Kepesertaan),
-        "Pihak Ketiga": this.formatCurrency(item.PihakKetiga),
-        "Wakaf Salman": this.formatCurrency(item.WakafSalman),
-        "Total Anggaran": this.formatCurrency(item.TotalAnggaran),
-      }));
-
-      // Adding total row to penjelasanData
-      const penjelasanTotal = {
-        No: "",
-        "Program-Kegiatan": "",
-        "Deskripsi Singkat": "",
-        "Output/Keluaran": "Total",
-        "Nominal Anggaran": this.formatCurrency(this.totalAnggaranSum),
-      };
-      penjelasanData.push(penjelasanTotal);
-
-      // Adding total row to resumeData
-      const resumeTotal = {
-        No: "",
-        "Program-Kegiatan": "Total",
-        Pusat: this.formatCurrency(
-          this.filteredCombinedData.reduce((sum, item) => sum + item.Pusat, 0)
-        ),
-        RAS: this.formatCurrency(
-          this.filteredCombinedData.reduce((sum, item) => sum + item.RAS, 0)
-        ),
-        Kepesertaan: this.formatCurrency(
-          this.filteredCombinedData.reduce(
-            (sum, item) => sum + item.Kepesertaan,
-            0
-          )
-        ),
-        "Pihak Ketiga": this.formatCurrency(
-          this.filteredCombinedData.reduce(
-            (sum, item) => sum + item.PihakKetiga,
-            0
-          )
-        ),
-        "Wakaf Salman": this.formatCurrency(
-          this.filteredCombinedData.reduce(
-            (sum, item) => sum + item.WakafSalman,
-            0
-          )
-        ),
-        "Total Anggaran": this.formatCurrency(
-          this.filteredCombinedData.reduce(
-            (sum, item) => sum + item.TotalAnggaran,
-            0
-          )
-        ),
-      };
-      resumeData.push(resumeTotal);
-
       const wb = XLSX.utils.book_new();
-      const penjelasanSheet = XLSX.utils.json_to_sheet(penjelasanData);
-      const resumeSheet = XLSX.utils.json_to_sheet(resumeData);
 
-      // Auto-fit columns for penjelasanSheet
-      const penjelasanCols = Object.keys(penjelasanData[0]).map((key) => ({
-        wch: Math.max(
-          ...penjelasanData.map((item) => item[key]?.toString().length || 0)
-        ),
+      // Add Penjelasan Sheet
+      const penjelasanData = this.filteredProgramKegiatanRKA.map(
+        (item, index) => ({
+          No: index + 1,
+          "Program-Kegiatan": item.nama,
+          "Deskripsi Singkat": item.deskripsi,
+          "Output/Keluaran": item.output,
+          "Nominal Anggaran": this.calculateNominalAnggaran(item.id),
+        })
+      );
+      const penjelasanWS = XLSX.utils.json_to_sheet(penjelasanData);
+      XLSX.utils.book_append_sheet(wb, penjelasanWS, "Penjelasan");
+
+      // Add Resume Sheet
+      const resumeData = this.filteredResumeData.map((item, index) => ({
+        No: index + 1,
+        "Program-Kegiatan": item.programNama,
+        Pusat: item.pusat,
+        RAS: item.ras,
+        Kepesertaan: item.kepesertaan,
+        "Pihak Ketiga": item.pihakKetiga,
+        "Wakaf Salman": item.wakafSalman,
+        "Total Anggaran": item.totalAnggaran,
       }));
-      penjelasanSheet["!cols"] = penjelasanCols;
+      const resumeWS = XLSX.utils.json_to_sheet(resumeData);
+      XLSX.utils.book_append_sheet(wb, resumeWS, "Resume");
 
-      // Auto-fit columns for resumeSheet
-      const resumeCols = Object.keys(resumeData[0]).map((key) => ({
-        wch: Math.max(
-          ...resumeData.map((item) => item[key]?.toString().length || 0)
-        ),
-      }));
-      resumeSheet["!cols"] = resumeCols;
+      // Generate the file name with the selected year
+      const fileName = `RKA_${this.selectedYear}.xlsx`;
 
-      XLSX.utils.book_append_sheet(wb, penjelasanSheet, "Penjelasan");
-      XLSX.utils.book_append_sheet(wb, resumeSheet, "Resume");
-
-      // Use the selected year in the file name
-      const fileName = `Penjelasan_RKA_${this.selectedYear}.xlsx`;
-
+      // Trigger download
       XLSX.writeFile(wb, fileName);
     },
-    showAccModal() {
-      this.$refs.accModal.show();
+  },
+  computed: {
+    filteredProgramKegiatanRKA() {
+      return this.programKegiatanRKA
+        .filter(
+          (item) =>
+            item.id_program === this.selectedProgram &&
+            item.tahun === this.selectedYear // Filter berdasarkan tahun yang dipilih
+        )
+        .sort((a, b) => a.id - b.id);
     },
-    hideAccModal() {
-      this.$refs.accModal.hide();
+    selectedProgramName() {
+      const program = this.programOptions.find(
+        (program) => program.id === this.selectedProgram
+      );
+      return program ? program.nama : "";
     },
-    confirmAccData() {
-      // Handle the ACC Data confirmation logic here
-      this.hideAccModal();
-      // Add your logic to handle the ACC Data confirmation here
-      console.log("ACC Data confirmed");
+    filteredResumeData() {
+      return this.calculateResumeData().sort((a, b) => a.id - b.id);
+    },
+    totalNominalAnggaran() {
+      return this.filteredProgramKegiatanRKA.reduce((total, item) => {
+        return total + this.calculateNominalAnggaran(item.id);
+      }, 0);
     },
   },
-  mounted() {
-    this.fetchProgramOptions();
-    this.fetchBidangOptions(); // Fetch bidang options when component is mounted
-    this.fetchProgramKegiatan();
-    this.fetchJudulKegiatan();
-    this.fetchItemKegiatan();
+
+  watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      }
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
   },
 };
 </script>
@@ -880,6 +812,12 @@ export default {
 .dropdown1 .m-md-2 {
   border: 1px solid black;
   background-color: white;
+}
+
+.dropdown1 select,
+.b-dropdown {
+  width: fit-content;
+  height: 38px;
 }
 
 .tombol {
