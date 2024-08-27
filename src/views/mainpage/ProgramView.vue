@@ -870,14 +870,15 @@ export default {
   computed: {
     filteredAlokasiDanaData() {
       return this.alokasiDanaData.filter((item) => {
-        // Temukan laporan bulanan yang sesuai dengan program, bulan, dan tahun yang dipilih
+        // Temukan laporan bulanan yang sesuai dengan program, bulan, tahun, dan id_laporan_bulanan yang dipilih
         const laporan = this.laporanData.find((laporan) => {
           const laporanMonth = new Date(laporan.bulan_laporan).getMonth() + 1;
           const laporanYear = new Date(laporan.bulan_laporan).getFullYear();
           return (
             laporan.id === item.id_laporan_bulanan &&
             laporanMonth === this.selectedMonth &&
-            laporanYear === this.selectedYear
+            laporanYear === this.selectedYear &&
+            laporan.program_id === this.selectedProgram
           );
         });
 
@@ -887,13 +888,13 @@ export default {
     },
     totalJumlahRencana() {
       return this.filteredAlokasiDanaData.reduce((total, item) => {
-        return total + item.item_kegiatan_r_k_a.nilai_satuan;
+        return total + parseFloat(item.item_kegiatan_r_k_a.nilai_satuan || 0);
       }, 0);
     },
     // Properti untuk menghitung total jumlah realisasi
     totalJumlahRealisasi() {
       return this.filteredAlokasiDanaData.reduce((total, item) => {
-        return total + item.jumlah_realisasi;
+        return total + parseFloat(item.jumlah_realisasi || 0); // Konversi ke angka dan jumlahkan
       }, 0);
     },
     // Properti untuk menghitung sisa saldo
