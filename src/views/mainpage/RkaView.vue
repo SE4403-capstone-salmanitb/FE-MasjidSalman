@@ -799,6 +799,91 @@
                 </div>
               </div>
             </div>
+            <!-- pop-up notifikasi edit -->
+            <div v-if="isNotificationVisible" :class="notificationClass">
+              <div class="row">
+                <b-icon-check-circle
+                  v-if="notificationType === 'success'"
+                  style="
+                    margin-right: 12px;
+                    margin-left: 15px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-check-circle>
+                <b-icon-exclamation-circle
+                  v-if="notificationType === 'error'"
+                  style="
+                    margin-right: 12px;
+                    margin-left: 15px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-exclamation-circle>
+                <div class="notification-header">
+                  <p class="notification-title">{{ notificationMessage }}</p>
+                  <p class="notification-content">{{ notificationDetail }}</p>
+                </div>
+                <b-icon-x
+                  @click="closeNotification"
+                  style="
+                    margin-left: 47px;
+                    margin-right: 12px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-x>
+              </div>
+            </div>
+            <!-- pop-up notifikasi delete -->
+            <div
+              v-if="isNotificationDeleteVisible"
+              :class="['notification-delete', notificationClass]"
+            >
+              <div class="row">
+                <b-icon-check-circle
+                  v-if="notificationType === 'success'"
+                  style="
+                    margin-right: 12px;
+                    margin-left: 15px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-check-circle>
+                <b-icon-exclamation-circle
+                  v-if="notificationType === 'error'"
+                  style="
+                    margin-right: 12px;
+                    margin-left: 15px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-exclamation-circle>
+                <div class="notification-header">
+                  <p class="notification-title">
+                    {{ notificationDeleteMessage }}
+                  </p>
+                  <p class="notification-content">
+                    {{ notificationDeleteDetail }}
+                  </p>
+                </div>
+                <b-icon-x
+                  @click="closeNotification"
+                  style="
+                    margin-left: 47px;
+                    margin-right: 12px;
+                    margin-top: 14px;
+                    width: 30px;
+                    height: 30px;
+                  "
+                ></b-icon-x>
+              </div>
+            </div>
             <!-- Pop-up Konfirmasi Delete Data -->
             <div v-if="confirmDelete" class="confirmation-popup">
               <div class="confirmation-card">
@@ -857,6 +942,13 @@ export default {
   },
   data() {
     return {
+      notificationMessage: "",
+      notificationDeleteMessage: "",
+      notificationDetail: "",
+      notificationDeleteDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
+      isNotificationDeleteVisible: false,
       bidangOptions: [],
       programOptions: [],
       isBulanActive: true,
@@ -881,6 +973,10 @@ export default {
     this.fetchJudulKegiatanRKA();
   },
   methods: {
+    closeNotification() {
+      this.isNotificationVisible = false;
+      this.isNotificationDeleteVisible = false;
+    },
     showConfirmPopup(item) {
       this.selectedItem = item; // Menyimpan item yang dipilih untuk dihapus
       this.confirmDelete = true; // Menampilkan popup konfirmasi
@@ -894,7 +990,34 @@ export default {
     async deleteRow(item) {
       try {
         // Kirim permintaan DELETE ke server untuk menghapus data berdasarkan ID item
-        await axios.delete(`/api/itemKegiatanRKA/${item.id}`);
+        await axios
+          .delete(`/api/itemKegiatanRKA/${item.id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Data berhasil di hapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.itemKegiatanList = this.itemKegiatanList.filter(
+              (i) => i.id !== item.id
+            );
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus data: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
 
         // Hapus item dari daftar itemKegiatanList di frontend
         this.itemKegiatanList = this.itemKegiatanList.filter(
@@ -1124,27 +1247,53 @@ export default {
     async saveItemKegiatan(item) {
       try {
         // Kirim data yang diperbarui ke server
-        await axios.put(`/api/itemKegiatanRKA/${item.id}`, {
-          uraian: item.uraian,
-          dana_jan: item.dana_jan,
-          dana_feb: item.dana_feb,
-          dana_mar: item.dana_mar,
-          dana_apr: item.dana_apr,
-          dana_mei: item.dana_mei,
-          dana_jun: item.dana_jun,
-          dana_jul: item.dana_jul,
-          dana_aug: item.dana_aug,
-          dana_sep: item.dana_sep,
-          dana_oct: item.dana_oct,
-          dana_nov: item.dana_nov,
-          dana_dec: item.dana_dec,
-          nilai_satuan: item.nilai_satuan,
-          quantity: item.quantity,
-          quantity_unit: item.quantity_unit,
-          frequency: item.frequency,
-          frequency_unit: item.frequency_unit,
-          sumber_dana: item.sumber_dana,
-        });
+        await axios
+          .put(`/api/itemKegiatanRKA/${item.id}`, {
+            uraian: item.uraian,
+            dana_jan: item.dana_jan,
+            dana_feb: item.dana_feb,
+            dana_mar: item.dana_mar,
+            dana_apr: item.dana_apr,
+            dana_mei: item.dana_mei,
+            dana_jun: item.dana_jun,
+            dana_jul: item.dana_jul,
+            dana_aug: item.dana_aug,
+            dana_sep: item.dana_sep,
+            dana_oct: item.dana_oct,
+            dana_nov: item.dana_nov,
+            dana_dec: item.dana_dec,
+            nilai_satuan: item.nilai_satuan,
+            quantity: item.quantity,
+            quantity_unit: item.quantity_unit,
+            frequency: item.frequency,
+            frequency_unit: item.frequency_unit,
+            sumber_dana: item.sumber_dana,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchItemKegiatanRKA();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
+
         // Keluar dari mode editing setelah penyimpanan berhasil
         this.isEditing = null;
         // Perbarui daftar item setelah penyimpanan
@@ -1189,6 +1338,16 @@ export default {
       );
     },
   },
+  computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        notifications: this.isNotificationDeleteVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
+  },
   watch: {
     selectedProgram(newVal) {
       if (newVal === "Tambah Program") {
@@ -1213,6 +1372,19 @@ export default {
 </script>
 
 <style>
+.notification-edit,
+.notification-delete {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  background-color: #f24e1e;
+  padding: 15px;
+  border-radius: 5px;
+  color: white;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
 .dropdown {
   width: auto; /* Atur lebar dropdown agar menyesuaikan dengan panjang teks */
   min-width: 270px; /* Lebar minimum dropdown */

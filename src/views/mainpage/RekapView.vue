@@ -4,7 +4,7 @@
     <div class="card-container">
       <div class="card mb-3" style="max-width: 1149px; max-height: fit-content">
         <div class="kepala">
-          <p>Laporan / Laporan Rekap</p>
+          <p>Laporan / Rekap</p>
         </div>
         <div class="container text-center">
           <div class="row">
@@ -73,7 +73,11 @@
             <div class="box-text-kpi">
               <p class="text-area">{{ selectedProgramName }}</p>
               <div class="additional-text">
-                <div class="container-box"></div>
+                <div class="container-box">
+                  <button type="button" class="btn" @click="goToInputPage">
+                    <b-icon-plus></b-icon-plus>
+                  </button>
+                </div>
               </div>
             </div>
             <div class="table-kpi">
@@ -81,7 +85,7 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Nama Kegiatan</th>
+                    <th>Nama</th>
                     <th>Indikator</th>
                     <th>Target</th>
                     <th>Jan</th>
@@ -99,28 +103,31 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="filteredData.length === 0">
-                    <td colspan="17" style="text-align: center">
-                      Tidak ada data
-                    </td>
-                  </tr>
-                  <tr v-for="(kpi, index) in filteredData" :key="index">
+                  <tr v-for="(kpi, index) in filteredKPIData" :key="kpi.id">
                     <td>{{ index + 1 }}</td>
-                    <td>{{ kpi.nama }}</td>
-                    <td>{{ kpi.indikator }}</td>
-                    <td>{{ kpi.target }}</td>
-                    <td>{{ kpi.capaianBulanan[1] }}</td>
-                    <td>{{ kpi.capaianBulanan[2] }}</td>
-                    <td>{{ kpi.capaianBulanan[3] }}</td>
-                    <td>{{ kpi.capaianBulanan[4] }}</td>
-                    <td>{{ kpi.capaianBulanan[5] }}</td>
-                    <td>{{ kpi.capaianBulanan[6] }}</td>
-                    <td>{{ kpi.capaianBulanan[7] }}</td>
-                    <td>{{ kpi.capaianBulanan[8] }}</td>
-                    <td>{{ kpi.capaianBulanan[9] }}</td>
-                    <td>{{ kpi.capaianBulanan[10] }}</td>
-                    <td>{{ kpi.capaianBulanan[11] }}</td>
-                    <td>{{ kpi.capaianBulanan[12] }}</td>
+                    <td>
+                      {{ getProgramKegiatanName(kpi.id_program_kegiatan_kpi) }}
+                    </td>
+                    <td>
+                      {{ kpi.indikator }}
+                    </td>
+                    <td>
+                      {{ kpi.target }}
+                    </td>
+                    <td>{{ getLaporanBulanan(kpi.id, 1) }}</td>
+                    <!-- Jan, id_laporan_bulanan: 1 -->
+                    <td>{{ getLaporanBulanan(kpi.id, 2) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 3) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 4) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 5) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 6) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 7) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 8) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 9) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 10) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 11) }}</td>
+                    <td>{{ getLaporanBulanan(kpi.id, 12) }}</td>
+                    <!-- Feb, id_laporan_bulanan: 2 -->
                   </tr>
                 </tbody>
               </table>
@@ -135,7 +142,7 @@
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx"; // Import SheetJS library
 
 export default {
   components: {
@@ -146,30 +153,78 @@ export default {
       bidangOptions: [],
       programOptions: [],
       filteredPrograms: [],
-      programKegiatanOptions: [],
-      keyPerformanceIndicators: [],
-      laporanBulanan: [],
+      laporanKPIBulanan: [],
+      kpiData: [], // Untuk menyimpan data KPI
+      programKegiatanKPI: [], // Untuk menyimpan data dari /api/programKegiatanKPI
 
       selectedBidang: "",
       selectedProgram: "",
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
 
-      combinedData: [],
-      isEditing: null, // Track which row is being edited
-      activeRow: null,
-      selectedKPI: null, // Properti untuk menyimpan KPI yang dipilih
+      selectedKPI: null, // Menyimpan KPI yang dipilih untuk konfirmasi hapus
     };
   },
   mounted() {
     this.fetchBidangOptions();
     this.fetchProgramOptions();
-    this.fetchLaporanBulanan();
-    this.fetchAndCombineData();
+    this.fetchLaporanKPIBulanan();
+    this.fetchKPIData(); // Panggil metode ini ketika komponen dimuat
+    this.fetchProgramKegiatanKPI(); // Panggil metode ini untuk mengambil data programKegiatanKPI
   },
   methods: {
-    toggleDropdown(index) {
-      this.activeRow = this.activeRow === index ? null : index;
+    getLaporanBulanan(kpiId, laporanBulananId) {
+      if (!this.laporanKPIBulanan || this.laporanKPIBulanan.length === 0) {
+        return "-"; // Jika datanya belum tersedia, kembalikan "-"
+      }
+
+      const laporan = this.laporanKPIBulanan.find(
+        (laporan) =>
+          laporan.id_kpi === kpiId &&
+          laporan.id_laporan_bulanan === laporanBulananId
+      );
+      return laporan ? laporan.capaian : "-"; // Tampilkan "-" jika tidak ada data
+    },
+    async fetchLaporanKPIBulanan() {
+      try {
+        const response = await axios.get("/api/laporanKPIBulanan");
+        this.laporanKPIBulanan = response.data;
+      } catch (error) {
+        console.error("Failed to fetch Laporan KPI Bulanan data:", error);
+      }
+    },
+
+    exportToExcel() {
+      // Filter data KPI sesuai dengan program dan tahun yang dipilih
+      const filteredData = this.filteredKPIData.map((kpi, index) => {
+        return {
+          No: index + 1,
+          Nama: this.getProgramKegiatanName(kpi.id_program_kegiatan_kpi),
+          Indikator: kpi.indikator,
+          Target: kpi.target,
+          Jan: this.getLaporanBulanan(kpi.id, 1),
+          Feb: this.getLaporanBulanan(kpi.id, 2),
+          Mar: this.getLaporanBulanan(kpi.id, 3),
+          Apr: this.getLaporanBulanan(kpi.id, 4),
+          Mei: this.getLaporanBulanan(kpi.id, 5),
+          Jun: this.getLaporanBulanan(kpi.id, 6),
+          Jul: this.getLaporanBulanan(kpi.id, 7),
+          Aug: this.getLaporanBulanan(kpi.id, 8),
+          Sep: this.getLaporanBulanan(kpi.id, 9),
+          Okt: this.getLaporanBulanan(kpi.id, 10),
+          Nov: this.getLaporanBulanan(kpi.id, 11),
+          Des: this.getLaporanBulanan(kpi.id, 12),
+        };
+      });
+
+      // Buat worksheet dan workbook
+      const worksheet = XLSX.utils.json_to_sheet(filteredData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data KPI");
+
+      // Ekspor workbook ke file Excel
+      const fileName = `Data_KPI_${this.selectedProgramName}_${this.selectedYear}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
     },
 
     async fetchBidangOptions() {
@@ -197,117 +252,28 @@ export default {
       }
     },
 
+    async fetchKPIData() {
+      try {
+        const response = await axios.get("/api/keyPerformanceIndicator");
+        this.kpiData = response.data; // Simpan data KPI yang diambil dari API
+      } catch (error) {
+        console.error("Failed to fetch KPI data:", error);
+      }
+    },
+
     async fetchProgramKegiatanKPI() {
       try {
         const response = await axios.get("/api/programKegiatanKPI");
-        this.programKegiatanOptions = response.data.filter(
-          (kegiatan) => kegiatan.tahun === this.selectedYear // Filter berdasarkan tahun yang dipilih
-        );
+        this.programKegiatanKPI = response.data; // Simpan data dari API programKegiatanKPI
       } catch (error) {
-        console.error("Failed to fetch program kegiatan KPI:", error);
+        console.error("Failed to fetch Program Kegiatan KPI data:", error);
       }
     },
 
-    async fetchLaporanBulanan() {
-      try {
-        const response = await axios.get("/api/laporanBulanan");
-        this.laporanBulanan = response.data;
-      } catch (error) {
-        console.error("Failed to fetch laporan bulanan:", error);
-      }
-    },
-
-    async fetchAndCombineData() {
-      try {
-        const [
-          keyPerformanceIndicatorResponse,
-          laporanKPIBulananResponse,
-          laporanBulananResponse,
-        ] = await Promise.all([
-          axios.get("/api/keyPerformanceIndicator"),
-          axios.get("/api/laporanKPIBulanan"),
-          axios.get("/api/laporanBulanan"),
-        ]);
-
-        const keyPerformanceIndicators = keyPerformanceIndicatorResponse.data;
-        const laporanKPIBulanan = laporanKPIBulananResponse.data;
-        const laporanBulanan = laporanBulananResponse.data;
-
-        // Gabungkan data
-        this.combinedData = this.programKegiatanOptions
-          .map((kegiatan) => {
-            const relatedKPIs = keyPerformanceIndicators
-              .filter((kpi) => kpi.id_program_kegiatan_kpi === kegiatan.id)
-              .map((kpi) => {
-                const laporanBulananKPI = laporanKPIBulanan.filter(
-                  (laporan) => laporan.id_kpi === kpi.id
-                );
-
-                // Ambil capaian sesuai bulan
-                let capaianBulanan = {
-                  1: "0",
-                  2: "0",
-                  3: "0",
-                  4: "0",
-                  5: "0",
-                  6: "0",
-                  7: "0",
-                  8: "0",
-                  9: "0",
-                  10: "0",
-                  11: "0",
-                  12: "0",
-                };
-
-                laporanBulananKPI.forEach((laporanKPI) => {
-                  const laporanBulananItem = laporanBulanan.find(
-                    (laporan) => laporan.id === laporanKPI.id_laporan_bulanan
-                  );
-
-                  if (laporanBulananItem) {
-                    const bulan =
-                      new Date(laporanBulananItem.bulan_laporan).getMonth() + 1;
-                    capaianBulanan[bulan] = laporanKPI.capaian;
-                  }
-                });
-
-                return {
-                  ...kpi,
-                  capaianBulanan,
-                };
-              });
-
-            if (relatedKPIs.length > 0) {
-              return relatedKPIs.map((kpi) => ({
-                ...kegiatan,
-                indikator: kpi.indikator,
-                target: kpi.target,
-                capaianBulanan: kpi.capaianBulanan,
-              }));
-            } else {
-              return {
-                ...kegiatan,
-                indikator: "",
-                target: "",
-                capaianBulanan: {},
-              };
-            }
-          })
-          .flat();
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    },
     goToInputPage() {
       this.$router.push({ path: "/input" });
     },
-    showConfirmDeletePopup(kpi) {
-      this.selectedKPI = kpi; // Simpan KPI yang akan dihapus
-      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
-    },
-    closePopup() {
-      this.confirmDelete = false;
-    },
+
     filterPrograms() {
       this.filteredPrograms = this.programOptions.filter(
         (program) => program.id_bidang === this.selectedBidang
@@ -331,85 +297,23 @@ export default {
       return years;
     },
 
-    toggleEdit(item) {
-      if (this.isEditing === item.id) {
-        this.saveData(item);
-      } else {
-        this.isEditing = item.id;
-      }
-    },
-
-    async deleteRow(kpi) {
-      try {
-        if (kpi.nama && kpi.indikator && kpi.target) {
-          // Hapus data indikator dan target menggunakan API
-          await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
-          await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
-        } else {
-          if (kpi.nama) {
-            await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
-          }
-          if (kpi.indikator || kpi.target) {
-            await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
-          }
-        }
-
-        // Perbarui data setelah penghapusan
-        this.fetchAndCombineData();
-
-        // Tutup pop-up konfirmasi setelah penghapusan berhasil
-        this.closePopup();
-      } catch (error) {
-        console.error("Failed to delete row:", error);
-        alert(
-          `Failed to delete the row: ${error.response?.status} - ${
-            error.response?.data?.message || error.message
-          }`
-        );
-      }
-    },
-    exportToExcel() {
-      // Ambil data dari tabel yang sudah difilter
-      const dataToExport = this.filteredData.map((item, index) => ({
-        No: index + 1,
-        "Nama Kegiatan": item.nama,
-        Indikator: item.indikator,
-        Target: item.target,
-        Jan: item.capaianBulanan[1],
-        Feb: item.capaianBulanan[2],
-        Mar: item.capaianBulanan[3],
-        Apr: item.capaianBulanan[4],
-        Mei: item.capaianBulanan[5],
-        Jun: item.capaianBulanan[6],
-        Jul: item.capaianBulanan[7],
-        Agust: item.capaianBulanan[8],
-        Sep: item.capaianBulanan[9],
-        Okt: item.capaianBulanan[10],
-        Nov: item.capaianBulanan[11],
-        Des: item.capaianBulanan[12],
-      }));
-
-      // Buat worksheet dari data
-      const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-      // Buat workbook dan tambahkan worksheet
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Laporan Rekap");
-
-      // Simpan file Excel
-      XLSX.writeFile(wb, "Laporan_Rekap.xlsx");
-    },
-    getIndicatorAndTarget(idKpi) {
-      const kpi = this.keyPerformanceIndicators.find(
-        (indicator) => indicator.id === idKpi
+    getProgramKegiatanName(id) {
+      const programKegiatan = this.programKegiatanKPI.find(
+        (item) => item.id === id
       );
-      return kpi
-        ? { indikator: kpi.indikator, target: kpi.target }
-        : { indikator: "", target: "" };
+      return programKegiatan ? programKegiatan.nama : "";
     },
   },
 
   computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        notifications: this.isNotificationDeleteVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
     selectedProgramName() {
       const program = this.programOptions.find(
         (program) => program.id === this.selectedProgram
@@ -417,17 +321,17 @@ export default {
       return program ? program.nama : "";
     },
 
-    filteredKPI() {
-      // Filter KPI berdasarkan selectedProgram dan urutkan berdasarkan ID
-      return this.programKegiatanOptions
-        .filter((kpi) => kpi.id_program === this.selectedProgram)
-        .sort((a, b) => a.id - b.id); // Mengurutkan berdasarkan ID secara ascending
-    },
-    filteredData() {
-      // Filter combinedData berdasarkan id_program
-      return this.combinedData.filter(
-        (item) => item.id_program === this.selectedProgram
-      );
+    filteredKPIData() {
+      return this.kpiData.filter((kpi) => {
+        const programKegiatan = this.programKegiatanKPI.find(
+          (item) => item.id === kpi.id_program_kegiatan_kpi
+        );
+        return (
+          programKegiatan &&
+          programKegiatan.id_program === this.selectedProgram &&
+          programKegiatan.tahun === this.selectedYear
+        );
+      });
     },
   },
 
@@ -435,6 +339,8 @@ export default {
     selectedProgram(newVal) {
       if (newVal === "Tambah Program") {
         this.navigateToInputProgram();
+      } else {
+        this.fetchKPIData(); // Ambil data KPI setiap kali program berubah
       }
     },
     selectedBidang(newVal) {
@@ -443,10 +349,6 @@ export default {
       } else {
         this.filterPrograms();
       }
-    },
-    selectedYear() {
-      this.fetchProgramKegiatanKPI(); // Refresh data saat tahun berubah
-      this.fetchAndCombineData(); // Kombinasi data lagi
     },
   },
 };

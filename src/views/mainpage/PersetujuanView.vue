@@ -20,6 +20,7 @@
           </select>
         </div>
         <div class="table-container">
+          <p style="font-weight: bold">Data Akun Website</p>
           <table class="table">
             <thead>
               <tr>
@@ -113,11 +114,84 @@
           <button
             type="button"
             class="btn"
-            style="margin-bottom: 210px; margin-right: 14px"
+            style="margin-right: 14px"
             @click="showRegisterPopup"
           >
             Tambah
           </button>
+        </div>
+        <div class="table-container">
+          <p style="font-weight: bold">Data Akun Mobile</p>
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="font-weight: bold">Name</th>
+                <th style="font-weight: bold">Email</th>
+                <th style="width: 170px; font-weight: bold">Tipe User</th>
+                <th style="width: 170px; font-weight: bold">
+                  Email Verifikasi
+                </th>
+                <th style="width: 50px; text-align: center; font-weight: bold">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <template v-if="filteredMobileAccounts.length === 0">
+                <tr>
+                  <td colspan="5" class="text-center">Data masih kosong</td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr
+                  v-for="(account, index) in filteredMobileAccounts"
+                  :key="index"
+                >
+                  <td>{{ account.name }}</td>
+                  <td>{{ account.email }}</td>
+                  <td
+                    :class="{
+                      'admin-color': account.tipe_user === 'Admin',
+                      'pengguna-color': account.tipe_user === 'Pengguna',
+                    }"
+                    style="text-align: center"
+                  >
+                    {{ account.tipe_user }}
+                  </td>
+                  <td
+                    :class="{
+                      'verified-color':
+                        account.verification === 'Terverifikasi',
+                      'not-verified-color':
+                        account.verification === 'Tidak Terverifikasi',
+                    }"
+                    style="text-align: center"
+                  >
+                    {{ account.verification }}
+                  </td>
+                  <td style="text-align: center; position: relative">
+                    <!-- Implementasi tombol aksi -->
+                    <b-icon-three-dots-vertical
+                      @click="toggleActions(index)"
+                      style="color: black"
+                    ></b-icon-three-dots-vertical>
+                    <div
+                      v-if="activeRow === index"
+                      class="actions-dropdown"
+                      style="width: max-content"
+                    >
+                      <button
+                        @click="deleteUser(account, index)"
+                        style="color: black"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -475,6 +549,10 @@ export default {
   },
 
   computed: {
+    filteredMobileAccounts() {
+      return this.dataAkun.filter((account) => account.is_mobile_user === 1);
+    },
+
     paginatedDataAkun() {
       return this.dataAkun.slice(0, this.itemsPerPage);
     },

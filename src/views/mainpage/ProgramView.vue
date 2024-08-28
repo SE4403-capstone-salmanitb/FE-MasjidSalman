@@ -767,6 +767,92 @@
             </div>
           </div>
         </div>
+        <!-- pop-up notifikasi edit -->
+        <div v-if="isNotificationVisible" :class="notificationClass">
+          <div class="row">
+            <b-icon-check-circle
+              v-if="notificationType === 'success'"
+              style="
+                margin-right: 12px;
+                margin-left: 15px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-check-circle>
+            <b-icon-exclamation-circle
+              v-if="notificationType === 'error'"
+              style="
+                margin-right: 12px;
+                margin-left: 15px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-exclamation-circle>
+            <div class="notification-header">
+              <p class="notification-title">{{ notificationMessage }}</p>
+              <p class="notification-content">{{ notificationDetail }}</p>
+            </div>
+            <b-icon-x
+              @click="closeNotification"
+              style="
+                margin-left: 47px;
+                margin-right: 12px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-x>
+          </div>
+        </div>
+        <!-- pop-up notifikasi delete -->
+        <div
+          v-if="isNotificationDeleteVisible"
+          :class="['notification-delete', notificationClass]"
+        >
+          <div class="row">
+            <b-icon-check-circle
+              v-if="notificationType === 'success'"
+              style="
+                margin-right: 12px;
+                margin-left: 15px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-check-circle>
+            <b-icon-exclamation-circle
+              v-if="notificationType === 'error'"
+              style="
+                margin-right: 12px;
+                margin-left: 15px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-exclamation-circle>
+            <div class="notification-header">
+              <p class="notification-title">
+                {{ notificationDeleteMessage }}
+              </p>
+              <p class="notification-content">
+                {{ notificationDeleteDetail }}
+              </p>
+            </div>
+            <b-icon-x
+              @click="closeNotification"
+              style="
+                margin-left: 47px;
+                margin-right: 12px;
+                margin-top: 14px;
+                width: 30px;
+                height: 30px;
+              "
+            ></b-icon-x>
+          </div>
+        </div>
+
         <!-- Pop-up Konfirmasi Delete Data Dana-->
         <div v-if="confirmDeleteDana" class="confirmation-popup">
           <div class="confirmation-card">
@@ -823,6 +909,13 @@ export default {
   },
   data() {
     return {
+      notificationMessage: "",
+      notificationDeleteMessage: "",
+      notificationDetail: "",
+      notificationDeleteDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
+      isNotificationDeleteVisible: false,
       bidangOptions: [],
       programOptions: [],
       filteredPrograms: [],
@@ -868,6 +961,14 @@ export default {
     };
   },
   computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        notifications: this.isNotificationDeleteVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
     filteredAlokasiDanaData() {
       return this.alokasiDanaData.filter((item) => {
         // Temukan laporan bulanan yang sesuai dengan program, bulan, tahun, dan id_laporan_bulanan yang dipilih
@@ -957,6 +1058,10 @@ export default {
     this.fetchPenerimaManfaatData();
   },
   methods: {
+    closeNotification() {
+      this.isNotificationVisible = false;
+      this.isNotificationDeleteVisible = false;
+    },
     fetchUserAdmin() {
       const user = JSON.parse(sessionStorage.getItem("user"));
       if (user) {
@@ -1110,12 +1215,38 @@ export default {
     async saveData(item) {
       try {
         // Simulate saving the data (make an API call here if needed)
-        await axios.put(`/api/pelaksanaan/${item.id}`, {
-          penjelasan: item.penjelasan,
-          waktu: item.waktu,
-          tempat: item.tempat,
-          penyaluran: item.penyaluran,
-        });
+        await axios
+          .put(`/api/pelaksanaan/${item.id}`, {
+            penjelasan: item.penjelasan,
+            waktu: item.waktu,
+            tempat: item.tempat,
+            penyaluran: item.penyaluran,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchPelaksanaanData();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
+
         this.isEditing = null; // Stop editing after saving
         this.fetchPelaksanaanData(); // Refresh data after saving
       } catch (error) {
@@ -1125,10 +1256,35 @@ export default {
     async saveDatas(item) {
       try {
         // Simulate saving the data (make an API call here if needed)
-        await axios.put(`/api/laporanKPIBulanan/${item.id}`, {
-          capaian: item.capaian,
-          deskripsi: item.deskripsi,
-        });
+        await axios
+          .put(`/api/laporanKPIBulanan/${item.id}`, {
+            capaian: item.capaian,
+            deskripsi: item.deskripsi,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchLaporanKPIData();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
         this.isEditing = null; // Stop editing after saving
         this.fetchLaporanKPIData(); // Refresh data after saving
       } catch (error) {
@@ -1138,13 +1294,38 @@ export default {
     async saveDataManfaat(item) {
       try {
         // Simulate saving the data (make an API call here if needed)
-        await axios.put(`/api/penerimaManfaat/${item.id}`, {
-          kategori: item.kategori,
-          tipe_rutinitas: item.tipe_rutinitas,
-          tipe_penyaluran: item.tipe_penyaluran,
-          rencana: item.rencana,
-          realisasi: item.realisasi,
-        });
+        await axios
+          .put(`/api/penerimaManfaat/${item.id}`, {
+            kategori: item.kategori,
+            tipe_rutinitas: item.tipe_rutinitas,
+            tipe_penyaluran: item.tipe_penyaluran,
+            rencana: item.rencana,
+            realisasi: item.realisasi,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchPenerimaManfaatData();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
         this.isEditing = null; // Stop editing after saving
         this.fetchPenerimaManfaatData(); // Refresh data after saving
       } catch (error) {
@@ -1154,9 +1335,34 @@ export default {
     async saveDataDana(item) {
       try {
         // Simulate saving the data (make an API call here if needed)
-        await axios.put(`/api/alokasiDana/${item.id}`, {
-          jumlah_realisasi: item.jumlah_realisasi,
-        });
+        await axios
+          .put(`/api/alokasiDana/${item.id}`, {
+            jumlah_realisasi: item.jumlah_realisasi,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchAlokasiDanaData();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
         this.isEditing = null; // Stop editing after saving
         this.fetchAlokasiDanaData(); // Refresh data after saving
       } catch (error) {
@@ -1166,7 +1372,34 @@ export default {
     async deleteRow(item) {
       try {
         // Call the API to delete the data
-        await axios.delete(`/api/pelaksanaan/${item.id}`);
+        await axios
+          .delete(`/api/pelaksanaan/${item.id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Data berhasil di hapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.filteredPelaksanaanData = this.filteredPelaksanaanData.filter(
+              (pelaksanaan) => pelaksanaan.id !== item.id
+            );
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus data: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
 
         // Remove the deleted item from the local data array (without refresh)
         this.filteredPelaksanaanData = this.filteredPelaksanaanData.filter(
@@ -1182,7 +1415,34 @@ export default {
     async deleteRowEvaluasi(item) {
       try {
         // Call the API to delete the data
-        await axios.delete(`/api/laporanKPIBulanan/${item.id}`);
+        await axios
+          .delete(`/api/laporanKPIBulanan/${item.id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Data berhasil di hapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.laporanKPIData = this.laporanKPIData.filter(
+              (kpi) => kpi.id !== item.id
+            );
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus data: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
 
         // Remove the deleted item from the local data array (without refresh)
         this.laporanKPIData = this.laporanKPIData.filter(
@@ -1212,7 +1472,34 @@ export default {
     async deleteRowDana(item) {
       try {
         // Call the API to delete the data
-        await axios.delete(`/api/alokasiDana/${item.id}`);
+        await axios
+          .delete(`/api/alokasiDana/${item.id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Data berhasil di hapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.alokasiDanaData = this.alokasiDanaData.filter(
+              (dana) => dana.id !== item.id
+            );
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus data: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
 
         // Remove the deleted item from the local data array (without refresh)
         this.alokasiDanaData = this.alokasiDanaData.filter(

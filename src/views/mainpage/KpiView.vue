@@ -85,28 +85,40 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Nama Kegiatan</th>
+                    <th>Nama</th>
                     <th>Indikator</th>
                     <th>Target</th>
                     <th style="text-align: center"></th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-if="filteredData.length === 0">
-                    <td colspan="5" style="text-align: center">
-                      Tidak ada data
-                    </td>
-                  </tr>
-                  <tr v-for="(kpi, index) in filteredData" :key="index">
+                  <tr v-for="(kpi, index) in filteredKPIData" :key="kpi.id">
                     <td>{{ index + 1 }}</td>
-                    <td>{{ kpi.nama }}</td>
-                    <td>{{ kpi.indikator }}</td>
-                    <td>{{ kpi.target }}</td>
+                    <td>
+                      {{ getProgramKegiatanName(kpi.id_program_kegiatan_kpi) }}
+                    </td>
+                    <td>
+                      <input
+                        v-if="isEditing === kpi.id"
+                        v-model="kpi.indikator"
+                        type="text"
+                      />
+                      <span v-else>{{ kpi.indikator }}</span>
+                    </td>
+                    <td>
+                      <input
+                        v-if="isEditing === kpi.id"
+                        v-model="kpi.target"
+                        type="text"
+                      />
+                      <span v-else>{{ kpi.target }}</span>
+                    </td>
                     <td style="text-align: center; position: relative">
                       <b-icon-three-dots-vertical
                         style="color: black; cursor: pointer"
                         @click="toggleDropdown(index)"
                       ></b-icon-three-dots-vertical>
+
                       <!-- Dropdown for actions -->
                       <div
                         v-if="activeRow === index"
@@ -127,7 +139,7 @@
                             border: none;
                             cursor: pointer;
                           "
-                          @click="showConfirmDeletePopup(kpi)"
+                          @click="showConfirmPopup(kpi)"
                         >
                           Delete
                         </button>
@@ -149,45 +161,129 @@
               </table>
             </div>
           </div>
-          <!-- Pop-up Konfirmasi Delete Data -->
-          <div>
-            <div v-if="confirmDelete" class="confirmation-popup">
-              <div class="confirmation-card">
-                <b-icon-exclamation-circle-fill
-                  style="color: #f24e1e; width: 126px; height: 126px"
-                ></b-icon-exclamation-circle-fill>
-                <p style="font-size: 32px; font-weight: bold">
-                  Anda yakin ingin menghapus data?
+          <!-- pop-up notifikasi edit -->
+          <div v-if="isNotificationVisible" :class="notificationClass">
+            <div class="row">
+              <b-icon-check-circle
+                v-if="notificationType === 'success'"
+                style="
+                  margin-right: 12px;
+                  margin-left: 15px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-check-circle>
+              <b-icon-exclamation-circle
+                v-if="notificationType === 'error'"
+                style="
+                  margin-right: 12px;
+                  margin-left: 15px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-exclamation-circle>
+              <div class="notification-header">
+                <p class="notification-title">{{ notificationMessage }}</p>
+                <p class="notification-content">{{ notificationDetail }}</p>
+              </div>
+              <b-icon-x
+                @click="closeNotification"
+                style="
+                  margin-left: 47px;
+                  margin-right: 12px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-x>
+            </div>
+          </div>
+          <!-- pop-up notifikasi delete -->
+          <div
+            v-if="isNotificationDeleteVisible"
+            :class="['notification-delete', notificationClass]"
+          >
+            <div class="row">
+              <b-icon-check-circle
+                v-if="notificationType === 'success'"
+                style="
+                  margin-right: 12px;
+                  margin-left: 15px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-check-circle>
+              <b-icon-exclamation-circle
+                v-if="notificationType === 'error'"
+                style="
+                  margin-right: 12px;
+                  margin-left: 15px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-exclamation-circle>
+              <div class="notification-header">
+                <p class="notification-title">
+                  {{ notificationDeleteMessage }}
                 </p>
-                <div class="confirmation-buttons">
-                  <button
-                    @click="deleteRow(selectedKPI)"
-                    style="
-                      width: 259px;
-                      height: 47px;
-                      background-color: #967c55;
-                      color: white;
-                      margin-right: 14px;
-                      font-size: 16px;
-                      font-weight: bolder;
-                    "
-                  >
-                    Hapus
-                  </button>
-                  <button
-                    @click="closePopup"
-                    style="
-                      width: 259px;
-                      height: 47px;
-                      background-color: #a4a4a3;
-                      color: black;
-                      font-size: 16px;
-                      font-weight: bolder;
-                    "
-                  >
-                    BATAL
-                  </button>
-                </div>
+                <p class="notification-content">
+                  {{ notificationDeleteDetail }}
+                </p>
+              </div>
+              <b-icon-x
+                @click="closeNotification"
+                style="
+                  margin-left: 47px;
+                  margin-right: 12px;
+                  margin-top: 14px;
+                  width: 30px;
+                  height: 30px;
+                "
+              ></b-icon-x>
+            </div>
+          </div>
+
+          <!-- Pop-up Konfirmasi Delete Data -->
+          <div v-if="confirmDelete" class="confirmation-popup">
+            <div class="confirmation-card">
+              <b-icon-exclamation-circle-fill
+                style="color: #f24e1e; width: 126px; height: 126px"
+              ></b-icon-exclamation-circle-fill>
+              <p style="font-size: 32px; font-weight: bold">
+                Anda yakin ingin menghapus data?
+              </p>
+              <div class="confirmation-buttons">
+                <button
+                  @click="deleteRow(selectedKPI)"
+                  style="
+                    width: 259px;
+                    height: 47px;
+                    background-color: #967c55;
+                    color: white;
+                    margin-right: 14px;
+                    font-size: 16px;
+                    font-weight: bolder;
+                  "
+                >
+                  Hapus
+                </button>
+                <button
+                  @click="closePopup"
+                  style="
+                    width: 259px;
+                    height: 47px;
+                    background-color: #a4a4a3;
+                    color: black;
+                    font-size: 16px;
+                    font-weight: bolder;
+                  "
+                >
+                  BATAL
+                </button>
               </div>
             </div>
           </div>
@@ -200,7 +296,7 @@
 <script>
 import Sidebar from "@/components/SidebarView.vue";
 import axios from "@/lib/axios";
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx"; // Import SheetJS library
 
 export default {
   components: {
@@ -208,34 +304,158 @@ export default {
   },
   data() {
     return {
+      notificationMessage: "",
+      notificationDeleteMessage: "",
+      notificationDetail: "",
+      notificationDeleteDetail: "",
+      notificationType: "", // error, success
+      isNotificationVisible: false,
+      isNotificationDeleteVisible: false,
       bidangOptions: [],
       programOptions: [],
       filteredPrograms: [],
-      programKegiatanOptions: [],
-      keyPerformanceIndicators: [],
+      kpiData: [], // Untuk menyimpan data KPI
+      programKegiatanKPI: [], // Untuk menyimpan data dari /api/programKegiatanKPI
 
       selectedBidang: "",
       selectedProgram: "",
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
 
-      combinedData: [],
       isEditing: null, // Track which row is being edited
       activeRow: null,
-      selectedKPI: null, // Properti untuk menyimpan KPI yang dipilih
       confirmDelete: false,
+      selectedKPI: null, // Menyimpan KPI yang dipilih untuk konfirmasi hapus
     };
   },
   mounted() {
     this.fetchBidangOptions();
     this.fetchProgramOptions();
-    this.fetchAndCombineData();
+    this.fetchKPIData(); // Panggil metode ini ketika komponen dimuat
+    this.fetchProgramKegiatanKPI(); // Panggil metode ini untuk mengambil data programKegiatanKPI
   },
   methods: {
+    exportToExcel() {
+      // Filter data KPI sesuai dengan program dan tahun yang dipilih
+      const filteredData = this.filteredKPIData.map((kpi, index) => ({
+        No: index + 1,
+        Nama: this.getProgramKegiatanName(kpi.id_program_kegiatan_kpi),
+        Indikator: kpi.indikator,
+        Target: kpi.target,
+      }));
+
+      // Buat worksheet dan workbook
+      const worksheet = XLSX.utils.json_to_sheet(filteredData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Data KPI");
+
+      // Ekspor workbook ke file Excel
+      const fileName = `Data_KPI_${this.selectedProgramName}_${this.selectedYear}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    },
+
+    closeNotification() {
+      this.isNotificationVisible = false;
+      this.isNotificationDeleteVisible = false;
+    },
+
     toggleDropdown(index) {
       this.activeRow = this.activeRow === index ? null : index;
     },
+    showConfirmPopup(kpi) {
+      this.selectedKPI = kpi; // Menyimpan KPI yang dipilih
+      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
+    },
+    closePopup() {
+      this.confirmDelete = false;
+      this.selectedKPI = null;
+    },
+    async deleteRow(kpi) {
+      try {
+        // Kirim permintaan DELETE ke server
+        await axios
+          .delete(`/api/keyPerformanceIndicator/${kpi.id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Data berhasil di hapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.kpiData = this.kpiData.filter((item) => item.id !== kpi.id);
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus data: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
 
+        // Hapus data dari tampilan lokal setelah penghapusan berhasil
+        this.kpiData = this.kpiData.filter((item) => item.id !== kpi.id);
+
+        // Tutup popup konfirmasi
+        this.confirmDelete = false;
+        this.selectedKPI = null;
+      } catch (error) {
+        console.error("Failed to delete data:", error);
+        // Tambahkan penanganan kesalahan jika perlu
+      }
+    },
+    toggleEdit(kpi) {
+      // Mengganti item dengan kpi
+      if (this.isEditing === kpi.id) {
+        this.saveData(kpi); // Panggil metode untuk menyimpan data yang diedit
+      } else {
+        this.isEditing = kpi.id;
+      }
+    },
+    async saveData(kpi) {
+      try {
+        // Lakukan update data ke server
+        await axios
+          .put(`/api/keyPerformanceIndicator/${kpi.id}`, {
+            indikator: kpi.indikator,
+            target: kpi.target,
+          })
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationMessage = "Berhasil";
+            this.notificationDetail = "Data berhasil di Edit";
+            this.notificationType = "success";
+            this.isNotificationVisible = true;
+            setTimeout(() => {
+              this.notificationMessage = "";
+              this.notificationDetail = "";
+              this.notificationType = "";
+              this.isNotificationVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+            // Redirect to RKA page after successful submission
+            this.fetchKPIData();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationMessage = "Gagal";
+            this.notificationDetail =
+              "Gagal edit data " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationVisible = true;
+            console.error("Error:", error.response.data);
+          });
+        this.isEditing = null; // Keluar dari mode edit setelah menyimpan
+      } catch (error) {
+        console.error("Failed to save data:", error);
+      }
+    },
     async fetchBidangOptions() {
       try {
         const response = await axios.get("/api/bidang");
@@ -261,83 +481,28 @@ export default {
       }
     },
 
+    async fetchKPIData() {
+      try {
+        const response = await axios.get("/api/keyPerformanceIndicator");
+        this.kpiData = response.data; // Simpan data KPI yang diambil dari API
+      } catch (error) {
+        console.error("Failed to fetch KPI data:", error);
+      }
+    },
+
     async fetchProgramKegiatanKPI() {
       try {
         const response = await axios.get("/api/programKegiatanKPI");
-        this.programKegiatanOptions = response.data;
+        this.programKegiatanKPI = response.data; // Simpan data dari API programKegiatanKPI
       } catch (error) {
-        console.error("Failed to fetch program kegiatan KPI:", error);
+        console.error("Failed to fetch Program Kegiatan KPI data:", error);
       }
     },
-    async fetchAndCombineData() {
-      try {
-        const [programKegiatanResponse, keyPerformanceIndicatorResponse] =
-          await Promise.all([
-            axios.get("/api/programKegiatanKPI"),
-            axios.get("/api/keyPerformanceIndicator"),
-          ]);
 
-        const programKegiatanOptions = programKegiatanResponse.data;
-        const keyPerformanceIndicators = keyPerformanceIndicatorResponse.data;
-
-        // Gabungkan data berdasarkan id_program_kegiatan_kpi
-        this.combinedData = programKegiatanOptions
-          .map((kegiatan) => {
-            const relatedKPIs = keyPerformanceIndicators.filter(
-              (kpi) => kpi.id_program_kegiatan_kpi === kegiatan.id
-            );
-
-            if (relatedKPIs.length > 0) {
-              // Jika ada data KPI yang sesuai
-              return relatedKPIs.map((kpi) => ({
-                ...kegiatan,
-                indikator: kpi.indikator,
-                target: kpi.target,
-              }));
-            } else {
-              // Jika tidak ada data KPI yang sesuai
-              return {
-                ...kegiatan,
-                indikator: "",
-                target: "",
-              };
-            }
-          })
-          .flat() // Menggunakan .flat() untuk meratakan array jika ada beberapa KPI
-          .sort((a, b) => a.id - b.id); // Mengurutkan data berdasarkan ID secara ascending
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-      }
-    },
-    exportToExcel() {
-      // Ambil data dari tabel yang difilter
-      const dataToExport = this.filteredData.map((kpi, index) => ({
-        No: index + 1,
-        "Nama Kegiatan": kpi.nama,
-        Indikator: kpi.indikator,
-        Target: kpi.target,
-      }));
-
-      // Buat worksheet dari data
-      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-
-      // Buat workbook baru dan tambahkan worksheet
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "KPI Data");
-
-      // Generate file Excel dan trigger download
-      XLSX.writeFile(workbook, `KPI_Data_${this.selectedYear}.xlsx`);
-    },
     goToInputPage() {
       this.$router.push({ path: "/input" });
     },
-    showConfirmDeletePopup(kpi) {
-      this.selectedKPI = kpi; // Simpan KPI yang akan dihapus
-      this.confirmDelete = true; // Tampilkan pop-up konfirmasi
-    },
-    closePopup() {
-      this.confirmDelete = false;
-    },
+
     filterPrograms() {
       this.filteredPrograms = this.programOptions.filter(
         (program) => program.id_bidang === this.selectedBidang
@@ -361,54 +526,23 @@ export default {
       return years;
     },
 
-    toggleEdit(item) {
-      if (this.isEditing === item.id) {
-        this.saveData(item);
-      } else {
-        this.isEditing = item.id;
-      }
-    },
-
-    async deleteRow(kpi) {
-      try {
-        if (kpi.nama && kpi.indikator && kpi.target) {
-          // Hapus data indikator dan target menggunakan API
-          await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
-          await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
-        } else {
-          if (kpi.nama) {
-            await axios.delete(`/api/programKegiatanKPI/${kpi.id}`);
-          }
-          if (kpi.indikator || kpi.target) {
-            await axios.delete(`/api/keyPerformanceIndicator/${kpi.id}`);
-          }
-        }
-
-        // Perbarui data setelah penghapusan
-        this.fetchAndCombineData();
-
-        // Tutup pop-up konfirmasi setelah penghapusan berhasil
-        this.closePopup();
-      } catch (error) {
-        console.error("Failed to delete row:", error);
-        alert(
-          `Failed to delete the row: ${error.response?.status} - ${
-            error.response?.data?.message || error.message
-          }`
-        );
-      }
-    },
-    getIndicatorAndTarget(idKpi) {
-      const kpi = this.keyPerformanceIndicators.find(
-        (indicator) => indicator.id === idKpi
+    getProgramKegiatanName(id) {
+      const programKegiatan = this.programKegiatanKPI.find(
+        (item) => item.id === id
       );
-      return kpi
-        ? { indikator: kpi.indikator, target: kpi.target }
-        : { indikator: "", target: "" };
+      return programKegiatan ? programKegiatan.nama : "";
     },
   },
 
   computed: {
+    notificationClass() {
+      return {
+        notification: this.isNotificationVisible,
+        notifications: this.isNotificationDeleteVisible,
+        "notification-error": this.notificationType === "error",
+        "notification-success": this.notificationType === "success",
+      };
+    },
     selectedProgramName() {
       const program = this.programOptions.find(
         (program) => program.id === this.selectedProgram
@@ -416,19 +550,17 @@ export default {
       return program ? program.nama : "";
     },
 
-    filteredKPI() {
-      // Filter KPI berdasarkan selectedProgram dan urutkan berdasarkan ID
-      return this.programKegiatanOptions
-        .filter((kpi) => kpi.id_program === this.selectedProgram)
-        .sort((a, b) => a.id - b.id); // Mengurutkan berdasarkan ID secara ascending
-    },
-    filteredData() {
-      // Filter combinedData berdasarkan id_program dan selectedYear
-      return this.combinedData.filter(
-        (item) =>
-          item.id_program === this.selectedProgram &&
-          item.tahun === this.selectedYear // Pastikan tahun sesuai dengan yang dipilih
-      );
+    filteredKPIData() {
+      return this.kpiData.filter((kpi) => {
+        const programKegiatan = this.programKegiatanKPI.find(
+          (item) => item.id === kpi.id_program_kegiatan_kpi
+        );
+        return (
+          programKegiatan &&
+          programKegiatan.id_program === this.selectedProgram &&
+          programKegiatan.tahun === this.selectedYear
+        );
+      });
     },
   },
 
@@ -436,6 +568,8 @@ export default {
     selectedProgram(newVal) {
       if (newVal === "Tambah Program") {
         this.navigateToInputProgram();
+      } else {
+        this.fetchKPIData(); // Ambil data KPI setiap kali program berubah
       }
     },
     selectedBidang(newVal) {
