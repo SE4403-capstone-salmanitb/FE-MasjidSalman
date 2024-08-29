@@ -397,14 +397,7 @@
           />
         </div>
 
-        <div
-          class="tombol-submit"
-          type="submit"
-          @click="store"
-          style="margin-bottom: 80px"
-        >
-          Daftarkan
-        </div>
+        <div class="tombol-submit" type="submit" @click="store">Daftarkan</div>
         <!-- Error messages -->
         <div
           v-if="Object.keys(registerErrors).length > 0"
@@ -746,7 +739,6 @@ export default {
 
 .regist {
   font-weight: bold;
-  margin-top: 80px;
 
   font-size: 32px;
 }
