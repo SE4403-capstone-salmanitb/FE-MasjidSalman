@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { ref } from "vue";
 import axios from "@/lib/axios"; // Sesuaikan path sesuai struktur proyek Anda
 
 const email = ref("");
@@ -89,13 +89,48 @@ const onSubmit = async () => {
 
   try {
     await axios.get("sanctum/csrf-cookie");
+
+    // Logout setelah permintaan CSRF
+    await axios
+      .post("/logout")
+      .then(() => {
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("bearer");
+      })
+      .catch((e) => {
+        console.error("Error saat logout setelah CSRF:", e.response);
+        return e.response;
+      });
+
     try {
       const result = await axios.post("/login", form);
       if (result.status !== 200) {
         throw new Error(result.data);
       }
+
+      const user = result.data.user;
+
+      // Cek jika is_mobile_user adalah 1
+      if (user.is_mobile_user === 1) {
+        // Logout pengguna
+        await axios
+          .post("/logout")
+          .then(() => {
+            sessionStorage.removeItem("user");
+            sessionStorage.removeItem("bearer");
+          })
+          .catch((e) => {
+            console.error("Error saat logout:", e.response);
+            return e.response;
+          });
+
+        // Tampilkan pesan error
+        errorMessage.value = "Login tidak diperbolehkan untuk pengguna mobile.";
+        return;
+      }
+
       // Simpan data pengguna di session storage
-      sessionStorage.setItem("user", JSON.stringify(result.data.user));
+      sessionStorage.setItem("user", JSON.stringify(user));
       sessionStorage.setItem("bearer", result.data.access_token);
       window.location.href = "/profile";
     } catch (error) {
@@ -109,16 +144,22 @@ const onSubmit = async () => {
   } catch (error) {
     console.error("Error dengan CSRF atau jaringan:", error);
     errorMessage.value = "Kesalahan jaringan. Silakan coba lagi nanti.";
+
+    // Logout setelah permintaan CSRF gagal (opsional, jika diperlukan)
+    await axios
+      .post("/logout")
+      .then(() => {
+        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("bearer");
+      })
+      .catch((e) => {
+        console.error("Error saat logout setelah CSRF gagal:", e.response);
+        return e.response;
+      });
   } finally {
     isLoading.value = false;
   }
 };
-
-onMounted(() => {
-  if (sessionStorage.getItem("bearer") != null) {
-    window.location.href = "/profile";
-  }
-});
 </script>
 
 <style scoped>
