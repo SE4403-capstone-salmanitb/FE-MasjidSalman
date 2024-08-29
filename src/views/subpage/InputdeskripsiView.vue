@@ -241,8 +241,13 @@ export default {
       axios
         .get("/api/laporanBulanan")
         .then((response) => {
-          console.log("API Response:", response.data); // Log response data
           this.LaporanBulanan = response.data;
+
+          var user = JSON.parse(sessionStorage.getItem("user"));
+
+          this.LaporanBulanan = this.LaporanBulanan.filter(
+            (laporan) => laporan.disusun_oleh === user.id
+          );
         })
         .catch((error) => {
           console.error("Error fetching Laporan Bulanan:", error);

@@ -49,9 +49,7 @@
           <form>
             <div class="card-container1">
               <div class="mb-3">
-                <label for="id_program" class="form-label"
-                  >Nama Laporan Bulanan</label
-                >
+                <label for="id_program" class="form-label">Kode Program</label>
                 <select
                   style="width: 100%"
                   class="form-control"
@@ -203,31 +201,51 @@ export default {
       axios
         .get("/api/laporanBulanan")
         .then((response) => {
-          console.log("API Response:", response.data); // Log response data
           this.LaporanBulanan = response.data;
+
+          var user = JSON.parse(sessionStorage.getItem("user"));
+
+          this.LaporanBulanan = this.LaporanBulanan.filter(
+            (laporan) => laporan.disusun_oleh === user.id
+          );
         })
         .catch((error) => {
           console.error("Error fetching Laporan Bulanan:", error);
         });
     },
     fetchKegiatanKPI() {
-      axios
-        .get("/api/keyPerformanceIndicator")
-        .then((response) => {
-          console.log("API Response:", response.data); // Log response data
-          this.KegiatanKPI = response.data;
-        })
-        .catch((error) => {
-          console.error("Error fetching Laporan Bulanan:", error);
-        });
+      if (this.form.id_laporan_bulanan) {
+        var selectedLaporan = this.LaporanBulanan.find(
+          (laporan) => laporan.id == this.form.id_laporan_bulanan
+        );
+
+        axios
+          .get(
+            "/api/custom/RKAKPI?year=" +
+              selectedLaporan.bulan_laporan.split("-")[0] +
+              "&id_program=" +
+              selectedLaporan.program_id
+          )
+          .then((response) => {
+            var tempData = [];
+            response.data.forEach((element) => {
+              tempData = tempData.concat(element.kpi);
+            });
+
+            console.log(tempData);
+            this.KegiatanKPI = tempData;
+          });
+      }
     },
     updateIdLaporanBulanan() {
       const selectedProgram = this.LaporanBulanan.find(
         (program) => program.kode === this.form.kode
       );
       console.log("Selected Program:", selectedProgram); // Log selected program
+
       if (selectedProgram) {
         this.form.id_laporan_bulanan = selectedProgram.id;
+        this.fetchKegiatanKPI();
       }
     },
     updateIdKegiatanKPI() {
