@@ -70,16 +70,6 @@
               </div>
             </div>
 
-            <div class="box-text-kpi">
-              <p class="text-area">{{ selectedProgramName }}</p>
-              <div class="additional-text">
-                <div class="container-box">
-                  <button type="button" class="btn" @click="goToInputPage">
-                    <b-icon-plus></b-icon-plus>
-                  </button>
-                </div>
-              </div>
-            </div>
             <div class="table-kpi">
               <table class="table table-fixed-width">
                 <thead>
