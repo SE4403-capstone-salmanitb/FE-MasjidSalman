@@ -8,32 +8,60 @@
         </div>
         <div class="container text-center">
           <div class="row">
+            <div class="tahun">Bidang</div>
+            <div class="tahun1">
+              <div class="dropdown1" style="width: fit-content; height: 38px">
+                <select
+                  class="m-md-2"
+                  style="width: fit-content; height: 38px"
+                  v-model="selectedBidang"
+                >
+                  <option
+                    v-for="bidang in bidangOptions"
+                    :key="bidang.id"
+                    :value="bidang.id"
+                  >
+                    {{ bidang.nama }}
+                  </option>
+                  <option value="Tambah Bidang">Tambah Bidang</option>
+                </select>
+              </div>
+            </div>
             <div class="teks">Program</div>
             <div class="dropdown1">
-              <b-dropdown
+              <select
+                v-model="selectedProgram"
                 id="dropdown-1"
                 class="m-md-2"
                 variant="outline"
-                :text="selectedOption"
-                v-model="selectedOptionIndex"
-                dropup
               >
-                <b-dropdown-item
-                  @click="selectOption(index)"
-                  v-for="(option, index) in programOptions"
-                  :key="'program' + index"
+                <option disabled value="">Pilih program</option>
+                <option
+                  v-for="program in filteredPrograms"
+                  :key="program.id"
+                  :value="program.id"
                 >
-                  {{ option.nama }}
-                </b-dropdown-item>
-              </b-dropdown>
+                  {{ program.nama }}
+                </option>
+                <option value="Tambah Program">Tambahkan Program</option>
+              </select>
             </div>
-            <div class="tombol">
-              <div class="print">
-                <button type="button" class="btn">
-                  <b-icon-printer-fill
-                    style="width: 20px; height: 20px"
-                  ></b-icon-printer-fill>
-                </button>
+            <div class="teks">Bulan</div>
+            <div class="bulan1">
+              <div class="dropdown1">
+                <select
+                  v-model="selectedMonth"
+                  class="m-md-2"
+                  style="width: 120px; height: 38px"
+                >
+                  <option
+                    v-for="(month, index) in months"
+                    :key="index"
+                    :value="index + 1"
+                  >
+                    {{ month }}
+                  </option>
+                </select>
               </div>
             </div>
             <div class="tahun">Tahun</div>
@@ -44,88 +72,84 @@
                   class="m-md-2"
                   style="width: 90px; height: 38px"
                 >
-                  <option
-                    v-for="year in years"
-                    :key="'year' + year"
-                    :value="year"
-                  >
+                  <option v-for="year in years" :key="year" :value="year">
                     {{ year }}
                   </option>
                 </select>
               </div>
             </div>
           </div>
-          <div class="description-container">
-            <div class="description-box1">
-              <p class="description-text1">Deskripsi Pelaksanaan Kegiatan</p>
-            </div>
-            <div class="tombol-plus">
-              <div class="print" style="margin-top: 12px">
-                <button type="button" class="btn" style="font-size: 25px">
-                  <b-icon-plus></b-icon-plus>
-                </button>
-              </div>
-            </div>
-          </div>
           <div
-            class="text-left"
-            v-for="(activity, index) in activityNames"
-            :key="'activity1-' + index"
+            class="print-tombol"
+            style="text-align: start; margin-left: 15px"
           >
-            <p>{{ activity.nama }}</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">Nama</th>
-                  <th scope="col">Waktu</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ activity.nama }}</td>
-                  <td>{{ activity.waktu }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <button
+              type="button"
+              style="margin-right: 10px"
+              class="acc"
+              @click="showAccModal"
+            >
+              Data Program
+            </button>
+            <button type="button" class="acc" @click="showAccModal">
+              ACC Data
+            </button>
+            <button type="button" class="print-icon" style="margin-left: 10px">
+              <b-icon-file-earmark-spreadsheet-fill
+                style="width: 20px; height: 20px"
+              ></b-icon-file-earmark-spreadsheet-fill>
+            </button>
           </div>
-          <div class="description-container">
-            <div class="description-box1">
-              <p class="description-text1">Evaluasi Kegiatan</p>
-            </div>
-            <div class="tombol-plus">
-              <div class="print" style="margin-top: 12px">
-                <button type="button" class="btn" style="font-size: 25px">
-                  <b-icon-plus></b-icon-plus>
-                </button>
-              </div>
+          <div class="penyusun">
+            <div class="profile-susun"></div>
+
+            <div class="nama-penyusun">
+              <p
+                style="
+                  font-size: 16px;
+                  font-weight: 700;
+                  color: gray;
+                  margin-top: 15px;
+                  margin-bottom: 0%;
+                "
+              >
+                Disusun oleh :
+              </p>
+              <p style="text-align: left; margin-top: 0%">tes</p>
             </div>
           </div>
-          <div class="evaluation-box">
-            <p class="evaluation-text">
-              {{ selectedOption }}
+
+          <b-modal
+            id="acc-modal"
+            ref="accModal"
+            hide-footer
+            title="Konfirmasi ACC Data"
+          >
+            <p class="teks-konfirmasi" style="margin-bottom: 15px">
+              Apakah anda ingin melakukan acc pada data?
             </p>
-          </div>
-          <div
-            class="text-left"
-            v-for="(activity, index) in activityNames"
-            :key="'activity2-' + index"
-          >
-            <p>{{ activity.nama }}</p>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th scope="col">Indikator</th>
-                  <th scope="col">Target</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>{{ activity.indikator }}</td>
-                  <td>{{ activity.waktu }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+            <p class="info" style="margin-bottom: 30px">
+              Saat anda memilih ya, maka seluruh data tidak akan dapat diubah
+              lagi!
+            </p>
+            <div class="tombol-konfirmasi">
+              <b-button
+                variant="secondary"
+                @click="hideAccModal"
+                style="width: 200px"
+                >Tidak</b-button
+              >
+              <b-button
+                style="
+                  background-color: #967c55;
+                  margin-left: 15px;
+                  width: 200px;
+                "
+                @click="confirmAccData"
+                >Ya</b-button
+              >
+            </div>
+          </b-modal>
         </div>
       </div>
     </div>
@@ -142,52 +166,71 @@ export default {
   },
   data() {
     return {
+      bidangOptions: [],
       programOptions: [],
-      selectedOptionIndex: null,
-      selectedProgramId: null,
+
+      filteredPrograms: [],
+      selectedBidang: "",
+      selectedProgram: "",
       selectedYear: new Date().getFullYear(),
       years: this.generateYears(),
-      activityNames: [], // Untuk menyimpan data kegiatan yang diambil dari API
-      keyPerformanceIndicators: [], // Untuk menyimpan data indikator dan target dari API KPI
+      selectedMonth: new Date().getMonth() + 1,
+      months: [
+        "Januari",
+        "Februari",
+        "Maret",
+        "April",
+        "Mei",
+        "Juni",
+        "Juli",
+        "Agustus",
+        "September",
+        "Oktober",
+        "November",
+        "Desember",
+      ],
     };
   },
-  computed: {
-    selectedOption() {
-      return this.selectedOptionIndex !== null
-        ? this.programOptions[this.selectedOptionIndex].nama
-        : "PROGRAM KEPUSTAKAAN";
-    },
-  },
   mounted() {
+    this.fetchBidangOptions();
     this.fetchProgramOptions();
-    this.fetchActivityNames(); // Mengambil data kegiatan saat komponen dimuat
-    this.fetchKeyPerformanceIndicators(); // Mengambil data KPI saat komponen dimuat
   },
   methods: {
+    async fetchBidangOptions() {
+      try {
+        const response = await axios.get("/api/bidang");
+        this.bidangOptions = response.data;
+
+        const defaultBidang = this.bidangOptions.find(
+          (bidang) => bidang.id === 1
+        );
+        if (defaultBidang) {
+          this.selectedBidang = defaultBidang.id;
+        }
+      } catch (error) {
+        console.error("Failed to fetch bidang options:", error);
+      }
+    },
     async fetchProgramOptions() {
       try {
         const response = await axios.get("/api/program");
-        this.programOptions = response.data; // Mengisi programOptions dengan hasil dari API program
+        this.programOptions = response.data;
+        this.filterPrograms();
       } catch (error) {
-        console.error("Error fetching program options:", error);
+        console.error("Failed to fetch program options:", error);
       }
     },
-    async fetchActivityNames() {
-      try {
-        const response = await axios.get("/api/custom/RKAKPI");
-        this.activityNames = response.data; // Mengisi activityNames dengan hasil dari API RKAKPI
-      } catch (error) {
-        console.error("Error fetching activity names:", error);
-        this.activityNames = [{ nama: "Error fetching data" }];
-      }
+
+    filterPrograms() {
+      this.filteredPrograms = this.programOptions.filter(
+        (program) => program.id_bidang === this.selectedBidang
+      );
     },
-    async fetchKeyPerformanceIndicators() {
-      try {
-        const response = await axios.get("/api/keyPerformanceIndicator");
-        this.keyPerformanceIndicators = response.data; // Mengisi keyPerformanceIndicators dengan hasil dari API KPI
-      } catch (error) {
-        console.error("Error fetching key performance indicators:", error);
-      }
+    navigateToInputProgram() {
+      this.$router.push({ path: "/inputprogram" });
+    },
+    navigateToInputBidang() {
+      this.$router.push({ path: "/inputbidang" });
     },
     generateYears() {
       const currentYear = new Date().getFullYear();
@@ -197,195 +240,60 @@ export default {
       }
       return years;
     },
+    showAccModal() {
+      this.$refs.accModal.show();
+    },
+    hideAccModal() {
+      this.$refs.accModal.hide();
+    },
+    confirmAccData() {
+      // Handle the ACC Data confirmation logic here
+      this.hideAccModal();
+      // Add your logic to handle the ACC Data confirmation here
+      console.log("ACC Data confirmed");
+    },
+  },
+  computed: {
+    selectedProgramName() {
+      const program = this.programOptions.find(
+        (program) => program.id === this.selectedProgram
+      );
+      return program ? program.nama : "";
+    },
+  },
+
+  watch: {
+    selectedProgram(newVal) {
+      if (newVal === "Tambah Program") {
+        this.navigateToInputProgram();
+      }
+    },
+    selectedBidang(newVal) {
+      if (newVal === "Tambah Bidang") {
+        this.navigateToInputBidang();
+      } else {
+        this.filterPrograms();
+      }
+    },
   },
 };
 </script>
 
 <style>
-.description-box {
-  height: 35px;
-  width: 265px;
-  background-color: #967c55;
-  margin-bottom: 24px; /* Jarak antara kotak dan teks */
+.penyusun {
   display: flex;
-  align-items: center; /* Untuk memusatkan vertikal teks di dalam kotak */
-  justify-content: center; /* Untuk memusatkan horizontal teks di dalam kotak */
-}
-
-.description-text {
-  color: white; /* Warna teks di dalam kotak */
-  font-weight: bold; /* Ketebalan teks di dalam kotak */
-  margin-top: 10px;
-  text-align: center; /* Untuk memusatkan teks di dalam kotak */
-}
-
-.description-container {
-  display: flex;
-
-  align-items: center; /* Untuk memusatkan vertikal elemen di dalam kontainer */
-}
-
-.description-box1 {
-  height: 35px;
-  width: 265px;
-  background-color: #967c55;
-  margin-top: 24px;
-  margin-bottom: 14px; /* Jarak antara kotak dan teks */
-
-  display: flex;
-}
-
-.description-text1 {
-  color: white; /* Warna teks di dalam kotak */
-  font-weight: bold; /* Ketebalan teks di dalam kotak */
-  margin-top: 6px;
-  margin-left: 5px;
-  text-align: start;
-}
-
-.text-left {
-  text-align: left;
-
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.table-container {
-  padding-left: 24px;
-  padding-right: 17px;
-}
-
-.table {
-  width: calc(100% - 41px); /* 24px (padding kiri) + 17px (padding kanan) */
-  border-collapse: collapse;
-}
-
-.table th,
-.table td {
-  border: 1px solid #dddddd;
-  text-align: left;
-  padding: 8px;
-}
-
-.table th {
-  background-color: #f2f2f2;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.Row1 {
-  background-color: #d9d9d9;
-  margin-left: 24px;
-  margin-bottom: 16px;
-}
-
-.Row1 .text-dana {
-  font-size: 14px;
-  margin-left: 12px;
-  margin-top: 14px;
-}
-
-.card-container {
-  padding-left: 260px; /* Lebar sidebar + jarak antara sidebar dan kartu */
-  padding-top: 33px;
-  overflow-y: auto;
-}
-
-.card-container .card {
-  background-color: white;
-}
-
-.kepala {
-  background-color: #967c55;
-  height: 70px;
-  width: 1149px;
-}
-
-.kepala p {
-  font-size: 24px;
-  font-weight: 800;
-  color: white;
-  margin-top: 18px;
-  margin-left: 24px;
-}
-
-.teks {
-  margin-left: 19px;
-  margin-top: 30px;
-  color: black;
-  font-size: 15px;
-  font-weight: bold;
-}
-
-.dropdown {
-  margin-top: 14px;
-  margin-bottom: 38px;
-}
-
-.dropdown .m-md-2 {
-  border: 1px solid black;
-  background-color: white;
-}
-
-.tombol {
-  display: flex;
-  margin-top: 27px;
-  margin-left: 5px;
-}
-
-.tahun {
-  margin-top: 30px;
-  font-weight: bold;
-}
-
-.bulan {
-  margin-top: 30px;
-  font-weight: bold;
-}
-
-.tombol .btn {
-  background-color: #967c55;
-  font-size: 12px;
-  font-weight: bold;
-  height: 30px;
-  width: 75px;
-  color: white;
-}
-
-.tombol .btn:hover {
-  color: white;
-}
-
-.print {
-  margin-left: 8px;
-}
-
-.print .btn {
-  background-color: #967c55;
-  height: 30px;
-  width: 30px;
   align-content: center;
-  color: white;
-  display: flex; /* Menggunakan flexbox */
-  justify-content: center; /* Untuk membuat konten berada di tengah */
-  align-items: center; /* Untuk memusatkan vertikal jika diperlukan */
+  align-items: center;
+  background-color: red;
 }
 
-.evaluation-box {
-  height: 40px;
-  width: 1108px;
-  background-color: #d9d9d9;
-  margin-top: 24px; /* Jarak antara kotak dan teks */
+.profile-susun {
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  background-color: gray;
 
-  margin-bottom: 16px;
-  display: flex;
-}
-
-.evaluation-text {
-  color: black; /* Warna teks di dalam kotak */
-  font-weight: bold; /* Ketebalan teks di dalam kotak */
-  text-align: start;
-  margin-top: 8px;
+  margin-right: 6px;
   margin-left: 15px;
 }
 </style>

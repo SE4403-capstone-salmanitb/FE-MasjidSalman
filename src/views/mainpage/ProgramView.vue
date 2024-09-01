@@ -161,7 +161,7 @@
             </div>
             <div class="tombol-tambah" @click="goToInputDeskripsi">
               <b-icon-plus
-                style="margin-bottom: 3px"
+                style="align-items: center, align-content: center. margin-top:15px;"
                 @click="goToInputDeskripsi"
               ></b-icon-plus>
             </div>
@@ -283,7 +283,7 @@
             </div>
             <div class="tombol-tambah" @click="goToInputEvaluasi">
               <b-icon-plus
-                style="margin-bottom: 3px"
+                style="align-items: center, align-content: center. margin-top:15px;"
                 @click="goToInputEvaluasi"
               ></b-icon-plus>
             </div>
@@ -385,7 +385,7 @@
             </div>
             <div class="tombol-tambah" @click="goToInputPenerima">
               <b-icon-plus
-                style="margin-bottom: 3px"
+                style="align-items: center, align-content: center. margin-top:15px;"
                 @click="goToInputPenerima"
               ></b-icon-plus>
             </div>
@@ -519,7 +519,7 @@
             </div>
             <div class="tombol-tambah" @click="goToInputPengguna">
               <b-icon-plus
-                style="margin-bottom: 3px"
+                style="align-items: center, align-content: center. margin-top:15px;"
                 @click="goToInputPengguna"
               ></b-icon-plus>
             </div>
@@ -1827,9 +1827,10 @@ export default {
 }
 
 .tombol-tambah {
+  align-content: center;
+  align-items: center;
   margin-left: 4px;
-  margin-top: 6px;
-  height: 31px;
+  height: 45px;
   width: 31px;
   font-size: 24px;
   color: white;
