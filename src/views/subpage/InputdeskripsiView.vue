@@ -48,50 +48,43 @@
         <div class="container">
           <form>
             <div class="card-container1">
-              <div class="row">
-                <div class="mb-3">
-                  <label
-                    for="id_program"
-                    class="form-label"
-                    style="padding-left: 18px"
-                    >Kode Program</label
+              <div class="mb-3">
+                <label for="id_program" class="form-label">Kode Program</label>
+                <select
+                  style="width: 100%"
+                  class="form-control"
+                  v-model="form.kode"
+                  @change="updateIdLaporanBulanan"
+                  required
+                >
+                  <option
+                    v-for="program in LaporanBulanan"
+                    :key="program.id"
+                    :value="program.kode"
                   >
-                  <select
-                    style="width: 511px"
-                    class="form-control"
-                    v-model="form.kode"
-                    @change="updateIdLaporanBulanan"
-                    required
+                    {{ program.kode }}
+                  </option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="id_program" class="form-label"
+                  >Nama Kegiatan KPI</label
+                >
+                <select
+                  style="width: 100%"
+                  class="form-control"
+                  v-model="form.nama"
+                  @change="updateIdKegiatanKPI"
+                  required
+                >
+                  <option
+                    v-for="program in filteredKegiatanKPI"
+                    :key="program.id"
+                    :value="program.nama"
                   >
-                    <option
-                      v-for="program in LaporanBulanan"
-                      :key="program.id"
-                      :value="program.kode"
-                    >
-                      {{ program.kode }}
-                    </option>
-                  </select>
-                </div>
-                <div class="mb-3">
-                  <label for="id_program" class="form-label"
-                    >Nama Kegiatan KPI</label
-                  >
-                  <select
-                    style="width: 511px"
-                    class="form-control"
-                    v-model="form.nama"
-                    @change="updateIdKegiatanKPI"
-                    required
-                  >
-                    <option
-                      v-for="program in filteredKegiatanKPI"
-                      :key="program.id"
-                      :value="program.nama"
-                    >
-                      {{ program.nama }}
-                    </option>
-                  </select>
-                </div>
+                    {{ program.nama }}
+                  </option>
+                </select>
               </div>
 
               <div
