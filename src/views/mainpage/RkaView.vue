@@ -1208,9 +1208,20 @@ export default {
       );
     },
     filterPrograms() {
-      this.filteredPrograms = this.programOptions.filter(
+      // Filter program berdasarkan bidang yang dipilih
+      const filtered = this.programOptions.filter(
         (program) => program.id_bidang === this.selectedBidang
       );
+
+      // Menggunakan Set untuk menghapus duplikat berdasarkan nama program
+      const uniquePrograms = Array.from(
+        new Set(filtered.map((program) => program.nama))
+      ).map((nama) => {
+        return filtered.find((program) => program.nama === nama);
+      });
+
+      // Atur hasil yang telah difilter dan dihapus duplikatnya ke filteredPrograms
+      this.filteredPrograms = uniquePrograms;
     },
     navigateToInputProgram() {
       this.$router.push({ path: "/inputprogram" });
