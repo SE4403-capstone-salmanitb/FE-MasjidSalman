@@ -57,6 +57,7 @@
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Program</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -72,8 +73,11 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="nama" class="form-label">Nama Kegiatan</label>
+                    <label for="nama" class="form-label"
+                      >Nama Program-Kegiatan</label
+                    >
                     <input
+                      placeholder="Produksi Buku"
                       type="string"
                       class="form-control"
                       id="nama1"
@@ -85,6 +89,7 @@
                   <div class="mb-3">
                     <label for="tahun" class="form-label">Tahun</label>
                     <input
+                      placeholder="2024"
                       type="string"
                       class="form-control"
                       id="tahun1"
@@ -96,6 +101,7 @@
                   <div class="mb-3">
                     <label for="idkpi" class="form-label">ID Program</label>
                     <input
+                      placeholder="1"
                       type="string"
                       class="form-control"
                       id="idkpi1"
@@ -116,7 +122,7 @@
             <div class="card-container1">
               <div class="mb-3">
                 <label for="id_program" class="form-label"
-                  >Nama Program Kegiatan KPI</label
+                  >Nama Program Kegiatan</label
                 >
                 <select
                   style="width: 100%"
@@ -125,6 +131,7 @@
                   @change="updateIdProgramKpi"
                   required
                 >
+                  <option value="" disabled>Pilih Program Kegiatan</option>
                   <option
                     v-for="program in programKegiatanOptions"
                     :key="program.id"
@@ -140,10 +147,9 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="indikator" class="form-label"
-                      >Key Performance</label
-                    >
+                    <label for="indikator" class="form-label">KPI</label>
                     <input
+                      placeholder="Jumlah buku baru ber-ISBN"
                       type="string"
                       class="form-control"
                       id="indikator1"
@@ -155,6 +161,7 @@
                   <div class="mb-3">
                     <label for="target" class="form-label">Target</label>
                     <input
+                      placeholder="Minimal 4 judul dalam setahun"
                       type="string"
                       class="form-control"
                       id="target1"
@@ -166,6 +173,7 @@
                   <div class="mb-3">
                     <label for="idkpi" class="form-label">ID_KPI</label>
                     <input
+                      placeholder="1"
                       type="string"
                       class="form-control"
                       id="idkpi1"

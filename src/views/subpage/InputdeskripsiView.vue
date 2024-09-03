@@ -57,6 +57,7 @@
                   @change="updateIdLaporanBulanan"
                   required
                 >
+                  <option value="" disabled>Pilih Kode Program</option>
                   <option
                     v-for="program in LaporanBulanan"
                     :key="program.id"
@@ -77,6 +78,7 @@
                   @change="updateIdKegiatanKPI"
                   required
                 >
+                  <option value="" disabled>Pilih Kegiatan KPI</option>
                   <option
                     v-for="program in filteredKegiatanKPI"
                     :key="program.id"
@@ -94,9 +96,11 @@
                 <div class="form">
                   <div class="mb-3">
                     <label for="penjelasan" class="form-label"
-                      >Penjelasan</label
+                      >Nama dan Penjelasan Singkat</label
                     >
                     <input
+                      placeholder="Layanan Sirkulasi dan Referensi Perpustakaan (Salman Reading Corner)			
+"
                       type="text"
                       class="form-control"
                       id="penjelasan1"
@@ -108,6 +112,7 @@
                   <div class="mb-3">
                     <label for="waktu" class="form-label">Waktu</label>
                     <input
+                      placeholder="Senin-Jumat 09.00—17.00 WIB, Sabtu 09.00—15.00 WIB / Setiap Pekan "
                       type="text"
                       class="form-control"
                       id="waktu1"
@@ -120,6 +125,8 @@
                     <div class="mb-3">
                       <label for="tempat" class="form-label">Tempat</label>
                       <input
+                        placeholder="Perpustakaan Salman
+"
                         type="text"
                         class="form-control"
                         id="tempat1"
@@ -133,6 +140,8 @@
                         >Penyaluran</label
                       >
                       <input
+                        placeholder="Dakwah-Advokasi
+"
                         type="text"
                         class="form-control"
                         id="penyaluran1"
@@ -148,6 +157,7 @@
                         >ID Laporan Bulanan</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idlaporanbulanan1"
@@ -162,6 +172,7 @@
                         >ID Kegiatan KPI</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idkegiatankpi1"

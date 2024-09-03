@@ -57,6 +57,7 @@
                   @change="updateIdLaporanBulanan"
                   required
                 >
+                  <option value="" disabled>Pilih Kode Program</option>
                   <option
                     v-for="program in LaporanBulanan"
                     :key="program.id"
@@ -77,6 +78,7 @@
                   @change="updateIdKegiatanRKA"
                   required
                 >
+                  <option value="" disabled>Pilih Kegiatan RKA</option>
                   <option
                     v-for="program in KegiatanRKA"
                     :key="program.id"
@@ -97,6 +99,7 @@
                       >Jumlah Realisasi</label
                     >
                     <input
+                      placeholder="639250"
                       type="text"
                       class="form-control"
                       id="jumlahrealisasi1"
@@ -112,6 +115,7 @@
                         >ID Laporan Bulanan</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idlaporanbulanan1"
@@ -126,6 +130,7 @@
                         >ID Kegiatan RKA</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idkegiatanrka1"

@@ -57,6 +57,7 @@
                   @change="updateIdLaporanBulanan"
                   required
                 >
+                  <option value="" disabled>Pilih Kode Program</option>
                   <option
                     v-for="program in LaporanBulanan"
                     :key="program.id"
@@ -67,7 +68,7 @@
                 </select>
               </div>
               <div class="mb-3">
-                <label for="id_program" class="form-label">Nama KPI</label>
+                <label for="id_program" class="form-label">Indikator</label>
                 <select
                   style="width: 100%"
                   class="form-control"
@@ -75,6 +76,7 @@
                   @change="updateIdKegiatanKPI"
                   required
                 >
+                  <option value="" disabled>Pilih Indikator</option>
                   <option
                     v-for="program in KegiatanKPI"
                     :key="program.id"
@@ -93,6 +95,8 @@
                   <div class="mb-3">
                     <label for="capaian" class="form-label">Capaian</label>
                     <input
+                      placeholder="444
+"
                       type="text"
                       class="form-control"
                       id="capaian1"
@@ -104,6 +108,8 @@
                   <div class="mb-3">
                     <label for="deskripsi" class="form-label">Deskripsi</label>
                     <input
+                      placeholder="271 anggota, 173 non-anggota, 58 ITB
+"
                       type="text"
                       class="form-control"
                       id="deskripsi1"
@@ -119,6 +125,7 @@
                         >ID Laporan Bulanan</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idlaporanbulanan1"
@@ -131,6 +138,7 @@
                     <div class="mb-3">
                       <label for="idkpi" class="form-label">ID KPI</label>
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="idkpi1"

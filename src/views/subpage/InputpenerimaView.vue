@@ -57,6 +57,7 @@
                   @change="updateIdLaporanBulanan"
                   required
                 >
+                  <option value="" disabled>Pilih Kode Program</option>
                   <option
                     v-for="program in LaporanBulanan"
                     :key="program.id"
@@ -74,6 +75,8 @@
                   <div class="mb-3">
                     <label for="kategori" class="form-label">Kategori</label>
                     <input
+                      placeholder="Internal			
+"
                       type="text"
                       class="form-control"
                       id="kategori1"
@@ -87,6 +90,7 @@
                       >Rutinitas</label
                     >
                     <input
+                      placeholder="rutin"
                       type="text"
                       class="form-control"
                       id="tipe_rutinitas1"
@@ -100,6 +104,8 @@
                       >Penyaluran</label
                     >
                     <input
+                      placeholder="Dakwah-Advokasi
+"
                       type="text"
                       class="form-control"
                       id="tipe_penyaluran1"
@@ -112,6 +118,7 @@
                     <div class="mb-3">
                       <label for="rencana" class="form-label">Rencana</label>
                       <input
+                        placeholder="4"
                         type="text"
                         class="form-control"
                         id="rencana1"
@@ -125,6 +132,7 @@
                         >Realisasi</label
                       >
                       <input
+                        placeholder="4"
                         type="text"
                         class="form-control"
                         id="realisasi1"
@@ -140,6 +148,7 @@
                       >ID Laporan Bulanan</label
                     >
                     <input
+                      placeholder="1"
                       type="text"
                       class="form-control"
                       id="idlaporanbulanan1"

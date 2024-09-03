@@ -19,6 +19,7 @@
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Sub-Program</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -36,6 +37,8 @@
                   <div class="mb-3">
                     <label for="nama" class="form-label">Judul Kegiatan</label>
                     <input
+                      placeholder="Pengumpulan & review naskah						
+"
                       type="text"
                       class="form-control"
                       id="nama1"
@@ -48,6 +51,7 @@
                       >ID Kegiatan RKA</label
                     >
                     <input
+                      placeholder="1"
                       type="text"
                       class="form-control"
                       id="id_program_kegiatan_rka1"

@@ -17,6 +17,7 @@
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Nama Bidang</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -34,6 +35,7 @@
                   <div class="mb-3">
                     <label for="nama" class="form-label">Nama Program</label>
                     <input
+                      placeholder="Kepustakaan"
                       type="text"
                       class="form-control"
                       id="nama1"
@@ -44,6 +46,7 @@
                   <div class="mb-3">
                     <label for="id_bidang" class="form-label">ID Bidang</label>
                     <input
+                      placeholder="1"
                       type="text"
                       class="form-control"
                       id="id_bidang1"

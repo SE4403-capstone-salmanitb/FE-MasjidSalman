@@ -10,13 +10,14 @@
           <form>
             <div class="card-container1">
               <div class="mb-3">
-                <label for="id_program" class="form-label">Nama Program</label>
+                <label for="id_program" class="form-label">Program</label>
                 <select
                   class="form-control"
                   v-model="formrka.nama_program"
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Program</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -33,9 +34,10 @@
                 <div class="form">
                   <div class="mb-3">
                     <label for="programkegiatan" class="form-label"
-                      >Nama program kegiatan</label
+                      >Program kegiatan</label
                     >
                     <input
+                      placeholder="Buku Antologi Literasi batch II"
                       type="text"
                       class="form-control"
                       id="programkegiatan1"
@@ -44,8 +46,11 @@
                     />
                   </div>
                   <div class="mb-3">
-                    <label for="deskripsi" class="form-label">Deskripsi</label>
+                    <label for="deskripsi" class="form-label"
+                      >Deskripsi Singkat</label
+                    >
                     <textarea
+                      placeholder="Penerbitan buku antologi literasi dari anggota aktif Salman Reading Corner"
                       type="text"
                       class="form-control"
                       id="deskripsi1"
@@ -55,8 +60,11 @@
                     ></textarea>
                   </div>
                   <div class="mb-3">
-                    <label for="output" class="form-label">Output</label>
+                    <label for="output" class="form-label"
+                      >Output/Keluaran</label
+                    >
                     <input
+                      placeholder="Buku Antologi Literasi"
                       type="text"
                       class="form-control"
                       id="output1"
@@ -68,6 +76,7 @@
                     <div class="mb-3">
                       <label for="tahun" class="form-label">Tahun</label>
                       <input
+                        placeholder="2024"
                         type="text"
                         class="form-control"
                         id="tahun1"
@@ -81,6 +90,7 @@
                         >ID Program</label
                       >
                       <input
+                        placeholder="1"
                         type="text"
                         class="form-control"
                         id="id_program1"

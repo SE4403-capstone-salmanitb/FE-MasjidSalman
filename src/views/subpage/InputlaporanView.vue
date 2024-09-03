@@ -17,6 +17,7 @@
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Program</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -37,6 +38,7 @@
                   <div class="mb-3">
                     <label for="kode" class="form-label">Kode</label>
                     <input
+                      placeholder="64416"
                       type="text"
                       class="form-control"
                       id="kode1"
@@ -52,6 +54,7 @@
                       >ID Program</label
                     >
                     <input
+                      placeholder="1"
                       type="text"
                       class="form-control"
                       id="program_id1"

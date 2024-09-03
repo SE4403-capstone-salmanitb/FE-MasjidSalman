@@ -57,6 +57,7 @@
                   @change="updateIdProgram"
                   required
                 >
+                  <option value="" disabled>Pilih Judul Kegiatan</option>
                   <option
                     v-for="program in programOptions"
                     :key="program.id"
@@ -72,8 +73,10 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="kebutuhan" class="form-label">Kebutuhan</label>
+                    <label for="kebutuhan" class="form-label">Uraian</label>
                     <input
+                      placeholder="Konsumsi rapat
+"
                       type="text"
                       class="form-control"
                       id="kebutuhan1"
@@ -87,6 +90,7 @@
                         >Nilai Satuan</label
                       >
                       <input
+                        placeholder="10000"
                         type="number"
                         class="form-control"
                         id="nilaisatuan1"
@@ -98,6 +102,7 @@
                     <div class="mb-3">
                       <label for="qty" class="form-label">Qty</label>
                       <input
+                        placeholder="3"
                         type="number"
                         class="form-control"
                         id="qty1"
@@ -109,6 +114,7 @@
                     <div class="mb-3">
                       <label for="unit" class="form-label">Unit (Unt)</label>
                       <input
+                        placeholder="org"
                         type="text"
                         class="form-control"
                         id="unit1"
@@ -118,8 +124,9 @@
                     </div>
 
                     <div class="mb-3">
-                      <label for="fren" class="form-label">Frekuensi</label>
+                      <label for="fren" class="form-label">Frq</label>
                       <input
+                        placeholder="4"
                         type="number"
                         class="form-control"
                         id="fren1"
@@ -131,6 +138,7 @@
                     <div class="mb-3">
                       <label for="unit" class="form-label">Unit (Unt)</label>
                       <input
+                        placeholder="bln"
                         type="text"
                         class="form-control"
                         id="unt1"
@@ -322,6 +330,7 @@
                       >ID Judul kegiatan</label
                     >
                     <input
+                      placeholder="1"
                       type="text"
                       class="form-control"
                       id="judulkegiatan1"

@@ -15,8 +15,9 @@
               >
                 <div class="form">
                   <div class="mb-3">
-                    <label for="nama" class="form-label">Nama Program</label>
+                    <label for="nama" class="form-label">Nama Bidang</label>
                     <input
+                      placeholder="Pengkajian dan Penerbitan"
                       type="text"
                       class="form-control"
                       id="nama1"
