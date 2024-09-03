@@ -75,7 +75,7 @@
                 <thead>
                   <tr>
                     <th>No</th>
-                    <th>Nama</th>
+                    <th>Nama Program Kegiatan</th>
                     <th>Indikator</th>
                     <th>Target</th>
                     <th>Jan</th>

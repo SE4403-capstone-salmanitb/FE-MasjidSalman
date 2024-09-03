@@ -338,6 +338,10 @@
             required
           />
         </div>
+        <!-- Error message for name -->
+        <p v-if="registerErrors.name" style="color: red">
+          {{ registerErrors.name[0] }}
+        </p>
         <div class="inputan">
           <input
             v-model="form.password"
@@ -358,6 +362,10 @@
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
         </div>
+        <!-- Error message for password -->
+        <p v-if="registerErrors.password" style="color: red">
+          {{ registerErrors.password[0] }}
+        </p>
         <div class="inputan">
           <input
             v-model="form.password_confirmation"
@@ -378,6 +386,10 @@
             @click="togglePasswordVisibility"
           ></b-icon-eye-fill>
         </div>
+        <!-- Error message for password_confirmation -->
+        <p v-if="registerErrors.password" style="color: red">
+          {{ registerErrors.password[0] }}
+        </p>
         <div class="inputan">
           <input
             v-model="form.email"
@@ -387,6 +399,10 @@
             required
           />
         </div>
+        <!-- Error message for email -->
+        <p v-if="registerErrors.email" style="color: red">
+          {{ registerErrors.email[0] }}
+        </p>
         <div class="inputan">
           <input
             v-model="form.profile_picture"
@@ -395,24 +411,16 @@
             required
             readonly
           />
+          <!-- Error message for profile_picture -->
+          <p v-if="registerErrors.profile_picture" style="color: red">
+            {{ registerErrors.profile_picture[0] }}
+          </p>
         </div>
 
         <div class="tombol-submit" type="submit" @click="store">Daftarkan</div>
-        <!-- Error messages -->
-        <div
-          v-if="Object.keys(registerErrors).length > 0"
-          class="error-messages"
-        >
-          <p
-            v-for="(error, key) in registerErrors"
-            :key="key"
-            style="color: red; margin-top: 5px"
-          >
-            {{ error }}
-          </p>
-        </div>
       </div>
     </div>
+
     <!-- Pop-up Resend Link verification -->
     <div v-if="showLinkPopup" class="popup-overlay">
       <div class="kartu-login">

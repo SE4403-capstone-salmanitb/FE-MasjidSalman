@@ -84,10 +84,34 @@
               <table class="table table-fixed-width">
                 <thead>
                   <tr>
-                    <th>No</th>
-                    <th>Nama</th>
-                    <th>Indikator</th>
-                    <th>Target</th>
+                    <th style="font-weight: bold; width: 40px">No</th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-weight: bold;
+                        width: calc((100%) / 3);
+                      "
+                    >
+                      Nama Program-Kegiatan
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-weight: bold;
+                        width: calc((100%) / 3);
+                      "
+                    >
+                      KPI
+                    </th>
+                    <th
+                      style="
+                        text-align: center;
+                        font-weight: bold;
+                        width: calc((100%) / 3);
+                      "
+                    >
+                      Target
+                    </th>
                     <th style="text-align: center"></th>
                   </tr>
                 </thead>

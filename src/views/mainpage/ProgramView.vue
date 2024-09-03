@@ -175,7 +175,7 @@
                 <thead>
                   <tr style="text-align: left">
                     <th style="font-weight: bold; width: calc((100%) / 4)">
-                      Nama
+                      Nama dan Penjelasan Singkat
                     </th>
                     <th style="font-weight: bold; width: calc((100%) / 4)">
                       Waktu
@@ -302,8 +302,8 @@
                       <th style="font-weight: bold; width: 229px">
                         Target Indikator
                       </th>
-                      <th style="font-weight: bold; width: 444px">Deskripsi</th>
                       <th style="font-weight: bold; width: 77px">Capaian</th>
+                      <th style="font-weight: bold; width: 444px">Deskripsi</th>
                       <th style="width: 50px; text-align: center"></th>
                     </tr>
                   </thead>
@@ -317,18 +317,18 @@
                       <td>
                         <input
                           v-if="isEditing === item.id"
-                          v-model="item.deskripsi"
-                          type="text"
-                        />
-                        <span v-else>{{ item.deskripsi }}</span>
-                      </td>
-                      <td>
-                        <input
-                          v-if="isEditing === item.id"
                           v-model="item.capaian"
                           type="text"
                         />
                         <span v-else>{{ item.capaian }}</span>
+                      </td>
+                      <td>
+                        <input
+                          v-if="isEditing === item.id"
+                          v-model="item.deskripsi"
+                          type="text"
+                        />
+                        <span v-else>{{ item.deskripsi }}</span>
                       </td>
                       <td style="text-align: center; position: relative">
                         <b-icon-three-dots-vertical
