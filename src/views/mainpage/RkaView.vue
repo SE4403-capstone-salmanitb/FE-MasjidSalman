@@ -119,6 +119,11 @@
                         style="color: #967c55"
                         @click="goToInputBulan"
                       ></b-icon>
+                      <b-icon
+                        icon="dash-square"
+                        style="color: #967c55; margin-left: 5px"
+                        @click="deleteJudulKegiatan(judul.id)"
+                      ></b-icon>
                     </p>
                     <div class="table-container1">
                       <table
@@ -569,6 +574,11 @@
                         style="color: #967c55"
                         @click="goToInputBulan"
                       ></b-icon>
+                      <b-icon
+                        icon="dash-square"
+                        style="color: #967c55; margin-left: 5px"
+                        @click="deleteJudulKegiatan(judul.id)"
+                      ></b-icon>
                     </p>
                     <div class="table-container1">
                       <table class="tabel">
@@ -986,6 +996,42 @@ export default {
     },
     toggleDropdown(index) {
       this.activeRow = this.activeRow === index ? null : index;
+    },
+    async deleteJudulKegiatan(id) {
+      try {
+        // Kirim permintaan DELETE ke server untuk menghapus judul kegiatan berdasarkan ID
+        await axios
+          .delete(`/api/judulKegiatanRKA/${id}`)
+          .then(() => {
+            // Handle successful response, e.g., show success message
+            this.notificationDeleteMessage = "Berhasil";
+            this.notificationDeleteDetail = "Judul kegiatan berhasil dihapus";
+            this.notificationType = "success";
+            this.isNotificationDeleteVisible = true;
+            setTimeout(() => {
+              this.notificationDeleteMessage = "";
+              this.notificationDeleteDetail = "";
+              this.notificationType = "";
+              this.isNotificationDeleteVisible = false;
+            }, 10000); // Reset notification after 10 seconds
+
+            // Refresh data setelah penghapusan
+            this.fetchJudulKegiatanRKA();
+            this.fetchItemKegiatanRKA();
+          })
+          .catch((error) => {
+            // Handle error, e.g., show error message
+            this.notificationDeleteMessage = "Gagal";
+            this.notificationDeleteDetail =
+              "Gagal menghapus judul kegiatan: " + error.response.data.message;
+            this.notificationType = "error";
+            this.isNotificationDeleteVisible = true;
+            console.error("Error:", error.response.data);
+          });
+      } catch (error) {
+        console.error("Failed to delete judul kegiatan:", error);
+        alert(`Gagal menghapus judul kegiatan: ${error.message}`);
+      }
     },
     async deleteRow(item) {
       try {
